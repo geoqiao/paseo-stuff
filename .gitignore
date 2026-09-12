@@ -1,0 +1,16 @@
+**/node_modules/
+**/dist/
+**/coverage/
+**/.vite/
+**/.playwright-cli/
+.scratch/
+.DS_Store
+*.log
+
+# Local experiments and internal workspace history are not publication inputs.
+/docs/
+/dev/
+**/server/generated/
+.env
+.env.*
+!.env.example
