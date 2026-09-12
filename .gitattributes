@@ -1,0 +1,2 @@
+# Captured synthetic Markdown uses significant two-space line breaks.
+plugins/math-renderer/tests/fixtures/synthetic/*.md whitespace=-blank-at-eol

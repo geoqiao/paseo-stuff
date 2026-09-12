@@ -1,0 +1,9 @@
+{
+  "id": "math-renderer",
+  "requirements": { "paseo": "0.8.0" },
+  "build": [
+    ["npm", "ci", "--ignore-scripts", "--legacy-peer-deps", "--no-audit", "--no-fund"],
+    ["npm", "run", "prepare:wasm"],
+    ["npm", "run", "typecheck"]
+  ]
+}

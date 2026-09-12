@@ -1,0 +1,51 @@
+{
+  "name": "readable-agent-activity",
+  "version": "0.1.0-beta.5",
+  "description": "Readable tool calls and reasoning for Paseo 0.8: quiet headers, code and JSON, bounded previews. Full detail only.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geoqiao/paseo-stuff.git",
+    "directory": "plugins/agent-activity"
+  },
+  "homepage": "https://github.com/geoqiao/paseo-stuff/tree/main/plugins/agent-activity#readme",
+  "bugs": {
+    "url": "https://github.com/geoqiao/paseo-stuff/issues"
+  },
+  "keywords": [
+    "paseo",
+    "paseo-plugin",
+    "tool-calls",
+    "json",
+    "readability"
+  ],
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --maxWorkers=2",
+    "check": "npm run typecheck && npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@getpaseo/client": "0.8.0",
+    "@getpaseo/plugin": "0.8.0",
+    "@getpaseo/protocol": "0.8.0",
+    "@tanstack/react-query": "^5.90.11",
+    "@types/diff": "^5.2.2",
+    "@types/node": "^20.9.0",
+    "@types/react": "~19.2.0",
+    "@types/react-test-renderer": "19.1.0",
+    "diff": "7.0.0",
+    "esbuild": "0.25.12",
+    "lucide-react": "0.546.0",
+    "oxlint": "1.61.0",
+    "prism-react-renderer": "2.4.1",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-test-renderer": "19.1.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.6",
+    "zod": "^4.4.3"
+  }
+}
