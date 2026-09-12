@@ -9,6 +9,12 @@
 - Do not commit generated bundles, node_modules, credentials, local host configuration or personal conversation fixtures.
 - Preserve upstream licenses and record exact provenance for forks and vendored fixtures.
 
+## Publication direction
+- `geoqiao/paseo-stuff` is the canonical development and release repository for all plugins in this project. Keep each plugin independently installable from its subdirectory.
+- The current Cafe submission scope is Readable Agent Activity, DeepSeek Harness and Math Renderer. Paseo Pet stays in this repository but is excluded from Cafe submissions unless the user changes that decision.
+- Preserve existing plugin/catalog IDs when migrating source pointers. Old standalone repositories retain history and migration notices, not parallel ongoing development.
+- Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
+
 ## Paseo contracts
 - Current verified target is Paseo app/daemon and SDK 0.8.0. Verify versions before introducing APIs.
 - Fetch https://paseo.sh/llms.txt, then the version-matching plugin reference before adopting unfamiliar APIs.

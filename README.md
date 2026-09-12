@@ -72,6 +72,17 @@ A [Paseo Cafe](https://github.com/paseo-cafe/paseo-cafe) entry can point to a su
 The entry filename must match that plugin's `paseo-plugin.json.id`. Each listing is
 submitted separately; a pull request is not a claim that Cafe has accepted the plugin.
 
+The current Cafe scope is exactly these three plugins, all sourced from this repository:
+
+| Catalog ID | Plugin directory | Submission |
+| --- | --- | --- |
+| `readable-agent-activity` | `plugins/agent-activity` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
+| `deepseek-harness` | `plugins/deepseek-harness` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
+| `math-renderer` | `plugins/math-renderer` | [New entry #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) |
+
+Paseo Pet remains managed here but is not submitted to Cafe. Follow the linked PRs
+for their current review status; submission and live catalog deployment are separate.
+
 ## Licenses and publication scope
 
 Repository-authored material is MIT unless otherwise noted. Each plugin retains its
