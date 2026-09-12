@@ -1,0 +1,7 @@
+node_modules/
+server/generated/
+coverage/
+dist/
+.vite/
+.DS_Store
+*.log
