@@ -1,7 +1,7 @@
 {
   "name": "readable-agent-activity",
-  "version": "0.1.0-beta.5",
-  "description": "Readable tool calls and reasoning for Paseo 0.8: quiet headers, code and JSON, bounded previews. Full detail only.",
+  "version": "0.1.0-beta.6",
+  "description": "Formatted and highlighted tool-call JSON, twenty-line previews and tool icons for Paseo 0.8. Full detail only.",
   "repository": {
     "type": "git",
     "url": "https://github.com/geoqiao/paseo-stuff.git",
@@ -32,11 +32,9 @@
     "@getpaseo/plugin": "0.8.0",
     "@getpaseo/protocol": "0.8.0",
     "@tanstack/react-query": "^5.90.11",
-    "@types/diff": "^5.2.2",
     "@types/node": "^20.9.0",
     "@types/react": "~19.2.0",
     "@types/react-test-renderer": "19.1.0",
-    "diff": "7.0.0",
     "esbuild": "0.25.12",
     "lucide-react": "0.546.0",
     "oxlint": "1.61.0",

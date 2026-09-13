@@ -32,7 +32,7 @@ function check(value, message) { if (!value) throw new Error(message); }
 var schema = {};
 ["optional", "int", "nonnegative"].forEach(function(key) { schema[key] = function() { return schema; }; });
 var z = {};
-["object", "string", "number", "enum", "json"].forEach(function(key) { z[key] = function() { return schema; }; });
+["object", "string", "number", "enum", "json", "array"].forEach(function(key) { z[key] = function() { return schema; }; });
 function runtimeRequire(name) {
   if (name === "zod") return { z: z };
   if (["react", "react/jsx-runtime", "react-native", "@getpaseo/plugin/client/react-native"].indexOf(name) !== -1) return {};
@@ -43,8 +43,9 @@ var evaluate = globalThis.eval;
 
 let entryBundle;
 let highlightBundle;
+let detailsBundle;
 beforeAll(async () => {
-  [entryBundle, highlightBundle] = await Promise.all([bundle("index.client.tsx"), bundle("client/highlight.ts")]);
+  [entryBundle, highlightBundle, detailsBundle] = await Promise.all([bundle("index.client.tsx"), bundle("client/highlight.ts"), bundle("shared/details.ts")]);
 });
 
 function smoke() {
@@ -53,12 +54,36 @@ var contributions = [];
 var removed = [];
 function register(item) { contributions.push(item); return function() { removed.push(item); }; }
 var entry = evaluate(${JSON.stringify(entryBundle)})(runtimeRequire);
-var cleanup = entry.default({ addSettingsScreen: register, addTimelineTransformer: register, addTimelineRenderer: register });
-check(contributions.length === 5, "Missing client contributions");
-check(contributions[2].query.itemType === "tool_call", "Missing tool transformer");
-check(typeof contributions[4].Component === "function", "Missing tool renderer");
+var cleanup = entry.default({
+  addSettingsScreen: function() { throw new Error("Redundant Activity settings entry"); },
+  addTimelineTransformer: register, addTimelineRenderer: register
+});
+check(contributions.length === 4, "Expected only tool and minimal Thinking timeline contributions");
+check(contributions[0].query.itemType === "tool_call", "Missing tool transformer");
+check(typeof contributions[1].Component === "function", "Missing tool renderer");
+check(contributions[2].query.itemType === "reasoning" && typeof contributions[3].Component === "function", "Missing density-only Thinking adapter");
+check(contributions[2].transform({ item: { text: "**original**" }, phase: "streaming" }).items[0].data.text === "**original**", "Thinking text was rewritten");
+var projected = contributions[0].transform({ phase: "streaming", item: {
+  type: "tool_call", callId: "outer", name: "exec", status: "running", error: null,
+  detail: { type: "unknown", input: { code: "compose tools" }, output: { content: [], details: {
+    cellId: "cell", status: "running", traces: [{
+      id: "trace", name: "exec_command", input: { cmd: "npm test" }, status: "done",
+      result: { content: [], details: { chunk_id: "chunk", wall_time_seconds: 0, output: "", exit_code: 2 } }
+    }]
+  } } }
+} });
+check(projected.items[0].data.detail.output.details.traces[0].result.details.exit_code === 2, "Conversion source data lost");
+check(!projected.items[0].data.activity, "Removed Calls annotation was reintroduced");
+check(projected.items[0].data.status === "running", "Conversion replaced the host status");
+var details = evaluate(${JSON.stringify(detailsBundle)})(runtimeRequire);
+var sections = details.detailSections(projected.items[0].data);
+check(sections.length === 2 && sections[0].value === "compose tools", "Unified input adaptation failed");
+var formatted = details.presentValue(sections[1].value);
+check(formatted.language === "json" && JSON.parse(formatted.text).details.traces[0].result.details.exit_code === 2, "Formatted output lost metadata");
+check(details.previewText(formatted.text).text.split("\\n").length === 20, "Native preview is not twenty lines");
+check(details.prettyJson('{"n":9007199254740993,"n":1}').indexOf("9007199254740993") !== -1, "Numeric lexeme lost");
 cleanup();
-check(removed.length === 5 && removed[0] === contributions[4], "Cleanup did not unregister contributions");
+check(removed.length === 4 && removed[0] === contributions[3], "Cleanup did not unregister contributions");
 var highlight = evaluate(${JSON.stringify(highlightBundle)})(runtimeRequire).highlightCode;
 var colors = { foreground: "#dddddd", foregroundMuted: "#aaaaaa", accent: "#9ab8ce", surface1: "#181818" };
 var samples = {

@@ -30,7 +30,7 @@ Do not enable two installations of the same timeline renderer or provider.
 This is the new development and release home for Readable Agent Activity and
 DeepSeek Harness as well. Their old repositories and immutable release tags remain
 available for existing installations. The existing Cafe entries keep their IDs;
-a registry migration must be reviewed and merged before Cafe points here.
+the registry migration in PR #97 has merged and points to this repository.
 
 Existing Git installations do **not** switch repositories automatically. See the
 [migration notes](MIGRATION.md) before changing an installed source. Activity beta.5
@@ -74,14 +74,14 @@ submitted separately; a pull request is not a claim that Cafe has accepted the p
 
 The current Cafe scope is exactly these three plugins, all sourced from this repository:
 
-| Catalog ID | Plugin directory | Submission |
+| Catalog ID | Plugin directory | Merged PR |
 | --- | --- | --- |
 | `readable-agent-activity` | `plugins/agent-activity` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
 | `deepseek-harness` | `plugins/deepseek-harness` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
 | `math-renderer` | `plugins/math-renderer` | [New entry #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) |
 
-Paseo Pet remains managed here but is not submitted to Cafe. Follow the linked PRs
-for their current review status; submission and live catalog deployment are separate.
+Paseo Pet remains managed here but is not submitted to Cafe. The linked PRs have
+merged; subsequent version/README updates appear after Cafe's next scan and deployment.
 
 ## Licenses and publication scope
 

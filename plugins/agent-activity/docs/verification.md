@@ -1,5 +1,109 @@
 # Verification and remaining gaps
 
+## Beta.6 — unified formatter and local acceptance (2026-09-13)
+
+This section supersedes earlier beta UI/feature descriptions below; those sections
+remain as historical release evidence, not claims about the current renderer.
+
+- Plugin-local `npm run check`: typecheck, zero lint warnings/errors, **7 files / 239
+  tests**, all passing. The reduced count reflects removal of old Markdown reasoning, summary,
+  diff, UI-text rewriting and old two-path renderer tests; current behavior has new
+  formatter, completeness, native-detail and renderer regressions.
+- DOM-free Node and real RN 0.81.5 Hermes bundle evaluation both ran (not skipped).
+  They verify four timeline-only registrations (tool and minimal Thinking transformers/renderers),
+  cleanup, complete formatted output, exact thought text, twenty-line preview and syntax tokenization.
+- Real pinned Paseo 0.8 projection functions verify stable source identity, exact thought
+  text/phase, native messages/speak fallback and Full detail. The Summary test still explicitly
+  reproduces the host API gap; it is not a claim of Summary support.
+- Production React Native components in the isolated browser harness passed at
+  **1500×1050 dark** and **390×844 light**: JSON key/string/literal colors, exactly
+  twenty formatted logical lines, one Show all, full-tail retention, normal text
+  selection with exact newlines, streaming/manual disclosure and no compact overflow.
+  A 100,000-line text result initially exposes only twenty lines. All **62** existing
+  Paseo icon mappings render real SVGs. No browser warnings/errors occurred.
+- The latest spacing correction uses native-default **14px text, natural leading
+  and 12px icons** on both layouts. The additional 44px compact header minimum is
+  removed. At **1400×950 dark/light** and **390×844 light**, the source-adapted browser
+  comparison measures all seven plugin pitches at **33px**, versus **32px for an
+  all-native tool/Thinking sequence**. Both columns' computed font size and leading
+  match. This is no longer a mixed native/plugin baseline. Default natural plugin
+  headers measure 17px; their hit areas are smaller than native badges, not 44px.
+- The spacing correction passed 231 tests. The spacing suite checks first/footer
+  boundaries, keyboard disclosure, full text, streaming and expanded-content flow.
+  The standalone compact Show all target remains at least 44px. A browser-only 28px
+  font-size probe makes headers grow without clipping; it is not an iOS Dynamic Type
+  test. The full formatter suite passes again with zero console warnings/errors.
+  Updated light desktop/compact screenshots were inspected. The user then accepted
+  the revised UI. Independent phone geometry, font-scaling and touch-matrix testing
+  are still not established.
+- The subsequent preview bug was reproduced at 390×844: a long JSON string had only
+  three formatted source lines, expanded to a **63,530px card** and offered no Show all.
+  The fix retains source-line prefixing but clips wrapped content to **380px** for
+  code/JSON/plain text (20×19px) and **400px** for Thinking (20×20px), scaled with font
+  size. The same compact card now measures **582px** including both labeled sections
+  and its one Show all control. These are browser measurements, not phone measurements.
+- Eight new mocked renderer regressions cover measured overflow, the exact threshold,
+  independent Input/Output measurements, width changes, empty output, system font scale,
+  Thinking and manual full state. The dedicated wide/compact browser suite verifies
+  long JSON/plain/Unicode input, full-text fidelity, streaming/reopening, Show less,
+  automatic removal of an unnecessary button after widening, and ancestor wheel scroll.
+  Native preview scrolling is disabled; the web clip preserves ancestor gestures.
+  The formatter and native-spacing browser suites still pass with zero console
+  warnings/errors. The compact clipping screenshot was inspected. Native iOS/Android
+  gesture behavior and scaled font metrics for this change remain unverified.
+- Superseded trials used 13px text, 32px then 30px desktop pitch, and retained
+  44px compact headers / 60px pitch. Their passing geometry tests did not establish
+  native visual compatibility. User desktop/mobile screenshots rejected that design;
+  the latest comparison now uses native typography and a fully native reference.
+- Two read-only reviews confirmed the native-Thought/public-API spacing boundary;
+  the previous density adapter had no concrete blocker in its implementation review.
+  Those reviews predate the new typography/mobile-target correction and did not
+  establish native-device measurements or acceptance of its visual design.
+- Synthetic dark/light screenshots were pixel-inspected and kept in ignored local
+  scratch storage, not substituted for published beta screenshots.
+- JSON keys now use host foreground, not accent: the default host uses the same dark
+  green accent in both themes, unsuitable for small dark-theme text. Strings and
+  number/boolean/null values use exposed success/warning colors. Other grammars keep
+  their existing palette behavior.
+- The initial formatter pass left the existing local installation disabled. For the
+  later spacing request, `colorful-agent-activity` on `127.0.0.1:6767` was found enabled.
+  After checks it was reloaded at **2026-09-13T09:34:38Z**, returning running/ready with
+  no new stderr. Other plugin enable states were unchanged; no duplicate installation,
+  daemon restart or host preference change. Desktop accessibility exposes Thinking
+  controls after reload; the numeric spacing measurements above are from the browser
+  reproduction, not a pixel measurement of the live app. The user later accepted the
+  corrected collapsed-row UI.
+- The superseded 14px-header refinement was reloaded into the same enabled alias at
+  **2026-09-13T10:05:00Z**. It returned running/ready; plugin log entries 39–42 contain
+  only stopping/stopped/loading/ready. Other plugin enable states remain unchanged.
+  The temporary browser and preview server were closed after verification.
+- The native-font/mobile-density correction reloaded that alias at
+  **2026-09-13T10:19:46Z**, returning running/ready. Plugin log entries 43–46 contain
+  only stopping/stopped/loading/ready; other plugin states are unchanged. Desktop AX
+  still exposes Thinking buttons, but inspected bounds were clipped/offscreen and
+  do not establish live pixel spacing. This trial's browser and preview server were
+  closed; no subagents, workspaces or worktrees were created.
+- The wrapped-preview fix reloaded the same enabled alias at
+  **2026-09-13T10:41:52Z**, returning running/ready. Plugin log entries 55–58 contain
+  only stopping/stopped/loading/ready, and other plugin states are unchanged. The
+  browser and preview server created for this regression check were closed. No
+  subagents, workspaces or worktrees were created for this fix.
+- The user accepted the local UI and preview fix, then authorized the beta.6 release.
+  Package and lockfile are versioned together. The unused `diff` and `@types/diff`
+  direct dependencies were removed using the plugin's own npm lockfile.
+- Three README comparison screenshots were captured from identical synthetic inputs
+  using the production Activity components and the source-adapted native reference.
+  All 20 vendored development reference files passed SHA-256 verification. Pixel
+  dimensions were checked and the screenshots inspected; no personal fixtures or
+  generated artwork are included. Old images were removed from the current release
+  so Cafe's directory scan cannot pick the previous UI. See [provenance](screenshots.md).
+
+Native iOS/Android UI, real device clipboard, a full reconnect/virtualization matrix
+and a latency benchmark remain unverified. Browser selection and mocked compact props
+are not native-device coverage. Source serialization, very long individual lines
+and Show all remain potentially expensive; formatter/highlight limits fall back to
+intact text rather than silently dropping data. See the [current contract](conversion-compatibility.md).
+
 ## Beta.5 native-loading follow-up
 
 Typecheck and lint pass (zero warnings/errors), with **14 files / 251 tests** passing.
