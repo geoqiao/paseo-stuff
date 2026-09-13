@@ -3,7 +3,7 @@
 Render **block LaTeX inside assistant reply bodies**, with one muted English action row
 per formula: **Show LaTeX** and **Copy LaTeX**. No extra panel or duplicate message toolbar.
 
-> **Experimental beta — 0.1.0-beta.1.** Requires Paseo app and daemon **0.8.0**.
+> **Experimental beta — 0.1.0-beta.2.** Requires Paseo app and daemon **0.8.0**.
 > Inline math is not typeset. Native iOS/Android acceptance and complete native Markdown
 > parity are not finished. Read the limitations before enabling this trusted plugin.
 
@@ -18,12 +18,16 @@ Plugins run as trusted, unsandboxed code. Review the source, choose the target d
 and enable plugins in Paseo before installing:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.1 --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.2 --host <host:port>
 paseo plugin ls --host <host:port>
 ```
 
 The manifest ID is `math-renderer`. This directory is independently installable;
 it does not import any sibling plugin or depend on root-installed packages.
+
+Beta.2 fixes mobile bundle loading and adds support for bold Greek symbols.
+See [verification details](docs/verification.md#native-bundle-loading-fix-beta2)
+for the reproduced Hermes error and the scope of the fix.
 
 If you used the earlier local prototype alias `paseo-math-renderer-prototype`, keep
 that installation's ID for reload/disable. Do not enable a second copy alongside it.
@@ -63,7 +67,8 @@ or wrap the entire reply in a code fence.
   that row to remain native. Paseo may split a reply into multiple rows, so this is
   not an all-or-nothing guarantee for the entire reply.
 - Local formula viewing state does not survive every virtualization unmount.
-- MathJax base + AMS only. Missing glyphs (including many non-Latin text glyphs),
+- MathJax base + AMS + boldsymbol only. `\boldsymbol{\mu}` and other bold math
+  symbols are supported. Missing glyphs (including many non-Latin text glyphs),
   external resources, custom macros and unsupported commands fall back to source.
 - Host foreground colors currently must be six-digit hex strings. Font size is clamped
   to 12–28 and image density to 1–3; other accessibility configurations need testing.
@@ -103,20 +108,25 @@ From this directory:
 
 ```sh
 npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+npm run prepare:markdown
 npm run prepare:wasm
 npm run check
 ```
 
+`prepare:markdown` lowers the pinned Markdown parser to function-based JavaScript
+and wraps it as ESM in ignored `shared/generated/` for Hermes compatibility.
 `prepare:wasm` embeds the unmodified npm resvg WASM artifact into ignored
-`server/generated/wasm.ts`. The manifest runs these build steps during installation.
-Do not commit that generated file, dependencies or compiled bundles.
+`server/generated/wasm.ts`. The manifest runs both build steps during installation.
+Do not commit generated files, dependencies or compiled bundles.
 
 Typecheck before reloading the exact installed ID on the intended host. Do not restart
 the daemon or auto-enable a disabled installation.
 
 ## Verification
 
-- Typecheck, lint and **54 automated tests** passed locally.
+- Typecheck, lint and **57 automated tests** passed locally, including the complete
+  client bundle evaluated in the RN 0.81.5 Hermes executable. Host UI/hooks and RPC
+  contracts are stubbed in that engine test; on-device rendering remains unverified.
 - Tests include real MathJax/resvg PNG output, malformed/oversized inputs, stable source-row
   identity using pinned Paseo 0.8.0 source, cleanup, and synthetic mixed-output regressions.
 - Two real model replies contained 12 display formulas: 11 valid and one intentionally invalid.

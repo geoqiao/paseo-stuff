@@ -21,7 +21,7 @@ their permissions and operational requirements differ.
 Run against the intended daemon, after reviewing the plugin and enabling plugins in Paseo:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.1 --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.2 --host <host:port>
 ```
 
 The `:plugins/<directory>` suffix selects one plugin, not the whole repository.
@@ -44,6 +44,7 @@ Use npm from the plugin directory, not the repository root:
 ```sh
 cd plugins/math-renderer
 npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+npm run prepare:markdown --if-present
 npm run prepare:wasm --if-present
 npm run check
 ```

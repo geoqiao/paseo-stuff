@@ -28,5 +28,6 @@ jobs:
           cache: npm
           cache-dependency-path: plugins/${{ matrix.plugin }}/package-lock.json
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+      - run: npm run prepare:markdown --if-present
       - run: npm run prepare:wasm --if-present
       - run: npm run check

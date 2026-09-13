@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-beta.2
+
+- Enable MathJax's bundled boldsymbol extension so valid formulas containing
+  bold Greek symbols render, including the multivariate normal density.
+- Fix the mobile startup error `Cannot read property 'prototype' of undefined`
+  reproduced in Hermes while loading the Markdown parser's entity decoder.
+- Prepare the pinned parser as function-based JavaScript with an ESM wrapper;
+  generate it during installation and CI without committing compiled artifacts.
+- Test complete client-bundle loading, streaming Markdown, fallback and cleanup
+  in Node and the RN Hermes executable. On-device UI acceptance remains outstanding.
+
 ## 0.1.0-beta.1
 
 First public experimental release, targeting Paseo 0.8.0.

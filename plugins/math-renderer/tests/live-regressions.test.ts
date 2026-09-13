@@ -11,6 +11,42 @@ function formulas(blocks: Block[]): Extract<Block, { kind: "math" }>[] {
   return blocks.flatMap(block => block.kind === "math" ? [block] : "children" in block ? formulas(block.children) : []);
 }
 describe("live-session regressions", () => {
+  it("typesets a multivariate normal density with bold Greek symbols, preserving source", async () => {
+    const text = String.raw`$$
+p(\mathbf{x}\mid\boldsymbol{\mu},\Sigma)
+=
+\frac{
+\exp\!\left(
+-\frac{1}{2}
+(\mathbf{x}-\boldsymbol{\mu})^{\mathsf T}
+\Sigma^{-1}
+(\mathbf{x}-\boldsymbol{\mu})
+\right)
+}{
+(2\pi)^{d/2}\sqrt{\det\Sigma}
+},
+\qquad \Sigma\succ 0
+$$`;
+    const doc = parseDocument(text)!;
+    expect(doc.formulas).toBe(1);
+    const [block] = formulas(doc.blocks);
+    expect(block.raw).toBe(text);
+    expect(block.tex).toBe(text.slice(3, -3));
+    expect(transformMessage({ item: { type: "assistant_message", text }, phase: "complete" })?.items[0].data).toEqual({ text });
+    const renderer = createMathRenderer();
+    try {
+      for (const color of ["#eeeeee", "#111111"]) {
+        const result = await renderer.render({ tex: block.tex, color, fontSize: 18, scale: 3 });
+        expect(result.ok).toBe(true);
+        if (result.ok) {
+          const png = Buffer.from(result.uri.split(",")[1], "base64");
+          expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+          expect(png.readUInt32BE(16)).toBe(result.width * 3);
+          expect(png.readUInt32BE(20)).toBe(result.height * 3);
+        }
+      }
+    } finally { renderer.dispose(); }
+  });
   it("typesets all six formulas from mixed model output, including wrapped math fence", async () => {
     const doc = parseDocument(sample)!;
     expect(doc.formulas).toBe(6);
