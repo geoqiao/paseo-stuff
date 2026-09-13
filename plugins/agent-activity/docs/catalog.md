@@ -4,7 +4,8 @@
 Paseo compatibility certification.
 
 The original [PR #86](https://github.com/paseo-cafe/paseo-cafe/pull/86) was merged.
-The monorepo migration updates that existing entry in place:
+The monorepo migration [PR #97](https://github.com/paseo-cafe/paseo-cafe/pull/97)
+was merged on 2026-09-12 and the live entry points here:
 
 - Registry file and plugin ID: `readable-agent-activity`.
 - Repository: `geoqiao/paseo-stuff`.
@@ -13,8 +14,14 @@ The monorepo migration updates that existing entry in place:
 
 Do not delete/re-add the entry or create another ID. The existing
 `colorful-agent-activity` entry belongs to the upstream author and is not changed.
-The migration still requires maintainer review and deployment before the live
-directory points at the new source.
+New versions do not need a new admission PR. Cafe derives the version from this
+directory's `package.json` on the repository's default branch, together with the
+README and screenshots. Existing Git installations still follow their stored ref.
+
+Cafe's deployment workflow currently scans every six hours (`17 */6 * * *`), after
+successful main-branch CI, or when a maintainer starts it manually. A GitHub release
+does not immediately update the static live page. Registry caveat changes require
+a small update PR; merging or submitting that PR is not proof of deployment.
 
 The entry discloses the Full detail-only beta limitation. `platforms` is omitted
 because the implementation is not OS-restricted; the caveat distinguishes a

@@ -9,10 +9,12 @@ commits and release tags remain available; they are not deleted or rewritten.
 | `deepseek-harness` | `geoqiao/paseo-stuff:plugins/deepseek-harness` | `deepseek-harness-v0.1.0-beta.3` |
 
 The existing Cafe submissions [#86](https://github.com/paseo-cafe/paseo-cafe/pull/86)
-and [#87](https://github.com/paseo-cafe/paseo-cafe/pull/87) were merged. A separate
-migration PR changes their `repo` and adds `path`, retaining filenames, IDs and
-caveats. That change is not live until Cafe reviews, merges and deploys it.
-Math Renderer is a separate new entry, not a replacement for either plugin.
+and [#87](https://github.com/paseo-cafe/paseo-cafe/pull/87) were merged. The separate
+[migration PR #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) also merged,
+changing `repo` and adding `path` while retaining filenames and IDs.
+Math Renderer's [PR #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) merged as
+a separate new entry, not a replacement for either plugin. Cafe derives later
+versions from each plugin's package.json during its scan/deployment cycle.
 
 ## New installations
 

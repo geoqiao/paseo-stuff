@@ -1,5 +1,9 @@
 # Separate post-release code review
 
+Historical beta.3 record. Summary/diff/Raw helpers referenced below were removed in
+beta.6; use [current verification](verification.md) and
+[the current contract](conversion-compatibility.md) for that release.
+
 2026-09-12. Review of the published beta.2 runtime, callers and tests, followed by
 targeted beta.3 fixes. The implementation owner and an independent reviewer
 examined correctness, unnecessary code, source fidelity and rendering work.
@@ -17,9 +21,9 @@ This is separate from the original formatter implementation review.
 | Unreachable output-card parsers complicated the actual formatter contract | Remove the unused Exa/GitHub/Paseo output helpers, including arbitrary embedded-JSON scanning and recursive envelope unwrapping. Preserve active tool recognition, icons, labels and summaries; test the real detail path's source fidelity instead. |
 | Candidate fixes risked avoidable large-data work | Consume diff classification as an iterator for counts rather than retaining all classified rows. Memoize selected Raw text by source, so Copy and Show all state updates do not repeatedly serialize large details. Two renderer regressions failed before memoization and now pass, including source-update invalidation. |
 
-Relevant code: [details](../shared/details.ts), [presentation](../shared/presentation.ts),
-[bounded summaries](../shared/summary.ts), [renderer](../client/activity.tsx), and
-their adjacent tests.
+Relevant code at beta.3: shared/details.ts, shared/presentation.ts,
+shared/summary.ts, client/activity.tsx and their adjacent tests. Consult the
+beta.3 tag for those historical implementations.
 
 ## Verification
 

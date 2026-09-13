@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-beta.6 — 2026-09-13
+
+- Unify ordinary and codex-conversion tools under Input / Output with one Show all / Show less. Preview twenty source lines and cap automatic wrapping to twenty displayed line-heights per section. No second character cap or independently scrolling output box.
+- Fix long JSON strings/plain text/Thinking bypassing the preview limit: measure wrapped content and show the same Show all even when there are fewer than twenty source lines. Full text, highlighting, selection and manual streaming disclosure remain intact; preserve ancestor scrolling and scale the cap with system text size.
+- Retain complete output metadata, traces and attachment data; only unwrap pure source/text transports. Preserve JSON numeric lexemes, duplicate keys, escapes and native detail fields.
+- Highlight JSON keys/strings/literals with theme-aware, readable colors. Use one selectable text with actual newlines for copying.
+- Remove the old Markdown reasoning renderer, generated summaries/diffs, separate tool rendering paths and Raw/Copy toolbars. Keep tool logos, host lifecycle status, non-JSON fallback and manual streaming disclosure. Remove the unused diff dependencies.
+- Use a minimal Thinking disclosure row with original plain text. Match native default labels with 14px text, natural leading and 12px icons on both desktop and mobile; remove the trial's extra 44px mobile header minimum. Browser reference sequences measure 33px pitch versus 32px all-native (previous compact trial: 60px). Host gaps remain; header hit areas are smaller than native badges. Show all keeps its 44px compact target. No negative margins, body rewriting or restored Markdown parser.
+- Add three side-by-side native-reference/plugin screenshots using the same synthetic data. Replace obsolete screenshot assets so Cafe does not display the old UI.
+- Local trial accepted; 239 tests pass, including wrapped-preview regressions and real Hermes bundle evaluation. No new installation or daemon restart. Summary remains unsupported; see docs/verification.md for limits.
+
 ## 0.1.0-beta.5
 
 - Move development and releases to `geoqiao/paseo-stuff`, subdirectory `plugins/agent-activity`, retaining the `readable-agent-activity` plugin ID. Old standalone tags remain unchanged; installed Git sources do not migrate automatically.

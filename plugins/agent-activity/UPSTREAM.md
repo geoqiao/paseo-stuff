@@ -13,15 +13,16 @@ This fork publishes under the distinct manifest ID **readable-agent-activity**. 
 
 ## Changes in this fork
 
-- Theme-derived neutral rows and bounded summaries instead of category backgrounds and palette controls.
-- Stacked sections, lexical JSON formatting, literal JS inputs, readable tool-result text, Raw/Copy and bounded previews.
-- One-layer decoding of known UI quoted labels and compaction of repeated accessibility paths.
-- Manual-only expansion; 20-line / 4,000-character previews with Show all / Show less.
-- Defensive malformed-detail handling, bounded diff/format/highlight work and asynchronous clipboard race protection.
+- Beta.6: one Input/Output formatter, twenty-line previews, a shared Show all, source-preserving JSON highlighting and tool icons.
+- Manual-only expansion; minimal plain-text Thinking disclosure matches tool-row density. Messages remain native. The old Markdown reasoning parser is not restored.
+- Thin source/text transport adaptation retains metadata, traces, attachments and native detail fields. Malformed and oversized text falls back without silent truncation.
+- Earlier betas included summaries, reconstructed diffs, UI-label compaction and Raw/Copy controls. Those helpers and their obsolete tests are removed in beta.6, not retained behind hidden UI.
 - No server entry; presentation uses public SDK modules and does not need daemon-side privileges.
 - Additional pure/renderer tests and pinned host compatibility fixtures. Full detail only; Summary remains unsupported.
 
-Public screenshots are newly generated from synthetic data, not upstream screenshots or personal conversation captures.
+Public screenshots are captured from synthetic data, not personal conversations. Their
+left columns use a source-adapted Paseo native reference, not the upstream Activity
+plugin. See [screenshot provenance](docs/screenshots.md) for exact source and limitations.
 
 ## Host test fixtures
 

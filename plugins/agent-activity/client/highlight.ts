@@ -8,6 +8,8 @@ export interface SyntaxColors {
   foregroundMuted: string;
   accent: string;
   surface1: string;
+  statusSuccess?: string;
+  statusWarning?: string;
 }
 export interface SyntaxToken {
   content: string;
@@ -32,9 +34,9 @@ const tokensCache = new Map<string, { size: number; tokens: SyntaxToken[][] }>()
 let cachedChars = 0;
 
 export function syntaxKey(colors: SyntaxColors): string {
-  return [colors.foreground, colors.foregroundMuted, colors.accent, colors.surface1].join("|");
+  return [colors.foreground, colors.foregroundMuted, colors.accent, colors.surface1, colors.statusSuccess, colors.statusWarning].join("|");
 }
-function tokenLines(stream: Prism.TokenStream, colors: SyntaxColors): SyntaxToken[][] {
+function tokenLines(stream: Prism.TokenStream, colors: SyntaxColors, json: boolean): SyntaxToken[][] {
   const lines: SyntaxToken[][] = [[]];
   function visit(value: Prism.TokenStream, color: string): void {
     if (typeof value === "string") {
@@ -47,7 +49,12 @@ function tokenLines(stream: Prism.TokenStream, colors: SyntaxColors): SyntaxToke
       for (const child of value) visit(child, color);
     } else {
       const types = [value.type, ...typeof value.alias === "string" ? [value.alias] : value.alias ?? []];
-      const nextColor = types.some((type) => ["comment", "punctuation", "operator"].includes(type))
+      // Accent is a control/background color in some host themes (including a
+      // dark green shared by light and dark Paseo). Keys need foreground contrast.
+      const nextColor = json && types.includes("property") ? colors.foreground
+        : json && types.includes("string") ? colors.statusSuccess ?? colors.accent
+        : json && types.some(type => ["number", "boolean", "null"].includes(type)) ? colors.statusWarning ?? colors.accent
+        : types.some((type) => ["comment", "punctuation", "operator"].includes(type))
         ? colors.foregroundMuted
         : types.some((type) => ["string", "char", "keyword", "template-string"].includes(type))
           ? colors.accent : color;
@@ -73,7 +80,7 @@ export async function highlightCode(code: string, language: string, colors: Synt
     return cached.tokens;
   }
   try {
-    const tokens = tokenLines(Prism.tokenize(code, Prism.languages[lang]!), colors);
+    const tokens = tokenLines(Prism.tokenize(code, Prism.languages[lang]!), colors, lang === "json");
     tokensCache.set(key, { size: code.length, tokens });
     cachedChars += code.length;
     while (tokensCache.size > 40 || cachedChars > 500_000) {

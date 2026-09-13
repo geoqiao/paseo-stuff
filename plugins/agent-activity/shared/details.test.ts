@@ -1,172 +1,142 @@
 import { describe, expect, it } from "vitest";
-import { detailSections, presentValue, prettyJson, previewText, rawValue, MAX_FORMAT_CHARS, PREVIEW_CHARS, PREVIEW_LINES } from "./details";
-import { diffLinesForDetail, formatError } from "./presentation";
-import { createToolCallData, type ToolCallItemData } from "./timeline";
+import { detailSections, presentValue, previewText, prettyJson, MAX_FORMAT_CHARS } from "./details";
+import type { ToolCallItemData } from "./timeline";
 
-function data(detail: ToolCallItemData["detail"]): ToolCallItemData {
-  return { name: "test", status: "completed", detail, presentation: { category: "unknown", icon: "Wrench", label: "Test" } };
-}
+const data = (detail: unknown, name = "tool", error?: unknown): ToolCallItemData =>
+  ({ detail, name, error, status: "completed", presentation: { icon: "Wrench" } }) as ToolCallItemData;
+const values = (detail: unknown, name?: string, error?: unknown) => detailSections(data(detail, name, error)).map(section => section.value);
 
-describe("lossless presentation", () => {
-  it.each([
-    '{"id":90071992547409931234,"x":1e+100,"neg":-0,"a":1,"a":2}',
-    '{"s":"quote:\\" slash:\\\\ newline:\\n","empty":{},"arr":[]}',
-    '[1,true,false,null,{"emoji":"猫🐈","values":[2,3]}]',
-    ' "hello" ', "false", "0", "null",
-  ])("formats without changing lexical values: %s", (raw) => {
-    const formatted = prettyJson(raw)!;
-    const lexical = (text: string) => text.match(/"(?:\\[\s\S]|[^"\\])*"|[^\s]/g)?.join("");
-    expect(lexical(formatted)).toBe(lexical(raw));
-    expect(() => JSON.parse(formatted)).not.toThrow();
+describe("one lossless formatter", () => {
+  it("changes only JSON whitespace, preserving duplicates, order, escapes and big numeric lexemes", () => {
+    const source = String.raw`{"10":9007199254740993,"2":1e99,"x":"\\n","x":"\u4e2d","n":-0}`;
+    const formatted = prettyJson(source)!;
+    expect(formatted).toBe(String.raw`{` + '\n  "10": 9007199254740993,\n  "2": 1e99,\n'
+      + String.raw`  "x": "\\n",` + "\n" + String.raw`  "x": "\u4e2d",` + '\n  "n": -0\n}');
+    expect(presentValue(source)).toEqual({ text: formatted, language: "json" });
   });
-  it.each(["partial {", '{"incomplete":', "plain text", "{'invalid': 1}", ""])("keeps malformed or plain output untouched: %s", (raw) => {
-    expect(presentValue(raw)).toEqual({ raw, text: raw, language: "text", canFormat: false });
+  it.each(["", "   ", '{"stream":', "ordinary\ntext", "null trailing", "undefined"])("preserves non-JSON or partial JSON: %j", source => {
+    expect(prettyJson(source)).toBeNull();
+    expect(presentValue(source)).toEqual({ text: source, language: "text" });
   });
-  it("does not reinterpret nested JSON strings", () => {
-    const raw = '{"text":"{\\"embedded\\":1}"}';
-    expect(presentValue(raw).text).toContain('"{\\"embedded\\":1}"');
+  it.each(["null", "false", "42", '""', "[]", "{}", '{"nested":[1,{"x":true}]}'])("formats any complete JSON value: %s", source => {
+    expect(JSON.parse(prettyJson(source)!)).toEqual(JSON.parse(source));
+    expect(presentValue(source).language).toBe("json");
   });
-  it("keeps zero, false, null and empty distinct", () => {
-    expect([0, false, null, ""].map((value) => presentValue(value).raw)).toEqual(["0", "false", "null", ""]);
+  it("distinguishes missing output from null, false, zero and empty text", () => {
+    expect([undefined, null, false, 0, ""].map(value => presentValue(value).text)).toEqual(["", "null", "false", "0", ""]);
   });
-  it("avoids formatting enormous values while retaining original content", () => {
-    const raw = '{"text":"' + "a".repeat(MAX_FORMAT_CHARS) + '"}';
-    expect(prettyJson(raw)).toBeNull();
-    expect(presentValue(raw).raw).toBe(raw);
+  it("formats large decoded objects without losing their tail", () => {
+    const value = { rows: Array.from({ length: 30_000 }, (_, i) => i), last: "TAIL" };
+    const full = presentValue(value);
+    expect(full.language).toBe("json");
+    expect(JSON.parse(full.text)).toEqual(value);
+    expect(previewText(full.text).text.split("\n")).toHaveLength(20);
+    expect(previewText(full.text).text).not.toContain("TAIL");
   });
-  it("bounds pathological nesting without changing valid JSON", () => {
-    const raw = "[".repeat(100) + "0" + "]".repeat(100);
-    const formatted = prettyJson(raw)!;
-    expect(Math.max(...formatted.split("\n").map((line) => line.match(/^ */)![0].length))).toBeLessThanOrEqual(80);
-    expect(JSON.parse(formatted)).toEqual(JSON.parse(raw));
+  it("keeps oversize serialized JSON intact rather than silently truncating it", () => {
+    const source = '{"large":"' + "x".repeat(MAX_FORMAT_CHARS) + '"}';
+    expect(prettyJson(source)).toBeNull();
+    expect(presentValue(source).text).toBe(source);
   });
-  it("bounds line count and single-line length independently", () => {
-    expect(previewText("a".repeat(PREVIEW_CHARS + 1))).toEqual({ text: "a".repeat(PREVIEW_CHARS), truncated: true });
-    expect(previewText(Array.from({ length: 100 }, () => "x").join("\n")).text.split("\n")).toHaveLength(PREVIEW_LINES);
-    expect(previewText("")).toEqual({ text: "", truncated: false });
-  });
-  it("bounds formatted output as well as input, falling back without losing the source", () => {
-    const raw = "[".repeat(40) + Array.from({ length: 2_000 }, () => "0").join(",") + "]".repeat(40);
-    expect(raw.length).toBeLessThan(MAX_FORMAT_CHARS);
-    expect(prettyJson(raw)).toBeNull();
-    expect(presentValue(raw)).toMatchObject({ raw, text: raw, canFormat: false });
-  });
-  it("keeps full errors instead of truncating them in the view model", () => {
-    const error = "failure ".repeat(200);
-    expect(formatError(error)).toBe(error);
+  it("bounds indentation amplification and handles invalid non-JSON objects defensively", () => {
+    const deep = "[".repeat(10_000) + "1" + "]".repeat(10_000);
+    expect(prettyJson(deep)).toBeNull();
+    expect(presentValue(deep).text).toBe(deep);
+    const circular: Record<string, unknown> = {}; circular.self = circular;
+    expect(() => presentValue(circular)).not.toThrow();
   });
 });
 
-describe("detail sections", () => {
-  it("keeps input/output and provider-specific fields intact", () => {
-    const input = { hidden: false, nested: { a: 1 } };
-    const output = { content: [{ type: "text", text: '{"a":1}' }], extra: "keep" };
-    expect(detailSections(data({ type: "unknown", input, output }))).toMatchObject([
-      { label: "Input", value: input, language: undefined },
-      { label: "Output", value: output, language: undefined },
-    ]);
-    const future = { type: "future", value: { arbitrary: "content" } };
-    expect(detailSections(data(future))).toEqual([{ label: "Details", value: future, language: undefined }]);
+describe("twenty logical lines", () => {
+  it.each([0, 1, 19, 20, 21, 100_000])("previews %i lines without scanning/splitting all of them", count => {
+    const lines = Array.from({ length: count }, (_, index) => "line " + index);
+    expect(previewText(lines.join("\n"))).toEqual({ text: lines.slice(0, 20).join("\n"), truncated: count > 20 });
   });
-  it("keeps typed GitHub, Exa, and Paseo outputs in generic lossless sections", () => {
-    const cases = [
-      {
-        name: "github_search_repositories",
-        input: { query: "Paseo" },
-        output: { structuredContent: { items: [{ full_name: "getpaseo/paseo" }] }, content: [{ type: "text", text: "GitHub body" }], trace: "github" },
-      },
-      {
-        name: "mcp__exa__web_search_exa",
-        input: { query: "Paseo" },
-        output: { structuredContent: { results: [{ title: "Paseo" }] }, content: [{ type: "text", text: "Exa body" }], trace: "exa" },
-      },
-      {
-        name: "mcp__paseo__create_agent",
-        input: { title: "Synthetic", provider: "pi/test" },
-        output: { ok: true, result: { agentId: "agt_synthetic" }, content: [{ type: "text", text: "Paseo body" }], trace: "paseo" },
-      },
-    ];
-    for (const { name, input, output } of cases) {
-      const view = createToolCallData({
-        type: "tool_call",
-        callId: name,
-        name,
-        status: "completed",
-        error: null,
-        detail: { type: "unknown", input, output },
-      });
-      const sections = detailSections(view);
-      expect(sections.map((section) => section.label)).toEqual(["Input", "Output"]);
-      expect(sections[0]!.value).toEqual(input);
-      expect(sections[1]!.value).toEqual(output);
-      expect(rawValue(sections[1]!.value)).toBe(JSON.stringify(output));
+  it("does not introduce a 4,000-character limit or split Unicode", () => {
+    const text = ("x".repeat(4100) + "🐈\r\n").repeat(25);
+    expect(previewText(text).text).toBe(text.split("\n").slice(0, 20).join("\n"));
+    expect(previewText(text).text).toContain("🐈");
+  });
+  it("retains blank and trailing lines in the full value", () => {
+    const text = "\n".repeat(20);
+    expect(previewText(text)).toEqual({ text: "\n".repeat(19), truncated: true });
+    expect(presentValue(text).text).toBe(text);
+  });
+});
+
+describe("one Input / Output adapter", () => {
+  it.each(["exec", "wait", "exec_command", "write_stdin", "view_image", "apply_patch", "ordinary-tool"])("preserves every result field for %s", name => {
+    const output = { content: [{ type: "text", text: '{"ok":false}' }], details: {
+      output: "failure", exit_code: 2, traces: [{ result: "x[value truncated]" }], droppedTraceCount: 1,
+    }, custom: { keep: true } };
+    const detail = { type: "unknown", input: { cmd: "test", extra: 42 }, output };
+    const before = JSON.stringify(detail);
+    const sections = detailSections(data(detail, name));
+    expect(sections.map(section => section.label)).toEqual(["Input", "Output"]);
+    expect(sections[0]!.value).toEqual(detail.input);
+    expect(JSON.parse(presentValue(sections[1]!.value).text)).toEqual(output);
+    expect(JSON.stringify(detail)).toBe(before);
+  });
+  it("unwraps only a pure single-text result, including ACP text", () => {
+    for (const block of [{ type: "text", text: '{"ok":true}' },
+      { type: "content", content: { type: "text", text: '{"ok":true}' } }]) {
+      expect(values({ type: "unknown", output: { content: [block] } })[1]).toBe('{"ok":true}');
     }
   });
-  it("keeps shell output and exit code without synthetic prompt characters", () => {
-    expect(detailSections(data({ type: "shell", command: "pwd", cwd: "/tmp", output: "", exitCode: 0 }))).toMatchObject([
-      { label: "Command", value: "pwd" }, { label: "Working directory", value: "/tmp" },
-      { label: "Output", value: "" }, { label: "Exit code", value: "0" },
+  it.each([
+    { content: [] },
+    { content: [{ type: "text", text: "hi", extra: true }] },
+    { content: [{ type: "text", text: "hi" }, { type: "image", data: "base64" }] },
+    { content: [{ type: "content", content: { type: "text", text: "hi" }, extra: true }] },
+    { content: [{ type: "image", data: "base64", mimeType: "image/png" }] },
+    { content: [{ type: "text", text: "hi" }], details: null },
+  ])("never hides metadata, multiple blocks or attachment bodies: %j", output => {
+    expect(values({ type: "unknown", output })[1]).toBe(output);
+    expect(JSON.parse(presentValue(output).text)).toEqual(output);
+  });
+  it("does not decode serialized envelopes or arbitrary nested strings", () => {
+    const output = String.raw`{"content":[{"type":"text","text":"hello"}],"n":9007199254740993,"n":1}`;
+    expect(values({ type: "unknown", output })[1]).toBe(output);
+    expect(presentValue(output).text).toContain("9007199254740993");
+  });
+  it.each(["exec", "functions.exec", "tools.exec", "mcpScript"])("shows source-only %s input in place, without an extra Calls panel", name => {
+    const code = 'const r = await tools.exec_command({cmd:"echo hello"});\ntext(r);';
+    expect(detailSections(data({ type: "unknown", input: { code } }, name))[0]).toEqual({
+      label: "Input", value: code, language: "javascript",
+    });
+  });
+  it("retains extra input parameters instead of showing just the code", () => {
+    const input = { code: "text(1);", timeoutMs: 1, custom: true };
+    expect(values({ type: "unknown", input }, "exec")[0]).toEqual(input);
+  });
+  it("preserves conflicting, empty and malformed input", () => {
+    for (const input of [null, [], { code: "   " }, { cmd: "ls", code: "x" }, { code: false }]) {
+      expect(values({ type: "unknown", input }, "exec")[0]).toEqual(input);
+    }
+  });
+  it("keeps native shell parameters and all result fields", () => {
+    expect(values({ type: "shell", command: "ls", cwd: "/tmp", output: "a\nb", exitCode: 2, extra: true })).toEqual([
+      { command: "ls", cwd: "/tmp" }, { output: "a\nb", exitCode: 2, extra: true },
     ]);
+    expect(values({ type: "shell", command: "ls", output: "a\nb" })[1]).toBe("a\nb");
   });
-  it("uses one diff panel, preserving source strings behind Raw", () => {
-    const detail = { type: "edit", filePath: "a.ts", oldString: "old\n", newString: "new\n" };
-    const sections = detailSections(data(detail));
-    expect(sections.map((section) => section.label)).toEqual(["File", "Diff"]);
-    expect(JSON.parse(rawValue(sections[1]!.raw))).toEqual(detail);
-    expect(sections[1]!.diff).toEqual([{ kind: "remove", text: "old" }, { kind: "add", text: "new" }]);
+  it("keeps read ranges, full write content and original edit fields without reconstructing a diff", () => {
+    expect(values({ type: "read", filePath: "a", offset: 1, limit: 3, content: "hello" })).toEqual([
+      { filePath: "a", offset: 1, limit: 3 }, "hello",
+    ]);
+    for (const type of ["write", "edit"]) {
+      const detail = { type, filePath: "a", content: "c", oldString: "old", newString: "new", unifiedDiff: "raw diff", extra: true };
+      const { type: _, ...input } = detail;
+      expect(values(detail)).toEqual([input, undefined]);
+    }
   });
-  it("keeps the complete edit detail behind Raw when unified and old/new values coexist", () => {
-    const detail = {
-      type: "edit" as const,
-      filePath: "a.ts",
-      unifiedDiff: "@@ -1 +1 @@\n-old\n+new",
-      oldString: "old\nfull source tail",
-      newString: "new\nfull source tail",
-    };
-    const diff = detailSections(data(detail))[1]!;
-    expect(diff.value).toBe(detail.unifiedDiff);
-    expect(diff.raw).toBe(detail);
-    expect(rawValue(diff.raw)).toBe(JSON.stringify(detail));
+  it.each([null, [], { type: "future", all: 1 }, { type: "search", query: "needle", paths: ["a"] }])("preserves unsupported details intact: %j", detail => {
+    expect(values(detail)).toEqual([undefined, detail]);
   });
-  it("keeps read ranges and contents available in lazy Raw data, including zero", () => {
-    const detail = { type: "read" as const, filePath: "a.ts", content: "visible contents", offset: 0, limit: 0 };
-    const contents = detailSections(data(detail))[1]!;
-    expect(contents.value).toBe(detail.content);
-    expect(contents.raw).toBe(detail);
-    expect(JSON.parse(rawValue(contents.raw))).toEqual(detail);
-  });
-  it("does not serialize large raw edit/read payloads while building sections", () => {
-    const edit = {
-      type: "edit" as const,
-      filePath: "a.ts",
-      unifiedDiff: "@@ -1 +1 @@\n-old\n+new",
-      oldString: "old",
-      newString: "new",
-      get largeTail(): string { throw new Error("raw edit payload was serialized eagerly"); },
-    };
-    const read = {
-      type: "read" as const,
-      filePath: "a.ts",
-      content: "visible contents",
-      offset: 0,
-      limit: 0,
-      get largeTail(): string { throw new Error("raw read payload was serialized eagerly"); },
-    };
-    expect(detailSections(data(edit as unknown as ToolCallItemData["detail"]))[1]!.raw).toBe(edit);
-    expect(detailSections(data(read as unknown as ToolCallItemData["detail"]))[1]!.raw).toBe(read);
-  });
-  it("falls back to before/after for enormous diffs without losing either side", () => {
-    const before = "old\n".repeat(30_000), after = "new\n".repeat(30_000);
-    const sections = detailSections(data({ type: "edit", filePath: "a", oldString: before, newString: after }));
-    expect(sections.map((section) => section.label)).toEqual(["File", "Before", "After"]);
-    expect(sections[1]!.value).toBe(before);
-    expect(sections[2]!.value).toBe(after);
-  });
-  it("bounds worst-case diff work and falls back to a complete replacement", () => {
-    const before = Array.from({ length: 400 }, (_, i) => "old " + i).join("\n");
-    const after = Array.from({ length: 400 }, (_, i) => "new " + i).join("\n");
-    const lines = diffLinesForDetail({ type: "edit", filePath: "a", oldString: before, newString: after });
-    expect(lines.filter((line) => line.kind === "remove").map((line) => line.text).join("\n")).toBe(before);
-    expect(lines.filter((line) => line.kind === "add").map((line) => line.text).join("\n")).toBe(after);
+  it("keeps unknown detail extensions and actual errors inside Output", () => {
+    expect(values({ type: "unknown", input: 1, output: false, custom: "keep" }, "tool", { message: "oops" })).toEqual([
+      1, { output: { custom: "keep", output: false }, error: { message: "oops" } },
+    ]);
+    expect(values({ type: "unknown" }, "tool", "oops")).toEqual([undefined, { error: "oops" }]);
   });
 });

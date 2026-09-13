@@ -36,6 +36,32 @@ describe("native-safe syntax highlighting", () => {
     await expect(highlightCode("x".repeat(MAX_HIGHLIGHT_CHARS + 1), "ansi", colors)).resolves.toBeNull();
   });
 
+  it.each([
+    { ...colors, statusSuccess: "#8dc891", statusWarning: "#efbf69" },
+    { foreground: "#202020", foregroundMuted: "#606060", accent: "#345678", surface1: "#eeeeee", statusSuccess: "#23713b", statusWarning: "#895500" },
+  ])("colors every JSON value type and key using the host palette %j", async palette => {
+    const source = '{"message":"hello","count":12,"enabled":true,"missing":null,"items":[false,-2.5]}';
+    const tokens = (await highlightCode(source, "json", palette))!.flat();
+    expect(tokens.map(token => token.content).join("")).toBe(source);
+    for (const key of ['"message"', '"count"', '"enabled"', '"missing"', '"items"']) {
+      expect(tokens.find(token => token.content === key)?.color).toBe(palette.foreground);
+    }
+    expect(tokens.find(token => token.content === '"hello"')?.color).toBe(palette.statusSuccess);
+    for (const value of ["12", "true", "null", "false", "-2.5"]) {
+      expect(tokens.find(token => token.content === value)?.color).toBe(palette.statusWarning);
+    }
+  });
+
+  it("invalidates cached JSON tokens when only the host value colors change", async () => {
+    const source = '{"value":"hello","number":5}';
+    const before = { ...colors, statusSuccess: "#112233", statusWarning: "#445566" };
+    const after = { ...before, statusSuccess: "#223344", statusWarning: "#556677" };
+    await highlightCode(source, "json", before);
+    const tokens = (await highlightCode(source, "json", after))!.flat();
+    expect(tokens.find(token => token.content === '"hello"')?.color).toBe(after.statusSuccess);
+    expect(tokens.find(token => token.content === "5")?.color).toBe(after.statusWarning);
+  });
+
   it.each(["javascript", "js"])("keeps complete JS tokens and applies theme colors for %s", async language => {
     const code = '// comment\nconst result = await run("hello");\ntext(result);';
     const tokens = (await highlightCode(code, language, colors))!;
