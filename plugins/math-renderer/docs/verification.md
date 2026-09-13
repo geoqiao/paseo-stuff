@@ -1,11 +1,11 @@
-# Verification scope — 0.1.0-beta.1
+# Verification scope — 0.1.0-beta.2
 
 ## Repeatable package checks
 
-Run npm ci with the flags in README, prepare:wasm, and npm run check.
+Run npm ci with the flags in README, prepare:markdown, prepare:wasm, and npm run check.
 The monorepo CI installs each plugin separately on Node.js 22 and 24.
 
-The 54 tests cover delimiters, CRLF/trailing whitespace, escaped dollars, code,
+The 57 tests cover delimiters, CRLF/trailing whitespace, escaped dollars, code,
 inline-source preservation, nested containers, unsupported Markdown bypass,
 limits, actual PNG output, caching and disposal. Synthetic A/B fixtures are
 model-generated test text, not personal conversations.
@@ -19,6 +19,60 @@ test adapter wrongly prefixed explicit IDs and therefore missed this bug.
 Assistant transformer phase is complete even during live text updates in this
 host version. The parser therefore depends on text and delimiter closure, not phase.
 Source data is retained at every prefix of synthetic A.
+
+## Native bundle loading fix (beta.2)
+
+The beta.1 client bundle reproduces the reported `Cannot read property 'prototype'
+of undefined` in the RN 0.81.5 Hermes executable, at `getDecoder` during eager
+loading of `markdown-it/dist/markdown-it.js`. Its bundled `EntityDecoder` is a
+class expression. The later parser fallback cannot catch entry evaluation errors;
+daemon status can still report running/ready while the mobile client fails to load.
+
+`prepare:markdown` uses the existing TypeScript build dependency to lower the pinned
+markdown-it 14.3.2 UMD distribution to ES5 syntax, preserving comments and removing
+its stale source-map reference. The generated parser has an ESM wrapper: importing
+the constructor as CommonJS would make Paseo's eager interop read restricted
+function properties in Hermes and fail with `Restricted in strict mode`.
+No parser downgrade, runtime transpiler, host patch or global polyfill is needed.
+Generated files are ignored; the install manifest and CI rebuild them.
+
+`tests/client-bundle.compat.test.js` matches the pinned Paseo 0.8.0 compiler settings
+and eager CommonJS interop, then evaluates the entire entry from a string. The old
+code passes in Node but fails in Hermes with the exact reported error. The fixed
+entry passes both engines: registration, all prefixes of synthetic A/B, entity
+decoding, delimiters/nested containers, input limits, native fallback and cleanup.
+The Hermes test skips explicitly where its executable is unavailable; `HERMES_BIN`
+can supply one. The local macOS run executed it successfully.
+
+Host modules, UI hooks and schema construction are stubbed only in this engine
+smoke test. Existing tests use real Zod and MathJax/resvg. These results do not
+establish on-device iOS/Android UI, clipboard or RPC behavior. The beta.1 release
+tag does not contain this fix.
+
+An isolated copy of this plugin, with no dependencies or generated files, passed
+every manifest build command and all 57 tests, including Hermes. Typecheck and
+lint passed without warnings. The already-enabled local installation
+`paseo-math-renderer-prototype` was reloaded on `127.0.0.1:6767` (app/daemon 0.8.0)
+and reported running / Plugin ready. This status confirms host compilation and
+backend readiness, not phone rendering. The temporary install copy was removed.
+
+The installed Paseo 0.8.0 compiler also compiled both beta.2 entries in an offline
+harness; the compiled server produced a PNG through its registered render handler.
+This verifies the actual host compiler, without claiming a live phone RPC check.
+
+## Bold Greek symbols (beta.2)
+
+A valid multivariate normal density passed Markdown parsing but failed MathJax
+conversion with `Undefined control sequence \boldsymbol`. The renderer enabled
+only `base` and `ams`; MathJax 3 provides `\boldsymbol` in a separate extension.
+The extension is now statically imported and explicitly enabled. All resources
+remain bundled and the existing input/image bounds still apply.
+
+The complete expression is covered in `tests/live-regressions.test.ts`, including
+source preservation, the assistant-message transformer, real PNG output in light
+and dark colors, and pixel dimensions at 3× density. It failed before the change
+and passes after it. Typecheck, lint and all 57 tests pass, including Hermes.
+Existing failed cards can use Retry after the plugin is reloaded.
 
 ## Desktop observation and local replay
 

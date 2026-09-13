@@ -1,6 +1,6 @@
-// Host esbuild uses platform: neutral without mainFields; the self-contained public UMD
-// parser avoids punycode.js's legacy package resolution. It is pure JS, not a DOM renderer.
-import MarkdownIt from "markdown-it/dist/markdown-it.js";
+// Self-contained UMD parser lowered at build time for Hermes string evaluation.
+// Also avoids legacy package resolution in the host's neutral esbuild target.
+import MarkdownIt from "./generated/markdown.js";
 import type Token from "markdown-it/lib/token.mjs";
 import { MAX_FORMULAS, MAX_TEXT } from "./contracts";
 

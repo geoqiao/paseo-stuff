@@ -5,6 +5,7 @@ import { SVG } from "mathjax-full/js/output/svg.js";
 import { liteAdaptor } from "mathjax-full/js/adaptors/liteAdaptor.js";
 import { RegisterHTMLHandler } from "mathjax-full/js/handlers/html.js";
 import "mathjax-full/js/input/tex/ams/AmsConfiguration.js";
+import "mathjax-full/js/input/tex/boldsymbol/BoldsymbolConfiguration.js";
 import { initWasm, Resvg } from "@resvg/resvg-wasm";
 import { wasmBase64 } from "./generated/wasm";
 import { renderInput, renderOutput, type RenderInput, type RenderOutput } from "../shared/contracts";
@@ -59,7 +60,7 @@ export function createMathRenderer({ maxEntries = 128, maxBytes = 8_000_000 } = 
       if (existing) return existing;
       // New TeX/document per expression: labels/macros cannot leak across messages or agents.
       const document = mathjax.document("", {
-        InputJax: new TeX({ packages: ["base", "ams"], maxBuffer: 4096, maxMacros: 256,
+        InputJax: new TeX({ packages: ["base", "ams", "boldsymbol"], maxBuffer: 4096, maxMacros: 256,
           formatError: () => { throw new Error("Invalid TeX"); } }),
         OutputJax: new SVG({ fontCache: "none", internalSpeechTitles: false }),
       });
