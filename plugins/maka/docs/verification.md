@@ -76,8 +76,10 @@ MaKa implements capabilities absent from its official wire protocol.
 `npm run check` passed: TypeScript, lint (zero warnings/errors), and **15 tests**. Coverage includes
 catalog/configuration, a valid new-session response without optional config options, isolated
 working directories and environments, MCP omission and notices, unsupported input, prompt errors,
-cancellation, EOF, startup failures, and disposal. The root CI matrix includes this plugin on
-Node.js 22 and 24; those Linux CI jobs have not been run as part of this local verification.
+cancellation, EOF, startup failures, and disposal. Publication CI also passed on Linux with
+Node.js 22 and 24: typecheck, lint, and all 15 tests passed on each version. All ten jobs in the
+five-plugin matrix passed in [PR #5 CI](https://github.com/geoqiao/paseo-stuff/actions/runs/34872895011).
+These synthetic-peer Linux checks do not establish real MaKa CLI execution on Linux.
 
 The plugin was installed as a local directory in the running Paseo 0.8 Desktop-managed daemon.
 It reached `running` without restarting the daemon. Real installed-host checks passed:
@@ -122,13 +124,14 @@ the authoritative support statement.
 
 - [Paseo 0.8 provider plugins](https://paseo.sh/docs/plugins/v0.8/providers.md)
 - [Paseo 0.8 plugin reference](https://paseo.sh/docs/plugins/v0.8/reference.md)
-- [MaKa CLI installation and usage](https://github.com/apache/maka/blob/main/packages/cli/README.md)
-- [MaKa ACP behavior](https://github.com/apache/maka/blob/main/packages/cli/src/acp/README.md)
-- [MaKa ACP registration](https://github.com/apache/maka/blob/main/packages/cli/src/acp/maka-acp-agent.ts)
-- [MaKa ACP session registry](https://github.com/apache/maka/blob/main/packages/cli/src/acp/session-registry.ts)
-- [MaKa ACP event mapper](https://github.com/apache/maka/blob/main/packages/cli/src/acp/session-event-mapper.ts)
+- [MaKa CLI installation and usage](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/README.md)
+- [MaKa ACP behavior](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/README.md)
+- [MaKa ACP registration](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/maka-acp-agent.ts)
+- [MaKa ACP session registry](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/session-registry.ts)
+- [MaKa ACP event mapper](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/session-event-mapper.ts)
 
-The GitHub links follow `main`; the installed npm version and integrity above identify the actual
-artifact tested. Windows, Linux and native mobile clients have not been exercised here.
+The MaKa source links are pinned to the tested release; the installed npm version and integrity
+above identify the actual artifact tested. Windows, Linux and native mobile clients have not been
+exercised with the real MaKa runtime here.
 Credentials, personal transcripts, local host configuration and raw live logs are excluded from
 the repository. The plugin does not configure or migrate a user's MaKa profile during installation.
