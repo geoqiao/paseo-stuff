@@ -74,16 +74,18 @@ A [Paseo Cafe](https://github.com/paseo-cafe/paseo-cafe) entry can point to a su
 The entry filename must match that plugin's `paseo-plugin.json.id`. Each listing is
 submitted separately; a pull request is not a claim that Cafe has accepted the plugin.
 
-The current Cafe scope is exactly these three plugins, all sourced from this repository:
+The current Cafe scope includes these four plugins, all sourced from this repository:
 
-| Catalog ID | Plugin directory | Merged PR |
+| Catalog ID | Plugin directory | Cafe PR / status |
 | --- | --- | --- |
-| `readable-agent-activity` | `plugins/agent-activity` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
-| `deepseek-harness` | `plugins/deepseek-harness` | [Existing-entry migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
-| `math-renderer` | `plugins/math-renderer` | [New entry #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) |
+| `readable-agent-activity` | `plugins/agent-activity` | [Merged migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
+| `deepseek-harness` | `plugins/deepseek-harness` | [Merged migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
+| `math-renderer` | `plugins/math-renderer` | [Merged entry #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) |
+| `maka` | `plugins/maka` | [Submitted entry #120](https://github.com/paseo-cafe/paseo-cafe/pull/120) |
 
-Paseo Pet remains managed here but is not submitted to Cafe. The linked PRs have
-merged; subsequent version/README updates appear after Cafe's next scan and deployment.
+Paseo Pet remains managed here but is not submitted to Cafe. MaKa's submission is awaiting
+review; the other three entries have merged. Accepted version/README updates appear after
+Cafe's next scan and deployment.
 
 ## Licenses and publication scope
 
