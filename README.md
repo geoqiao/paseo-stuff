@@ -11,6 +11,7 @@ shared runtime or root-hoisted dependency tree.
 | Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Experimental beta; block LaTeX in reply bodies, Paseo 0.8.0 only. Inline math and native mobile acceptance are not complete. |
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
+| MaKa | [plugins/maka](plugins/maka) | Experimental provider for the official MaKa ACP CLI; uses MaKa's configured default model. MCP forwarding, permission dialogs and session reopening are not supported by the tested MaKa release. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
 Read each plugin's README before installing. Plugins are trusted, unsandboxed code;
@@ -49,7 +50,7 @@ npm run prepare:wasm --if-present
 npm run check
 ```
 
-CI independently installs and checks all four plugins on Node.js 22 and 24.
+CI independently installs and checks all five plugins on Node.js 22 and 24.
 Use the public Paseo SDK. Typecheck before reloading the exact installed ID on an
 explicit host; do not restart the daemon or enable an intentionally disabled plugin.
 See [AGENTS.md](AGENTS.md) for repository development rules.
