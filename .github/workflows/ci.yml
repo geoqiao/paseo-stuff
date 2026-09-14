@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [agent-activity, deepseek-harness, math-renderer, paseo-pet]
+        plugin: [agent-activity, deepseek-harness, maka, math-renderer, paseo-pet]
         node: [22, 24]
     defaults:
       run:
