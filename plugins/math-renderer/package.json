@@ -1,14 +1,20 @@
 {
   "name": "paseo-math-renderer",
-  "version": "0.1.0-beta.2",
+  "version": "0.1.0-beta.3",
   "private": true,
   "type": "module",
-  "description": "Render block LaTeX inside Paseo assistant replies, with source viewing and copying. Experimental beta for Paseo 0.8.0.",
+  "description": "Render block LaTeX in completed Paseo replies, with source viewing, copying and native-reply mode. Experimental beta for Paseo 0.9.",
   "license": "MIT",
   "author": "geoqiao",
-  "repository": { "type": "git", "url": "https://github.com/geoqiao/paseo-stuff.git", "directory": "plugins/math-renderer" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/geoqiao/paseo-stuff.git",
+    "directory": "plugins/math-renderer"
+  },
   "homepage": "https://github.com/geoqiao/paseo-stuff/tree/main/plugins/math-renderer#readme",
-  "bugs": { "url": "https://github.com/geoqiao/paseo-stuff/issues" },
+  "bugs": {
+    "url": "https://github.com/geoqiao/paseo-stuff/issues"
+  },
   "scripts": {
     "prepare:markdown": "node server/prepare-markdown.mjs",
     "prepare:wasm": "node server/prepare-wasm.mjs",
@@ -22,11 +28,13 @@
     "markdown-it": "14.3.2",
     "mathjax-full": "3.2.2"
   },
-  "overrides": { "@xmldom/xmldom": "0.9.12" },
+  "overrides": {
+    "@xmldom/xmldom": "0.9.12"
+  },
   "devDependencies": {
-    "@getpaseo/client": "0.8.0",
-    "@getpaseo/plugin": "0.8.0",
-    "@getpaseo/protocol": "0.8.0",
+    "@getpaseo/client": "0.9.0-beta.1",
+    "@getpaseo/plugin": "0.9.0-beta.1",
+    "@getpaseo/protocol": "0.9.0-beta.1",
     "@tanstack/react-query": "5.90.11",
     "@types/markdown-it": "14.1.2",
     "@types/node": "^22.0.0",

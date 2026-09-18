@@ -1,137 +1,125 @@
 # Verification
 
-## Tested runtime
+Verification date: 2026-09-18 UTC.
 
-- Verification date: 2026-09-14 (UTC).
-- Local macOS host; Paseo Desktop-managed daemon and CLI 0.8.0.
-- Public Paseo plugin/client/protocol packages 0.8.0; ACP SDK 1.4.0.
-- Official `maka-agent` npm package `0.2.0-dev.31.20260913`.
-- MaKa Desktop `0.2.0-dev.31.20260913` was subsequently verified to open the shared profile.
-- MaKa executable tested with Node.js 26.8.2; Paseo's Electron helper uses Node.js 24.20.0.
-- Real inference: DeepSeek API. The API accepts `deepseek-v4-flash` and returns
-  the current model ID `deepseek-flash`; MaKa was configured with that current ID.
+## Runtime and release evidence
 
-The tested npm package integrity is:
+Plugin version 0.1.0-beta.2 targets Paseo
+0.9.0-beta.1 with exact 0.9.0-beta.1 client, plugin, and protocol packages and ACP SDK
+1.4.0. The checks below preceded publication of the pinned prerelease.
 
-```text
-sha512-5iVjgjXYJKCJGAqve4Q7ndQGzt3/fedjrp8AHUkm30IWc0UZWQCag7rkSntZmgNTAvcbB7F2prPEj49LLRrq5w==
-```
+The signed MaKa release used for the normal profile is 0.2.0-dev.39.20260916:
 
-## Official ACP behavior verified independently
+- The official GitHub release is v0.2.0-dev.39.20260916.
+- MaKa Desktop and the global CLI both report 0.2.0-dev.39.20260916.
+- The npm package integrity is
+  sha512-1yQ8xnVSepi+q+yGEDV63RKY4O281n2/2YGdEkkXGpihH6A1xyI1SD9C/j0PoQJlAgWWupWWkW4oLQWsmZoOtw==.
+- The macOS arm64 ZIP matched SHA-256
+  48271132a47088db74dfa70ec169f23a9f8c034bac44224c8eb0fde96f808f43.
+  The staged application passed codesign --verify --deep --strict and macOS notarization
+  assessment before replacement.
 
-### Desktop and CLI version compatibility
+The newer npm nightly 0.2.0-dev.40.20260917 was inspected and tested only in temporary
+profiles. Its package integrity is
+sha512-87VI79VN+wai7CEj3pXuuFjs1qf4dowhFZKsdgl8bOZBjZafL0bnRueBpdOSDEf9ePP6KkQ4Fh5cWO1mJFzZRw==.
+It raises the runtime schema from 18 to 19, while the signed dev39 release keeps runtime
+schema 18. The normal profile therefore uses the matching signed dev39 Desktop and CLI.
 
-The initial setup exposed a desktop compatibility regression: the installed Desktop
-`0.2.0-dev.15.20260902` supported runtime schema 15, while the newer official CLI migrated the
-shared database to schema 18. Starting the older desktop produced
-`OperationalStateMigrationBlockedError` and instructed the user to upgrade. Installing the
-matching official Desktop `0.2.0-dev.31.20260913` restored startup and displayed the existing
-sessions without downgrading or deleting profile data. The old application copies were removed
-at the user's request; a profile backup was retained.
+Before the upgrade, the normal profile reported runtime schema 18, session metadata 39, and usage
+schema 7 under Desktop/CLI dev38. After the compatible Desktop launch and dev39 CLI check it
+reported runtime schema 18, session metadata 39, and usage schema 9. No schema downgrade or
+forced migration was used. MaKa Desktop opened the normal profile, and was then quit gracefully.
+The old application bundle remains at `/Applications/Maka.app.pre-dev38.20260916`.
+Restoring that bundle alone is not a verified database downgrade. Credentials, settings,
+and profile contents were not exported or printed.
 
-The macOS arm64 ZIP matched GitHub's published SHA-256
-`5e52a28382ca1a8697c698d5e85adcc3d2e95452fe99f251c7ae15f3a48ab43f`, and the extracted application
-passed `codesign --verify --deep --strict`. This is why the install instructions require matching
-Desktop and CLI releases before starting the CLI.
+No MaKa shell or tool operation was active before the Desktop replacement. The bounded real CLI
+check used a temporary project directory, sent a text-only prompt, closed the ACP session, and
+exited cleanly. It received the exact sentinel MAKA_PASEO_REAL_OK from MaKa dev39.
 
-### Raw ACP checks
+## Upstream ACP behavior
 
-The official CLI was exercised through ACP SDK 1.4.0 before installing the plugin.
-This establishes the upstream behavior separately from the Paseo adapter.
+The official dev39 ACP source advertises session listing and closing. It does not implement ACP
+load/resume, persistence restoration, permission/question interaction, MCP forwarding, or usage
+updates. Session creation uses MaKa's configured default model and does not expose model selection.
 
-- `initialize` advertised session listing and closing, without load/resume or images.
-- `session/new` returned permission, thinking, collaboration and orchestration selectors.
-- A real model turn streamed `MAKA_READY` in successive `agent_message_chunk` updates.
-- A second session created and read a real file in a temporary project directory under
-  MaKa's normal `ask` permission mode. The file contents were checked independently.
-- A follow-up in the same session correctly recalled a synthetic word from the previous turn.
-- The file-operation turn emitted thinking and assistant text, with **no tool-call updates**.
+The dev40 npm nightly adds standard ACP tool-call and tool-call-update mapping for tool start,
+output deltas, progress, previews, and final results, as confirmed by inspecting its bundled
+mapper. The plugin preserves these events and the public Paseo 0.9 shim renders bounded tool
+output and progress. Tool lifecycle conversion was exercised through the synthetic
+fake-maka.mjs peer and public shim; the isolated dev40 public-shim run covered initialization,
+catalog, and session-list events only and did not emit a dev40 tool lifecycle.
 
-An earlier OpenCode Free connection completed ACP initialization and session creation but did
-not produce a response within the bounded probe. That run is not counted as successful inference.
+The native MaKa session/list capability is deliberately withheld from Paseo. Paseo maps each
+listed result into an import offering and later supplies persistence when opening it; MaKa cannot
+load that session. The plugin masks session.list, rejects sessions requests, and filters any
+session-list event. A regression fixture advertises a non-empty native list and verifies that the
+Paseo connection exposes no session.list capability and rejects the import request before an
+unopenable offering can be emitted.
 
-## Upstream boundaries
+## Automated and live checks
 
-These are facts about the tested MaKa package, not features supplied by this plugin:
+The plugin check uses the public Paseo 0.9 ACP shim and synthetic ACP peers. It covers:
 
-| Boundary | Evidence in the installed MaKa package |
-| --- | --- |
-| No session reopening | `dist/acp/maka-acp-agent.js` registers no load/resume handler; session registry ownership is connection-local. |
-| No model selection | `dist/acp/session-registry.js` creates with `modelTarget: { kind: 'default' }`; config setters do not include a model selector. |
-| No forwarded MCP | `validateNewSessionParams` rejects nonempty `mcpServers`. |
-| No permission/question bridge | The session registry rejects active unsupported interactions with `unsupported_interaction`. |
-| No tool cards or usage updates | `dist/acp/session-event-mapper.js` maps assistant text and thinking only; the real file test confirmed the wire behavior. |
-| No Paseo metadata application | The new-session handler does not apply the shim's `_paseo` system prompt, provider options or tool policy. |
+- catalog discovery and MaKa selector configuration;
+- masking native session listing when resume is unavailable;
+- standard ACP tool-call and tool-call-update conversion into Paseo tool cards;
+- streamed thinking and answer chunks with shared native IDs;
+- isolated working directories and environment;
+- MCP omission and notice delivery;
+- unsupported commands, images, steering, permissions, persistence, archive, revert, and
+  unarchive inputs;
+- prompt errors, cancellation, EOF, startup failure, and bounded disposal.
 
-MaKa tools can still read and edit files. The missing tool cards describe observability through
-ACP, not an absence of tool execution. Permission mode is owned by MaKa and is not weakened by
-the plugin. A task that needs an interaction unavailable over ACP fails instead of being approved.
+The final check passed under Node.js 22 and Node.js 24 with TypeScript, oxlint, and 16 tests. The
+same check also passed under the installed Node.js 26.8.2 runtime. The checks do not require model
+credentials.
 
-## Automated and installed-host checks
+A direct raw ACP probe against dev40 in a temporary HOME reported version 0.2.0-dev.40.20260917,
+session capabilities list and close, created a session with three config options, and listed the
+temporary session. A direct public Paseo ACP shim probe against that same isolated process
+negotiated prompt.message, session.configure, and session.list, then received catalog and sessions
+events only. No normal credentials or profile database was visible to either probe. No dev40
+inference or tool lifecycle was attempted in the isolated profile.
 
-The plugin's automated tests use the real public Paseo ACP shim with synthetic ACP peer
-processes. They verify adapter behavior without model credentials. They do not establish that
-MaKa implements capabilities absent from its official wire protocol.
+The normal-profile dev39 ACP probe was the bounded inference check. It initialized, created a
+session, returned MAKA_PASEO_REAL_OK, closed the session, and left no running MaKa process.
 
-`npm run check` passed: TypeScript, lint (zero warnings/errors), and **15 tests**. Coverage includes
-catalog/configuration, a valid new-session response without optional config options, isolated
-working directories and environments, MCP omission and notices, unsupported input, prompt errors,
-cancellation, EOF, startup failures, and disposal. Publication CI also passed on Linux with
-Node.js 22 and 24: typecheck, lint, and all 15 tests passed on each version. All ten jobs in the
-five-plugin matrix passed in [PR #5 CI](https://github.com/geoqiao/paseo-stuff/actions/runs/34872895011).
-These synthetic-peer Linux checks do not establish real MaKa CLI execution on Linux.
+The enabled `maka` plugin was reloaded on the existing Paseo 0.9.0-beta.1 daemon at
+2026-09-18T05:38:50Z and reached ready. Public provider/model discovery exposed MaKa configured
+default and its Default/Low/High/Max thinking options. A fresh installed-host MaKa agent returned
+the exact requested sentinel, then recalled a synthetic token in a second turn without the token
+being repeated in that prompt. Its complete timeline contained no tool calls. Both turns finished
+with no pending permissions, and the test agent was archived through Paseo. New plugin log entries
+contain only loading/ready, without stderr. This verifies the installed provider path, not the
+Desktop picker's pixels. The Paseo daemon and app were not restarted.
 
-The plugin was installed as a local directory in the running Paseo 0.8 Desktop-managed daemon.
-It reached `running` without restarting the daemon. Real installed-host checks passed:
+## Supported boundaries and limits
 
-- The provider picker exposed **MaKa configured default**, with Default, Low, High, and Max
-  thinking options from the configured DeepSeek model.
-- A MaKa agent wrote and read `paseo-maka-check.txt`; its exact contents were independently
-  checked as `PASEO_MAKA_OK` plus one newline. Its follow-up correctly recalled `cobalt`.
-- Changing thinking to Low succeeded. A fresh agent opened with High thinking and Plan
-  collaboration; Desktop displayed High, Ask, Plan, and Default orchestration selectors.
-- Paseo Stop changed an independently observed native Runtime Host turn from `running` to
-  `cancelled`.
-- Reloading the plugin during another active turn also changed the native turn to `cancelled`.
-  The verification observer held a separate public Runtime Host connection open throughout, so
-  host exit could not disguise an orphaned turn. The plugin returned to `running`, and a new
-  agent completed a real prompt afterwards.
-- The final live response was exactly `PASEO_MAKA_FINAL_OK: 391`, with thinking shown separately.
-  Desktop's native Thinking block was expanded and collapsed successfully.
-- Plugin lifecycle logs showed clean stop/start transitions without cleanup errors.
-- The test agents and temporary local workspace were archived after verification. A final
-  native catalog check found no running turns in the test directory; the installed plugin
-  remains enabled and running.
-
-Two compatibility regressions were found through these real checks and fixed:
-
-1. Startup listeners are now attached before the first `await`, so a process started from a
-   daemon callback cannot emit `spawn` before its listener is registered. An event-loop callback
-   test covers this scheduling boundary. Startup errors also retain a bounded, redacted cause.
-2. MaKa emits thinking and answer chunks with the same native message ID. Paseo 0.8's ACP shim
-   accumulates text by ID alone. The adapter gives the two channels disjoint, reversible IDs,
-   preventing thinking from being prepended to the answer. The regression fixture uses shared
-   IDs and interleaved chunks across follow-ups; it failed before the fix and passed afterwards.
-
-Desktop checks used the macOS app in its existing dark appearance. Light appearance, narrow
-windows, and native mobile were not separately tested. Tool-card Summary/Full checks do not
-apply because MaKa emits no tool cards. MCP notice delivery is covered at the provider-event
-boundary; a visible notice in the Desktop UI was not verified. Paseo's generic capability
-snapshot can still report MCP/tool support, so the explicit upstream limitations above remain
-the authoritative support statement.
+- Follow-up prompts work while a session remains connected.
+- Native MaKa session listing exists upstream but is intentionally hidden by this plugin until
+  load/resume support exists.
+- MaKa's configured default model and collaboration/thinking selectors are supported.
+- Standard ACP tool events are supported when emitted by the installed MaKa build.
+- MCP servers, interactive permissions/questions, image prompts, provider commands, prompt
+  steering, persistence, imported history, resume/load, and usage updates are unsupported.
+- The plugin does not apply Paseo custom system prompts, provider options, or tool policy to MaKa.
+- The signed dev39 normal profile was the installed live target. The dev40 nightly requires a
+  Desktop release that supports its runtime schema 19 before it can be used with that profile.
+- Mobile, narrow-layout, light-theme, and post-reload Paseo UI pixels were not exercised in this
+  migration. The installed provider conversation was verified through public Paseo APIs.
 
 ## Sources
 
-- [Paseo 0.8 provider plugins](https://paseo.sh/docs/plugins/v0.8/providers.md)
-- [Paseo 0.8 plugin reference](https://paseo.sh/docs/plugins/v0.8/reference.md)
-- [MaKa CLI installation and usage](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/README.md)
-- [MaKa ACP behavior](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/README.md)
-- [MaKa ACP registration](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/maka-acp-agent.ts)
-- [MaKa ACP session registry](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/session-registry.ts)
-- [MaKa ACP event mapper](https://github.com/apache/maka/blob/v0.2.0-dev.31.20260913/packages/cli/src/acp/session-event-mapper.ts)
+- [Paseo plugin provider reference for 0.9.0-beta.1](https://github.com/getpaseo/paseo/blob/v0.9.0-beta.1/public-docs/plugins/providers.md)
+- [Paseo plugin reference for 0.9.0-beta.1](https://github.com/getpaseo/paseo/blob/v0.9.0-beta.1/public-docs/plugins/reference.md)
+- [Paseo migration notes for 0.9.0-beta.1](https://github.com/getpaseo/paseo/blob/v0.9.0-beta.1/public-docs/plugins/migration.md)
+- [MaKa signed release v0.2.0-dev.39.20260916](https://github.com/apache/maka/releases/tag/v0.2.0-dev.39.20260916)
+- [MaKa dev39 ACP README](https://github.com/apache/maka/blob/v0.2.0-dev.39.20260916/packages/cli/src/acp/README.md)
+- [MaKa dev39 ACP agent](https://github.com/apache/maka/blob/v0.2.0-dev.39.20260916/packages/cli/src/acp/maka-acp-agent.ts)
+- [MaKa dev39 session registry](https://github.com/apache/maka/blob/v0.2.0-dev.39.20260916/packages/cli/src/acp/session-registry.ts)
+- [MaKa nightly package 0.2.0-dev.40.20260917](https://www.npmjs.com/package/maka-agent/v/0.2.0-dev.40.20260917)
+- [Paseo MaKa upstream maintenance guide](upstream-maintenance.md)
 
-The MaKa source links are pinned to the tested release; the installed npm version and integrity
-above identify the actual artifact tested. Windows, Linux and native mobile clients have not been
-exercised with the real MaKa runtime here.
-Credentials, personal transcripts, local host configuration and raw live logs are excluded from
-the repository. The plugin does not configure or migrate a user's MaKa profile during installation.
+Credentials, personal transcripts, local host configuration, and raw live logs are excluded from
+the repository.

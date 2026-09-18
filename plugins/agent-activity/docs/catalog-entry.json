@@ -5,7 +5,7 @@
     "productivity"
   ],
   "caveats": [
-    "Experimental beta: verified on Paseo 0.8.0, Full detail only; Summary is unsupported.",
+    "Experimental beta for Paseo 0.8/0.9 (0.9.0-beta.1 tested), Full detail only; Summary is unsupported.",
     "All connected clients must use Full detail; disable before switching to Summary.",
     "Do not enable alongside another tool-call or Thinking timeline replacement.",
     "Show all and serialization can be expensive for very large payloads.",

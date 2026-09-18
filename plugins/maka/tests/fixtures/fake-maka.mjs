@@ -126,6 +126,23 @@ function promptText(prompt) {
 
 function finishPrompt(requestId, sessionId, text) {
   const session = sessionFor(sessionId);
+  if (text.includes("tool")) {
+    update(sessionId, {
+      sessionUpdate: "tool_call",
+      toolCallId: "tool-" + requestId,
+      name: "read_file",
+      title: "Read file",
+      kind: "read",
+      status: "in_progress",
+      rawInput: { filePath: "maka-test.txt" },
+    });
+    update(sessionId, {
+      sessionUpdate: "tool_call_update",
+      toolCallId: "tool-" + requestId,
+      status: "completed",
+      rawOutput: { text: "tool output" },
+    });
+  }
   update(sessionId, {
     sessionUpdate: "agent_thought_chunk",
     messageId: "assistant-" + requestId,
@@ -277,7 +294,15 @@ input.on("line", (line) => {
     return;
   }
   if (message.method === "session/list") {
-    response(message.id, { sessions: [] });
+    response(message.id, {
+      sessions: [
+        {
+          sessionId: "native-unopenable-session",
+          cwd: process.cwd(),
+          title: "Native session without resume",
+        },
+      ],
+    });
     return;
   }
   if (message.id !== undefined && message.method !== undefined) {

@@ -3,7 +3,9 @@
 Render **block LaTeX inside assistant reply bodies**, with one muted English action row
 per formula: **Show LaTeX** and **Copy LaTeX**. No extra panel or duplicate message toolbar.
 
-> **Experimental beta — 0.1.0-beta.2.** Requires Paseo app and daemon **0.8.0**.
+> **Experimental beta — 0.1.0-beta.3.** Requires Paseo app and daemon
+> **0.9.0-beta.1 or newer within 0.9**. Replies stay native while streaming; supported
+> block formulas render after completion.
 > Inline math is not typeset. Native iOS/Android acceptance and complete native Markdown
 > parity are not finished. Read the limitations before enabling this trusted plugin.
 
@@ -15,17 +17,20 @@ per formula: **Show LaTeX** and **Copy LaTeX**. No extra panel or duplicate mess
 ## Install
 
 Plugins run as trusted, unsandboxed code. Review the source, choose the target daemon,
-and enable plugins in Paseo before installing:
+and enable plugins in Paseo before installing the pinned prerelease:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.2 --host <host:port>
-paseo plugin ls --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.3 --host <host:port>
+paseo --host <host:port> plugin ls
 ```
 
 The manifest ID is `math-renderer`. This directory is independently installable;
 it does not import any sibling plugin or depend on root-installed packages.
+For local development, run the checks below, then install this directory or reload
+the existing runtime ID.
 
-Beta.2 fixes mobile bundle loading and adds support for bold Greek symbols.
+Beta.3 adds 0.9 whole-message handling, host external-link opening and a native-reply
+mode for chat Find. Beta.2 fixed mobile bundle loading and added bold Greek symbols.
 See [verification details](docs/verification.md#native-bundle-loading-fix-beta2)
 for the reproduced Hermes error and the scope of the fix.
 
@@ -39,7 +44,9 @@ Likewise, avoid overlapping assistant-message replacement plugins.
   or the entire block on one line.
 - Closed fenced `math` blocks, including one redundant outer display-delimiter pair.
 - Paragraphs, headings, emphasis, lists, quotes, ordinary code, and HTTP(S) Markdown links.
-- Incomplete streaming formulas remain source text until closed.
+- Streaming replies use Paseo's native Markdown renderer. Supported formulas are
+  typeset when the whole reply completes, avoiding repeated full-document parsing
+  and mid-stream fallback when an image, file link or size limit appears later.
 - Invalid or unsupported TeX retains its source; transport/render failures offer **Retry**.
 - **Show LaTeX** changes to **Show formula** while viewing source. Manual viewing survives
   text and theme updates while the card remains mounted.
@@ -60,12 +67,17 @@ or wrap the entire reply in a code fence.
 ## Limitations
 
 - **Block math only:** `$...$` and `\(...\)` remain source, not inline math layout.
-- Paseo 0.8.0 does not expose its native Markdown renderer or math-node extensions.
+- Paseo 0.9 does not expose its native Markdown renderer or math-node extensions.
   The plugin replaces supported source rows with its own small Markdown renderer;
   code highlighting, workspace-file interactions and native selection behavior are not fully reproduced.
-- Tables, images, explicit HTML, and non-HTTP(S) Markdown links in a source row cause
-  that row to remain native. Paseo may split a reply into multiple rows, so this is
-  not an all-or-nothing guarantee for the entire reply.
+- Tables, images, explicit HTML, non-HTTP(S) links, more than 32 formulas or more
+  than 96,000 characters cause the entire completed source reply to remain native.
+- **Chat Find:** Paseo 0.9 cannot map a search hit to a replaced plugin row. Before
+  Cmd/Ctrl+F, choose **Math: use native replies for chat Find** in the Command Center.
+  Choose **Math: render block formulas** afterwards. These actions affect this
+  client's selected host, restore original rows without changing history, and reset
+  to formula rendering when the plugin/client reloads. Other clients are unaffected.
+  Find inside rendered formula replies remains an upstream integration limitation.
 - Local formula viewing state does not survive every virtualization unmount.
 - MathJax base + AMS + boldsymbol only. `\boldsymbol{\mu}` and other bold math
   symbols are supported. Missing glyphs (including many non-Latin text glyphs),
@@ -74,7 +86,7 @@ or wrap the entire reply in a code fence.
   to 12–28 and image density to 1–3; other accessibility configurations need testing.
 - PNG output has a LaTeX accessibility label and copy action, but is not semantic MathML
   and does not provide continuous mathematical text selection.
-- macOS Paseo 0.8.0 was checked with actual model output. Native iOS/Android, other
+- Historical macOS Paseo 0.8.0 checks used actual model output. Native iOS/Android, other
   app/daemon versions, full desktop reconnect/disable cycles and sustained multi-client
   performance are **not** accepted as tested.
 - The transformer only selects assistant messages and does not change tool display settings.
@@ -91,7 +103,7 @@ No external math service, font URL, system-font scan, runtime filesystem access,
 process or extra HTTP listener is used by the renderer. This is not a promise that
 Paseo's trusted plugin environment is a security sandbox.
 
-Limits include 96,000 characters / 32 formulas per source row, 4,096 characters per formula,
+Limits include 96,000 characters / 32 formulas per complete source reply, 4,096 characters per formula,
 bounded TeX commands/nesting/rows, 2,400×800 logical pixels / 4 million raster pixels,
 1 MB SVG/PNG, 128 cache entries / 8 MB of image URIs, and at most 16 pending renders.
 These are **not a hard CPU timeout or a strict memory sandbox**. Use trusted inputs;
@@ -123,6 +135,10 @@ Typecheck before reloading the exact installed ID on the intended host. Do not r
 the daemon or auto-enable a disabled installation.
 
 ## Verification
+
+The 0.9 migration adds real pinned host presentation/identity/Find-model tests and
+bundle lifecycle checks for both native-reply actions. Historical evidence follows;
+see [verification details](docs/verification.md) for current checks and limits.
 
 - Typecheck, lint and **57 automated tests** passed locally, including the complete
   client bundle evaluated in the RN 0.81.5 Hermes executable. Host UI/hooks and RPC

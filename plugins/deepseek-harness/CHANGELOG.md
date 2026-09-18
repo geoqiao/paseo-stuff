@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-beta.4 — 2026-09-18
+
+- Migrate the plugin's exact Paseo SDK dependencies to `0.9.0-beta.1` and
+  bound the manifest to `>=0.8.0 <0.10.0`.
+- Add the published DSH `0.1.6-alpha.2` CLI/ACP closure to the exact runtime
+  gate after real ACP control-surface and provider checks; retain `0.1.5-rc.1`
+  and `0.1.5-rc.2` support.
+- Keep the narrow `session/load` to `session/resume` bridge and typed tool
+  output projection because both tested DSH ACP closures advertise resume
+  without legacy load support.
+- Verify the latest alpha's real persistence reopen and typed read-tool output
+  with bounded synthetic prompts, without changing approval policy.
+- Update pinned installation instructions and verification records for Paseo 0.9
+  beta and the alpha DSH release.
+
 ## 0.1.0-beta.3
 
 - Move development and releases to `geoqiao/paseo-stuff`, subdirectory `plugins/deepseek-harness`, retaining the `deepseek-harness` plugin ID.

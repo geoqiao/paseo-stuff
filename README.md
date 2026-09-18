@@ -8,21 +8,27 @@ shared runtime or root-hoisted dependency tree.
 
 | Plugin | Directory | Status / important limits |
 | --- | --- | --- |
-| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Experimental beta; block LaTeX in reply bodies, Paseo 0.8.0 only. Inline math and native mobile acceptance are not complete. |
+| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 | MaKa | [plugins/maka](plugins/maka) | Experimental provider for the official MaKa ACP CLI; uses MaKa's configured default model. MCP forwarding, permission dialogs and session reopening are not supported by the tested MaKa release. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
+
+The four plugins above Pet support **Paseo 0.9.0-beta.1** in these prereleases:
+Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.4**, MaKa **0.1.0-beta.2**,
+and Math Renderer **0.1.0-beta.3**. Pet remains on its existing 0.8 support range.
+Use each plugin's pinned installation command and read its verification limits.
 
 Read each plugin's README before installing. Plugins are trusted, unsandboxed code;
 their permissions and operational requirements differ.
 
 ## Install a plugin from this repository
 
-Run against the intended daemon, after reviewing the plugin and enabling plugins in Paseo:
+For Math Renderer on Paseo 0.9, run against the intended daemon after reviewing
+the plugin and enabling plugins in Paseo:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.2 --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.3 --host <host:port>
 ```
 
 The `:plugins/<directory>` suffix selects one plugin, not the whole repository.
@@ -81,11 +87,11 @@ The current Cafe scope includes these four plugins, all sourced from this reposi
 | `readable-agent-activity` | `plugins/agent-activity` | [Merged migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
 | `deepseek-harness` | `plugins/deepseek-harness` | [Merged migration #97](https://github.com/paseo-cafe/paseo-cafe/pull/97) |
 | `math-renderer` | `plugins/math-renderer` | [Merged entry #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) |
-| `maka` | `plugins/maka` | [Submitted entry #120](https://github.com/paseo-cafe/paseo-cafe/pull/120) |
+| `maka` | `plugins/maka` | [Merged entry #120](https://github.com/paseo-cafe/paseo-cafe/pull/120) |
 
-Paseo Pet remains managed here but is not submitted to Cafe. MaKa's submission is awaiting
-review; the other three entries have merged. Accepted version/README updates appear after
-Cafe's next scan and deployment.
+Paseo Pet remains managed here but is not submitted to Cafe. All four entries have
+merged. Version/README updates appear after Cafe's next scan and deployment;
+updated curator caveats require a separate Cafe review.
 
 ## Licenses and publication scope
 

@@ -6,7 +6,7 @@ import { TOOL_CALL_RENDERER_KIND, TOOL_CALL_RENDERER_VERSION, toolCallItemDataSc
 
 export default function contribute(client: PluginClientContext) {
   const remove = [
-    // Paseo 0.8 has no public display-mode/group context. Full detail only;
+    // Paseo 0.8/0.9 have no public display-mode/group context. Full detail only;
     // never change the host preference or guess it from private app state.
     client.addTimelineTransformer({ id: "tool-calls", query: { itemType: "tool_call" }, transform: transformToolCall }),
     client.addTimelineRenderer({ kind: TOOL_CALL_RENDERER_KIND, version: TOOL_CALL_RENDERER_VERSION, schema: toolCallItemDataSchema, Component: ToolActivity }),
