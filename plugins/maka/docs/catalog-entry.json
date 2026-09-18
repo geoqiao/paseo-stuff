@@ -1,0 +1,14 @@
+{
+  "repo": "geoqiao/paseo-stuff",
+  "path": "plugins/maka",
+  "categories": ["provider"],
+  "caveats": [
+    "Experimental: requires Paseo 0.9.0-beta.1, Node >=22.19, and configured MaKa; signed Desktop/CLI dev39 tested.",
+    "Keep Desktop/CLI compatible: dev40 needs schema 19, unsupported by dev39 Desktop; dev40 only passed isolated protocol checks.",
+    "Tool cards need ACP tool events; real dev40 tools are unverified. No MCP forwarding, interactive approvals, or usage updates.",
+    "Connected follow-ups work; importing or reopening sessions after reload/restart is unavailable.",
+    "Uses MaKa's configured default model and permissions; Paseo custom system prompts/tool policy are not applied.",
+    "Verified on macOS; real MaKa on Windows/Linux and native mobile UI remain unverified."
+  ],
+  "submittedBy": "geoqiao"
+}

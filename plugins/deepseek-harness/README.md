@@ -2,17 +2,19 @@
 
 **Use the official DeepSeek Harness in Paseo — with native context resume and complete tool results.**
 
-A community-maintained Paseo 0.8 provider plugin, not a replacement agent loop
-or an official DeepSeek/Paseo endorsement. It runs `dsh --profile acp`; Paseo
-owns the chat UI. No custom client surface or patched Paseo app is required.
+A community-maintained Paseo 0.8 and 0.9 beta provider plugin, not a
+replacement agent loop or an official DeepSeek/Paseo endorsement. It runs
+`dsh --profile acp`; Paseo owns the chat UI. No custom client surface or
+patched Paseo app is required.
 
 [Install](#install-prerequisites) · [Compatibility](#acp-compatibility-and-limitations) · [Verification](docs/verification.md) · [Code review](docs/code-review.md)
 
 > [!IMPORTANT]
-> **Requirements:** Paseo 0.8.x, daemon Node.js 22.19.0 or newer, and a
-> separately installed official DeepSeek Harness executable. The supported and
-> tested DSH versions are **0.1.5-rc.1** and **0.1.5-rc.2**. The executable
-> must be able to run dsh --version and dsh --profile acp.
+> **Requirements:** Paseo 0.8.x or 0.9.0-beta.1, daemon Node.js 22.19.0 or
+> newer, and a separately installed official DeepSeek Harness executable. The
+> supported and tested DSH versions are **0.1.5-rc.1**, **0.1.5-rc.2**, and
+> **0.1.6-alpha.2**. The executable must be able to run `dsh --version` and
+> `dsh --profile acp`.
 
 ## What it does
 
@@ -32,10 +34,12 @@ owns the chat UI. No custom client surface or patched Paseo app is required.
 ## Install prerequisites
 
 Install a verified official DSH version **on the daemon machine**, then check
-that the daemon can find the executable on its PATH:
+that the daemon can find the executable on its PATH. The npm `latest` and
+`next` dist-tags currently resolve to `0.1.5-rc.2`; the separately tagged
+alpha release below is the newest tested official closure:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.1.5-rc.2
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.1.6-alpha.2
 dsh --version
 ~~~
 
@@ -60,16 +64,17 @@ receive that environment merged with per-session Paseo overrides, so variables
 such as `DSH_HOME` are preserved for the session.
 The parent process environment is never mutated.
 
-The verified runtime compositions use CLI 0.1.5-rc.1 or 0.1.5-rc.2 with
-@deepseek-ai/dsh-acp 0.1.5-rc.2 and ACP SDK 1.4.0. The plugin probes the CLI
-version and explicitly accepts only the two DSH versions listed above; it
-does not claim compatibility with other package closures.
+The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
+`@deepseek-ai/dsh-acp` `0.1.5-rc.2`, and CLI `0.1.6-alpha.2` with
+`@deepseek-ai/dsh-acp` `0.1.6-alpha.2`; all use ACP SDK `1.4.0`. The plugin
+probes the CLI version and explicitly accepts only the three DSH versions
+listed above; it does not claim compatibility with other package closures.
 
 ## ACP compatibility and limitations
 
 DSH advertises session/resume but not ACP's older top-level loadSession
-capability. Paseo 0.8's public ACP shim uses session/load when it sees
-persistence. A small typed stdio adapter therefore does the following:
+capability. Paseo's public ACP shim in 0.8 and 0.9 beta uses session/load when
+it sees persistence. A small typed stdio adapter therefore does the following:
 
 1. After initialize, if the peer has session/resume and does not have
    loadSession, it exposes loadSession only to the private shim-facing
@@ -91,6 +96,11 @@ surfaces. DSH model and reasoning configuration is exposed when the ACP
 server advertises it. The public ACP shim emits complete timeline snapshots;
 this plugin does not claim token-level or UI streaming.
 
+Paseo 0.9's shim supplies fallback identities when an ACP assistant or
+reasoning chunk omits `messageId`. Both tested DSH ACP closures emit message
+IDs for those chunks, so the plugin preserves the host behavior and does not
+invent a second identity scheme.
+
 The plugin has no local persistence layer, no daemon-side DSH session mirror,
 no custom persona or provider preset, and no permission-policy override.
 Activity or another Paseo client may choose how to preview a complete tool
@@ -108,11 +118,11 @@ iOS/Android clients have not been exercised. See [verification](docs/verificatio
 
 ## Paseo installation
 
-Review this trusted, unsandboxed plugin and install the directory or public
-repository on the intended daemon. For a repository installation:
+Review this trusted, unsandboxed plugin and install the pinned prerelease on the
+intended daemon:
 
 ~~~sh
-paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.3 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.4 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -121,15 +131,15 @@ choices come from the installed DSH profile. Plugins and DSH tools are trusted,
 unsandboxed code; file permissions do not hide credentials from tools running
 as your OS user. This adapter does not add a security sandbox.
 
-The source manifest requires >=0.8.0 <0.9.0. Do not restart the daemon for
-this plugin. Follow Paseo's global plugin-enable and per-installation
+The source manifest requires `>=0.8.0 <0.10.0`, covering the tested Paseo 0.8
+line and 0.9 beta. Do not restart the daemon for this plugin. Follow Paseo's
+global plugin-enable and per-installation
 enable/disable rules; an existing disabled installation should remain
 disabled unless the user explicitly enables it.
 
-Beta.3 moves publication to the monorepo; the runtime is unchanged from beta.2.
-The old standalone repository and tags remain available. Existing Git installations
-do not switch sources automatically; read the
-[migration notes](https://github.com/geoqiao/paseo-stuff/blob/main/MIGRATION.md).
+For local development, run the checks below and install this plugin directory
+by its absolute path. Existing Git installations do not switch sources or pinned
+tags automatically.
 
 ## Development and test entry point
 
@@ -158,8 +168,8 @@ npm run lint
 npm test
 ~~~
 
-The tests use the installed public Paseo 0.8 SDK, public runAcpProvider, ACP
-SDK 1.4.0 framing, and a fake ACP peer process. They cover catalog discovery,
+The tests use the installed public Paseo 0.9.0-beta.1 SDK, public
+`runAcpProvider`, ACP SDK 1.4.0 framing, and a fake ACP peer process. They cover catalog discovery,
 model and thinking options, multi-turn prompts, configuration, persistence
 resume, tool output fidelity, images, MCP, permissions, errors, cancellation,
 EOF and startup cleanup, concurrent environment/cwd isolation, unsupported
@@ -182,6 +192,21 @@ including two-turn memory, file write/read, a complete tool-output tail over
 and DSH processes restarted. Five usage events were received in each run; emitted events
 validated with the public `ProviderEventSchema`. Both installation closures
 resolved to DSH ACP `0.1.5-rc.2` and ACP SDK `1.4.0`.
+
+The beta.4 local migration then ran the same production provider factory on
+Node 22.23.2 with isolated CLI `0.1.5-rc.2` and the upgraded global CLI
+`0.1.6-alpha.2`. Both completed catalog discovery, session configuration, one
+bounded synthetic no-tools prompt, usage/timeline validation and clean close;
+the prompt produced no permission event. The exact closure and ACP probe are
+recorded in [verification](docs/verification.md). No daemon reload, enable,
+disable or restart was performed for this migration.
+
+A follow-up Node 24.21.0 check completed the latest alpha.2 persistence
+regression: teardown closed all six owned ACP profile children, reopening used
+the returned persistence through the real `session/resume` bridge, and a second
+prompt recalled its marker without repeating it. A temporary read-only file
+probe also verified typed raw tool output under the existing policy without a
+permission response or approval change.
 
 Separately, an installed macOS Paseo 0.8.0 daemon completed real turns and kept
 tool-output tails, prior displayed history and DSH context through a plugin

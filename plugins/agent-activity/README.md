@@ -2,7 +2,7 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.6** · [Release notes](CHANGELOG.md) · Paseo 0.8, Full detail only.
+**Version 0.1.0-beta.7** · [Release notes](CHANGELOG.md) · Paseo 0.8/0.9, Full detail only.
 
 ## What it does
 
@@ -73,12 +73,17 @@ Virtual-list remounts reset local disclosure state.
 
 ## Compatibility
 
-**Paseo 0.8.0 · Full detail only · experimental beta.**
-The manifest allows `>=0.8.0 <0.9.0`; later 0.8 releases need verification.
+**Paseo 0.8.0 and 0.9.0-beta.1 · Full detail only · experimental beta.**
+The manifest allows `>=0.8.0 <0.10.0`; future releases need verification.
 
 Paseo 0.8 groups Summary calls before running plugin transformers. Its public API
 exposes neither the display mode nor group members. An enabled replacement can
 hide the native group's entry point; this plugin cannot automatically fall back.
+
+Paseo 0.9 transforms each original call **before** Summary grouping. All calls now
+remain visible, but plugin cards bypass grouping. Summary is still unsupported.
+Native plan/approval tools pass through, preserving host suppression and expandable
+plan cards. No display-mode API is available in either version.
 
 - Use **Full detail on every connected client**.
 - **Disable this plugin before switching to Summary**.
@@ -95,10 +100,10 @@ Plugins are **trusted, unsandboxed code**. This plugin is client-only and uses p
 SDK modules, React Native primitives and host theme colors. It has no runtime network,
 filesystem, process or daemon-side behavior. Contributions unregister on cleanup.
 
-Install this beta on your intended host:
+Install the pinned prerelease on the intended daemon:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.6 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.7 --host <your-host>
 ```
 
 Installation enables the plugin. Review its source/trust requirements and select

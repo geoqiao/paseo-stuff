@@ -1,4 +1,37 @@
-# Verification scope — 0.1.0-beta.2
+# Verification scope
+
+## Beta.3 — Paseo 0.9 migration (2026-09-18)
+
+- Exact SDK/protocol/client target: **0.9.0-beta.1**. `npm run check` passed on
+  Node **22.23.2** and **24**: typecheck, zero lint warnings/errors and **6 files /
+  66 tests**, including real RN 0.81.5 Hermes evaluation.
+- Nine new tests use unmodified tagged host presentation, grouping, projection,
+  identity and Find-model sources. They cover native streaming, whole completed
+  replies, stable history IDs, unsupported/oversized fallback, native tools in both
+  display modes and canonical IDs after removing the transformer.
+- Complete client-bundle checks exercise repeated native/render commands and
+  cleanup, including no duplicate transformer registrations. These commands are
+  client-local and reset on contribution reload; there is no hidden saved setting.
+- Compiled client and server with the installed Paseo app's actual compiler. The
+  compiled backend rendered a quadratic formula successfully (135×47 logical px).
+- Reloaded the existing enabled ID `paseo-math-renderer-prototype` at
+  `127.0.0.1:6767`; the 0.9.0-beta.1 daemon reports running/ready.
+- A synthetic Pi turn produced two formulas in its completed Paseo timeline. Its
+  source was inspected, and the test agent was archived. Desktop UI automation
+  failed to start, so this is not a claim that its live pixels were inspected.
+- The actual components and real local MathJax/resvg backend passed nine browser
+  interaction groups: exact LaTeX clipboard, manual source state, image decode,
+  light/dark and desktop/390px layouts, overflow/touch targets, malformed TeX,
+  delimiter edits, unsupported Markdown and RPC retry. A further check confirms
+  native output throughout the simulated streaming phase, then two rendered images
+  after completion. No browser runtime errors; compact screenshot inspected.
+- Those browser checks use React Native Web with host/RPC adapters. Native mobile
+  rendering, actual installed Command Center interaction and reconnect/multi-client
+  acceptance remain unverified.
+- Chat Find still cannot target transformed host rows. The tested native-reply
+  action restores original IDs; this is an explicit workaround, not an upstream fix.
+
+## Historical beta.2 evidence (Paseo 0.8.0)
 
 ## Repeatable package checks
 

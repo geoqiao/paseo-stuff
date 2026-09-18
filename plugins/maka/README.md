@@ -1,22 +1,21 @@
 # MaKa provider for Paseo
 
-An experimental server-only plugin that adds **MaKa** to Paseo 0.8's provider picker through
-the official `maka --acp` interface. It supports streamed conversations, real file and shell
-work, follow-up prompts, cancellation, and MaKa's configuration selectors.
+An experimental server-only plugin that adds **MaKa** to Paseo 0.9's provider picker through
+the official `maka --acp` interface. It supports streamed conversations, tool cards when MaKa
+emits them, real file and shell work, follow-up prompts, cancellation, and MaKa's configuration
+selectors.
 
 ## Install
 
-Requirements: Paseo 0.8 with plugins enabled, Node.js 22.19 or newer, and a configured MaKa CLI
-on the machine running the Paseo daemon. The tested MaKa build is pinned here because its ACP
-interface is still evolving.
+Requirements: Paseo 0.9.0-beta.1 with plugins enabled, Node.js 22.19 or newer, and a configured
+MaKa CLI on the machine running the Paseo daemon. The tested signed MaKa release is
+[0.2.0-dev.39.20260916](https://github.com/apache/maka/releases/tag/v0.2.0-dev.39.20260916).
+Keep Desktop and CLI on the same MaKa release because they share a workspace database.
 
-**If you use MaKa Desktop, update it to the same release before starting the CLI.** Both
-applications share MaKa's workspace database. A newer CLI can migrate that database into a
-format an older desktop cannot open. For this tested CLI, use
-[MaKa Desktop 0.2.0-dev.31.20260913](https://github.com/apache/maka/releases/tag/v0.2.0-dev.31.20260913).
+Install the matching CLI release:
 
 ```bash
-npm install --global maka-agent@0.2.0-dev.31.20260913
+npm install --global --ignore-scripts maka-agent@0.2.0-dev.39.20260916
 maka
 ```
 
@@ -24,13 +23,13 @@ Use MaKa's own UI to configure a working provider connection, credentials, and a
 then exit it. A working MaKa default is required before Paseo can discover the model catalog.
 The plugin neither imports credentials nor changes your MaKa profile.
 
-Install the published plugin from GitHub:
+Install the pinned plugin prerelease:
 
 ```bash
-paseo plugin add geoqiao/paseo-stuff:plugins/maka --ref maka-v0.1.0-beta.1 --host 127.0.0.1:6767
+paseo plugin add geoqiao/paseo-stuff:plugins/maka --ref maka-v0.1.0-beta.2 --host <your-host>
 ```
 
-For a local development checkout, run from this plugin directory instead:
+For local development, run from this directory:
 
 ```bash
 npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
@@ -38,9 +37,8 @@ npm run check
 paseo plugin install "$PWD" --host 127.0.0.1:6767
 ```
 
-Replace the host with your daemon's address if different. For later source changes, run the
-checks again, then `paseo plugin reload maka --host 127.0.0.1:6767`. Reloading ends existing
-MaKa sessions; create a new agent afterwards.
+Replace the host with your daemon's address if different. Source changes require a reload before
+they are visible to Paseo, and reloading ends existing MaKa sessions.
 
 Select **MaKa → MaKa configured default** when creating an agent. The model label is a local
 selector for the model already chosen in MaKa; it does not switch the upstream model. Thinking
@@ -56,18 +54,22 @@ the plugin supplies `--acp` itself.
 
 The tested official MaKa ACP implementation has these boundaries:
 
-- **Tool visibility:** MaKa can execute file and shell tools, but ACP publishes only assistant
-  text and thinking. Paseo receives no tool cards, tool results, or usage updates.
+- **Tool visibility:** When MaKa publishes standard ACP tool-call and tool-call-update
+  notifications, Paseo renders the call, bounded output/progress, and final result through its
+  public ACP shim. The newer `maka-agent@0.2.0-dev.40.20260917` nightly publishes these events;
+  MaKa still publishes no ACP usage updates.
 - **MCP:** MaKa rejects MCP servers. The plugin omits Paseo's MCP configuration and emits an
   explicit session notice, without exposing its values. Paseo's agent-management MCP is also
   unavailable inside MaKa conversations.
 - **Permissions and questions:** the interactive bridge is unavailable. The plugin preserves
   MaKa's permission mode and never automatically approves tools. Tasks requiring an unsupported
   interaction fail; resolve configuration through MaKa's own UI.
-- **History:** follow-ups work while the session is connected. Resume/load, imported history,
-  and restoration after plugin reload or daemon restart are unavailable. Requests carrying
-  persistence are rejected. Shutdown closes the owned ACP session and allows MaKa to cancel
-  its associated Runtime Host work before process termination.
+- **History:** follow-ups work while the session is connected. MaKa's ACP interface has native
+  session listing and close, but no load/resume operation. The plugin therefore withholds session
+  listing from Paseo so it cannot offer imports that would fail when opened. Imported history and
+  restoration after plugin reload or daemon restart are unavailable. Requests carrying
+  persistence are rejected. Shutdown closes the owned ACP session and allows MaKa to cancel its
+  associated Runtime Host work before process termination.
 - **Prompt configuration:** MaKa does not apply Paseo's `_paseo` metadata, including custom
   system prompts, provider options, or tool policy. Configure effective behavior in MaKa.
 - **Other input:** image prompts, provider commands, and prompt steering are unsupported.
@@ -97,6 +99,6 @@ If Desktop reports `OperationalStateMigrationBlockedError` or a schema newer tha
 version, update Desktop to match the CLI. Changing schema version numbers or restoring only
 part of the database is not a compatible downgrade.
 
-`npm run check` runs TypeScript, lint, and tests against the public Paseo ACP shim and synthetic
+`npm run check` runs TypeScript, lint, and tests against the public Paseo 0.9 ACP shim and synthetic
 ACP peers. Real CLI, installed-host, and UI evidence is in
 [`docs/verification.md`](docs/verification.md), including the versions and platform limits.

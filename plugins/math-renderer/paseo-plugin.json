@@ -1,6 +1,6 @@
 {
   "id": "math-renderer",
-  "requirements": { "paseo": "0.8.0" },
+  "requirements": { "paseo": ">=0.9.0-beta.1 <0.10.0" },
   "build": [
     ["npm", "ci", "--ignore-scripts", "--legacy-peer-deps", "--no-audit", "--no-fund"],
     ["npm", "run", "prepare:markdown"],

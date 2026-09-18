@@ -3,11 +3,11 @@
   "path": "plugins/math-renderer",
   "categories": ["productivity"],
   "caveats": [
-    "Experimental beta for Paseo app and daemon 0.8.0 only; block math only, not inline math.",
-    "macOS desktop checked; native iOS/Android and sustained multi-client load are untested.",
-    "Unsupported Markdown source rows stay native; code highlighting and native file interactions are not fully reproduced.",
-    "Missing glyphs, custom macros, unsupported commands and oversized formulas fall back to source.",
-    "Uses local MathJax and embedded resvg WASM; input bounds are not a hard CPU or memory sandbox.",
+    "Experimental beta for Paseo 0.9 (0.9.0-beta.1 tested); completed replies and block math only.",
+    "macOS host and browser components checked; native mobile UI and sustained multi-client load are untested.",
+    "Unsupported whole replies stay native; code highlighting and native file interactions are not fully reproduced.",
+    "Use the Math native-reply Command Center action before chat Find; rendered rows lack host search integration.",
+    "Unsupported TeX falls back to source. Local MathJax/resvg input bounds are not a hard CPU or memory sandbox.",
     "Avoid enabling another assistant-message replacement plugin for the same content."
   ],
   "submittedBy": "geoqiao"

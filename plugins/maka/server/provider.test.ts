@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { PluginServerContext } from "@getpaseo/plugin/server";
+import { runAcpProvider } from "@getpaseo/plugin/server/acp";
 import {
   ProviderEventSchema,
   type ProviderConnection,
@@ -106,7 +107,37 @@ describe.sequential("MaKa ACP provider", () => {
     await cleanup();
   });
 
-  it("discovers the configured-default sentinel and maps MaKa selectors", async () => {
+  it("discovers selectors and hides native sessions without resume support", async () => {
+    const nativeProvider = runAcpProvider({
+      id: "native-session-list-probe",
+      label: "Native session list probe",
+      command,
+    });
+    const nativeConnection = await nativeProvider.connect(connectRequest());
+    const nativeCollector = collect(nativeConnection);
+    try {
+      expect(nativeConnection.capabilities).toContain("session.list");
+      await nativeConnection.send({
+        type: "sessions",
+        requestId: "native-sessions-1",
+        cwd: testRoot,
+      });
+      const nativeSessions = await nativeCollector.waitFor(
+        (event) =>
+          event.type === "sessions" && event.requestId === "native-sessions-1",
+      );
+      expect(nativeSessions.type).toBe("sessions");
+      if (nativeSessions.type === "sessions") {
+        expect(nativeSessions.sessions).toHaveLength(1);
+        expect(nativeSessions.sessions[0]?.title).toBe(
+          "Native session without resume",
+        );
+      }
+    } finally {
+      nativeCollector.unsubscribe();
+      await nativeConnection.close();
+    }
+
     const { provider, connection } = await connected();
     const collector = collect(connection);
     try {
@@ -116,6 +147,8 @@ describe.sequential("MaKa ACP provider", () => {
       expect(connection.capabilities).not.toContain("prompt.image");
       expect(connection.capabilities).not.toContain("prompt.steer");
       expect(connection.capabilities).not.toContain("permission");
+      // The native ACP peer advertises a non-empty session/list result, but
+      // MaKa cannot load those sessions. Do not offer unopenable imports to Paseo.
       expect(connection.capabilities).not.toContain("session.list");
       expect(connection.capabilities).not.toContain("session.persistence");
 
@@ -142,6 +175,14 @@ describe.sequential("MaKa ACP provider", () => {
           ]),
         }),
       ]);
+
+      await expect(
+        connection.send({
+          type: "sessions",
+          requestId: "sessions-1",
+          cwd: testRoot,
+        }),
+      ).rejects.toThrow("persistent sessions are not importable");
 
       const open = openInput("selectors", cwdA, "selectors");
       await connection.send(open);
@@ -321,6 +362,39 @@ describe.sequential("MaKa ACP provider", () => {
     }
   });
 
+  it("passes standard ACP tool calls through the public Paseo shim", async () => {
+    const { provider, connection } = await connected();
+    const collector = collect(connection);
+    try {
+      const open = await openSession(connection, collector, "tools", cwdA);
+      await connection.send(messagePrompt(open.sessionId, "tool-1", "tool"));
+      const tool = await collector.waitFor(
+        (event) =>
+          event.type === "timeline.item" &&
+          event.sessionId === open.sessionId &&
+          event.item.type === "tool_call" &&
+          event.item.name === "read_file" &&
+          event.item.status === "completed",
+      );
+      expect(tool.type).toBe("timeline.item");
+      if (tool.type === "timeline.item" && tool.item.type === "tool_call") {
+        expect(tool.item.detail.type).toBe("unknown");
+        if (tool.item.detail.type === "unknown") {
+          expect(tool.item.detail.output).toEqual({ text: "tool output" });
+        }
+      }
+      await collector.waitFor(
+        (event) =>
+          event.type === "session.turn" &&
+          event.sessionId === open.sessionId &&
+          event.state === "completed",
+      );
+    } finally {
+      collector.unsubscribe();
+      await provider.dispose();
+    }
+  });
+
   it("reports prompt errors and cancels a pending turn", async () => {
     const { provider, connection } = await connected();
     const collector = collect(connection);
@@ -465,7 +539,7 @@ describe.sequential("MaKa ACP provider", () => {
       ).rejects.toThrow("provider commands");
       await expect(
         connection.send({ type: "sessions", requestId: "sessions-1" }),
-      ).rejects.toThrow("persistent sessions");
+      ).rejects.toThrow("persistent sessions are not importable");
       await expect(
         connection.send({
           type: "session.permission",

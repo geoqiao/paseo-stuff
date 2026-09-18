@@ -12,7 +12,7 @@ fixtures. This is not a security certification or a new native-client test.
 | Credential-label redaction missed JSON key quotes and `API key` spelling | Conditional disclosure if child stderr contains a credential-bearing object. Five direct cases and a public-provider startup-error case failed before the fix and now pass, including escaped quotes. No real credential was accessed or observed leaking. |
 | Probe timeout was reported as cleanup exit 143/SIGTERM | Reproduced with a hung fake `--version`. The deadline is now latched before child termination; event listeners are removed when the probe settles. The regression also checks child exit and absence of an ACP spawn. |
 | Missing workspace was blamed on a missing executable | Node uses ENOENT for either. The error now names both executable and cwd and asks the user to check both paths, without claiming which is absent or adding filesystem preflights. |
-| Stable/extended versions had misleading diagnostics | Extraction reports the complete stable/prerelease/build version; only rc.1/rc.2 remain accepted. An untested `rc.2+custom` cannot pass by matching a tested prefix. |
+| Stable/extended versions had misleading diagnostics | Extraction reports the complete stable/prerelease/build version; only the explicitly tested rc.1, rc.2, and alpha.2 releases are accepted. An untested `rc.2+custom` cannot pass by matching a tested prefix. |
 | Redundant connection reference | Removed the write-only `ConnectionScope.connection` field. The cleanup closure already owns that connection. |
 | Missing defensive-API coverage | Added invalid startup-timeout and unsupported-command tests. These do not add advertised capabilities. |
 

@@ -16,17 +16,18 @@
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 
 ## Paseo contracts
-- Current verified target is Paseo app/daemon and SDK 0.8.0. Verify versions before introducing APIs.
+- Current migration target is Paseo app/daemon and SDK 0.9.0-beta.1; Paseo Pet remains on 0.8.0. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
 - Fetch https://paseo.sh/llms.txt, then the version-matching plugin reference before adopting unfamiliar APIs.
 - Client entries: `index.client.tsx`, client UI under `client/`.
 - Optional daemon entry: `index.server.ts`, daemon-only modules under `server/`.
 - Pure data/contracts under `shared/`; no other root code modules.
 - Use public SDK modules only. Never import host internals in a production plugin, inspect host React state/DOM, or read private app storage to infer settings.
 - Use React Native primitives and host UI. Derive colors from theme.colors and layout from layout.compact/platform.
-- Host Icon exposes name/size/color, not stroke width in 0.8.0. Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
+- Host Icon exposes name/size/color, not stroke width in 0.8/0.9. Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
 - Keep transforms synchronous, deterministic and JSON-safe. Preserve source information and stable item identity.
 - Host Tool call display preferences take precedence. Never silently force Full detail or replace grouped Summary rows with a single call.
 - A compatibility gap must be documented and tested, not hidden behind a guessed configuration value.
+- In 0.9, timeline transforms run before native Markdown splitting, Summary grouping and plan suppression. Pass native plan tools through. Math retains native streaming and offers native-reply mode for the host's unresolved chat Find identity gap.
 - Preserve per-card manual-only expansion through streaming and status updates.
 
 ## Safety and lifecycle

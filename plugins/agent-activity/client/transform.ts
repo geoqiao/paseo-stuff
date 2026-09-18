@@ -9,6 +9,9 @@ export const transformReasoning: PluginTimelineTransformerContribution<"reasonin
 });
 
 export const transformToolCall: PluginTimelineTransformerContribution<"tool_call">["transform"] = ({ item }) => {
+  // 0.9 transforms before native plan suppression/presentation. Keep approval
+  // tools and structured plans native, including rejected/completed plans.
+  if (item.name === "ExitPlanMode" || item.name === "plan_approval" || item.detail?.type === "plan") return undefined;
   // This exact shape is a native SpeakMessage, not an ordinary tool card.
   if (item.name === "speak" && item.detail?.type === "unknown"
     && typeof item.detail.input === "string" && item.detail.input.trim()) return undefined;

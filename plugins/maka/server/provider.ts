@@ -481,6 +481,11 @@ function scopeToConnector(
 }
 
 function assertSupportedInput(input: ProviderInput): void {
+  if (input.type === "sessions") {
+    throw new Error(
+      "MaKa ACP exposes native session listing without resume; persistent sessions are not importable",
+    );
+  }
   if (input.type === "session.open" && input.persistence !== undefined) {
     throw new Error(
       "MaKa ACP does not support persistence; reopen starts a new session only when no persistence is supplied",
@@ -497,9 +502,6 @@ function assertSupportedInput(input: ProviderInput): void {
       throw new Error("MaKa ACP does not support image prompts");
     }
   }
-  if (input.type === "sessions") {
-    throw new Error("MaKa ACP does not expose persistent sessions");
-  }
   if (input.type === "session.permission") {
     throw new Error("MaKa ACP does not support interactive permissions");
   }
@@ -515,10 +517,10 @@ function assertSupportedInput(input: ProviderInput): void {
 function filterProviderEvent(event: ProviderEvent): ProviderEvent | undefined {
   if (
     event.type === "session.commands" ||
+    event.type === "sessions" ||
     event.type === "session.permission" ||
     event.type === "session.permission_resolved" ||
-    event.type === "session.persistence" ||
-    event.type === "sessions"
+    event.type === "session.persistence"
   ) {
     return undefined;
   }

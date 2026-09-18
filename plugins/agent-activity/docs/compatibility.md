@@ -1,9 +1,10 @@
-# Paseo 0.8 compatibility
+# Paseo 0.8 / 0.9 compatibility
 
 ## Supported beta scope
 
-Verified with app, daemon, protocol and plugin SDK **0.8.0**, using **Full detail**.
-The manifest accepts `>=0.8.0 <0.9.0`; future 0.8 releases must be rechecked.
+The original installed target was **0.8.0**, using **Full detail**. The 0.9 migration
+uses SDK **0.9.0-beta.1**, with pinned host-pipeline tests for both versions.
+The manifest accepts `>=0.8.0 <0.10.0`; future releases must be rechecked.
 macOS is the tested installed host. The current working tree also passes real RN 0.81.5
 Hermes bundle evaluation; native iOS/Android UI remains unverified.
 
@@ -33,6 +34,18 @@ The existing Node tests still exercise real Zod validation. The old standalone
 beta.4 release tag does not contain this fix; the monorepo beta.5 includes it.
 
 ## Why Summary cannot safely fall back
+
+In [0.9.0-beta.1](https://github.com/getpaseo/paseo/tree/7c1958f5b0a4ae9f2cb12f77b0a754a644cd0081),
+`agent-stream/presentation.ts` applies plugin transformation before native splitting
+and grouping. `tests/paseo-09.compat.test.js` proves that every call is retained,
+but plugin rows do not form Summary groups. The public transform input still has no
+display mode. This improvement is not Summary support.
+
+The same pipeline applies native plan suppression after transformation. Beta.7
+passes `ExitPlanMode`, `plan_approval` and structured plan details through so that
+native pending/rejected/completed plan handling remains intact in both modes.
+
+The earlier **0.8** behavior differs:
 
 Evidence is pinned to [Paseo v0.8.0, commit b8e2467](https://github.com/getpaseo/paseo/tree/b8e24677e12b226c7c38c1c3a40649daa9f1152f):
 

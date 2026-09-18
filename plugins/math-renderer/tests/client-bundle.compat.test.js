@@ -11,9 +11,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const hermesPlatform = { darwin: "osx-bin", linux: "linux64-bin", win32: "win64-bin" }[process.platform];
 const hermes = process.env.HERMES_BIN || join(root, "node_modules/react-native/sdks/hermesc", hermesPlatform || "unsupported", process.platform === "win32" ? "hermes.exe" : "hermes");
 
-// Paseo v0.8.0 compiler options and eager CommonJS interop, followed by string
+// Paseo v0.9.0-beta.1 compiler options and eager CommonJS interop, followed by string
 // evaluation without Metro/Babel. Pinned source:
-// https://github.com/getpaseo/paseo/blob/b8e24677e12b226c7c38c1c3a40649daa9f1152f/packages/server/src/server/plugins/compiler.ts
+// https://github.com/getpaseo/paseo/blob/7c1958f5b0a4ae9f2cb12f77b0a754a644cd0081/packages/server/src/server/plugins/compiler.ts
 async function bundle(entry) {
   const result = await build({
     absWorkingDir: root, entryPoints: [entry], bundle: true, format: "cjs", jsx: "automatic",
@@ -57,12 +57,17 @@ function smoke() {
   return host + `
 var contributions = [];
 var removed = [];
+var commands = [];
+var removedCommands = [];
 function register(item) { contributions.push(item); return function() { removed.push(item); }; }
 var entry = evaluate(${JSON.stringify(entryBundle)})(runtimeRequire);
-var cleanup = entry.default({ addTimelineTransformer: register, addTimelineRenderer: register });
+var cleanup = entry.default({ addTimelineTransformer: register, addTimelineRenderer: register,
+  addCommandCenterItem: function(item) { commands.push(item); return function() { removedCommands.push(item); }; }
+});
 check(contributions.length === 2, "Expected transformer and renderer");
-check(contributions[0].query.itemType === "assistant_message", "Wrong source type");
-check(typeof contributions[1].Component === "function", "Missing renderer");
+var transformer = contributions[1];
+check(transformer.query.itemType === "assistant_message", "Wrong source type");
+check(typeof contributions[0].Component === "function", "Missing renderer");
 var parse = evaluate(${JSON.stringify(parserBundle)})(runtimeRequire).parseDocument;
 var samples = ${JSON.stringify(samples)};
 samples.forEach(function(text) {
@@ -70,7 +75,8 @@ samples.forEach(function(text) {
   for (var n = 0; n <= text.length; n++) {
     var prefix = text.slice(0, n);
     var source = Object.freeze({ type: "assistant_message", text: prefix });
-    var result = contributions[0].transform({ item: source, phase: "complete" });
+    check(transformer.transform({ item: source, phase: "streaming" }) === undefined, "Streaming must stay native");
+    var result = transformer.transform({ item: source, phase: "complete" });
     if (result) {
       check(result.items.length === 1 && result.items[0].data.text === prefix, "Streaming source changed");
       check(result.items[0].id === undefined, "Overrode host source identity");
@@ -83,12 +89,18 @@ check(parse(text).blocks[0].inline[0].text === "Entity & 🐈 © 中文", "Entit
   check(parse(text).formulas === 1, "Display delimiter/container failed: " + text);
 });
 ["No formula", "$$\\nx^2", "~~~math\\nx^2", "~~~js\\n$$x$$\\n~~~", "![image](https://example.com/x)\\n\\n$$x$$"].forEach(function(text) {
-  check(contributions[0].transform({ item: { type: "assistant_message", text: text }, phase: "complete" }) === undefined, "Native fallback failed");
+  check(transformer.transform({ item: { type: "assistant_message", text: text }, phase: "complete" }) === undefined, "Native fallback failed");
 });
 check(parse("") === null && parse("x".repeat(96001)) === null, "Input limits failed");
 check(parse(Array(33).fill("$$x$$").join("\\n\\n")) === null, "Formula limit failed");
+check(commands.length === 2, "Missing native/Math actions");
+commands[0].onSelect(); commands[0].onSelect();
+check(removed.length === 1 && removed[0] === transformer, "Native action must remove only the transformer once");
+commands[1].onSelect(); commands[1].onSelect();
+check(contributions.length === 3, "Render action must not register duplicate transformers");
+commands[0].onSelect(); commands[1].onSelect();
 cleanup();
-check(removed.length === 2 && removed[0] === contributions[1], "Cleanup failed");
+check(removed.length === 4 && removed[3] === contributions[0] && removedCommands.length === 2, "Cleanup failed");
 print("BUNDLE_SMOKE_OK");
 `;
 }

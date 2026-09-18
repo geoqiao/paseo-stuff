@@ -36,4 +36,12 @@ describe("tool-only source-preserving transform", () => {
     expect(data).not.toHaveProperty("activity");
     expect(data.presentation).toEqual({ icon: "Code" });
   });
+  it.each(["running", "completed", "failed", "canceled"] as const)("preserves native plan handling when %s", status => {
+    for (const name of ["ExitPlanMode", "plan_approval", "other_plan"]) {
+      const detail = name === "other_plan" ? { type: "plan", plan: "Keep native" } : { type: "unknown", input: {} };
+      const outcome = status === "failed" ? { status, error: "rejected" } : { status, error: null };
+      const item = { type: "tool_call" as const, callId: "plan", name, detail: detail as ToolCallDetail, ...outcome };
+      expect(transformToolCall({ item, phase: status === "running" ? "streaming" : "complete" })).toBeUndefined();
+    }
+  });
 });

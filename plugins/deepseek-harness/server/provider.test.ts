@@ -834,7 +834,7 @@ describe.sequential("DeepSeek Harness provider", () => {
     await withEnvironment({ DSH_FAKE_VERSION: "0.1.5-rc.3" }, async () => {
       const provider = createDeepSeekHarnessProvider({ startupTimeoutMs: 500 });
       await expect(provider.connect(connectRequest())).rejects.toThrow(
-        "supports only 0.1.5-rc.1 and 0.1.5-rc.2",
+        "supports only 0.1.5-rc.1 and 0.1.5-rc.2 and 0.1.6-alpha.2",
       );
     });
 

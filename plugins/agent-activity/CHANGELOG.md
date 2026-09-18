@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.7 — 2026-09-18
+
+- Support Paseo 0.9.0-beta.1 with updated SDK dependencies and a bounded compatibility range; retain 0.8 host regression fixtures.
+- Keep native plan tools and structured plan cards out of the custom tool renderer, preserving 0.9 plan suppression and disclosure.
+- Add unmodified 0.9 presentation fixtures for Full detail, Summary limitations, streaming/history identity, reasoning and speech. Summary remains unsupported: 0.9 retains all calls but does not group plugin cards.
+
 ## 0.1.0-beta.6 — 2026-09-13
 
 - Unify ordinary and codex-conversion tools under Input / Output with one Show all / Show less. Preview twenty source lines and cap automatic wrapping to twenty displayed line-heights per section. No second character cap or independently scrolling output box.

@@ -1,5 +1,23 @@
 # Verification and remaining gaps
 
+## Beta.7 — Paseo 0.9 migration (2026-09-18)
+
+- `npm run check` passed on Node **22.23.2** and **24**: typecheck, lint with no
+  warnings/errors, **8 files / 252 tests**, including actual Hermes evaluation.
+- Unmodified 0.9.0-beta.1 host fixtures add nine tests covering the new presentation
+  order, native plans/speech, full reasoning text, status fidelity and stable source
+  identity. Four unit cases cover native plans in every lifecycle status. Existing
+  0.8 tests remain. Fixture provenance and Apache license are recorded alongside them.
+- `colorful-agent-activity` reloaded on `127.0.0.1:6767` and reports enabled/running
+  on the 0.9.0-beta.1 daemon. A bounded synthetic Pi turn emitted one tool call and
+  two formulas; its completed timeline was inspected and its test agent archived.
+- Desktop UI automation was unavailable in this session. The live turn does not
+  establish visual acceptance of its cards. No native mobile UI check was performed.
+- Summary remains unsupported: 0.9 preserves all custom cards but bypasses native
+  grouping. No host preference was changed. DSH and Pet enable states were preserved.
+
+Earlier sections record historical checks for earlier releases.
+
 ## Beta.6 — unified formatter and local acceptance (2026-09-13)
 
 This section supersedes earlier beta UI/feature descriptions below; those sections

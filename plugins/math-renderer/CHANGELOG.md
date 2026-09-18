@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-beta.3 — 2026-09-18
+
+- Target Paseo 0.9.0-beta.1 and the 0.9 SDK. Keep streaming replies native and render supported whole replies after completion, avoiding repeated parsing and mid-stream ownership changes.
+- Add client-local Command Center actions to restore native replies for chat Find and re-enable block formula rendering. Do not mutate history or host preferences.
+- Open HTTP(S) links through the public host `openExternalUrl` API.
+- Add pinned 0.9 host fixtures and regression coverage for mixed/oversized whole-message fallback, stable history identity, native tool modes and the remaining Find identity gap.
+- Retain all parser, TeX and rendering bounds. Unsupported whole replies remain native; inline math and full native Markdown parity remain outside this beta.
+
 ## 0.1.0-beta.2
 
 - Enable MathJax's bundled boldsymbol extension so valid formulas containing

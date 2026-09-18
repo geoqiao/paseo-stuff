@@ -1,7 +1,7 @@
 import { useMemo, useState, type ReactNode } from "react";
-import { Image, Linking, Pressable, Text, View, useWindowDimensions } from "react-native";
+import { Image, Pressable, Text, View, useWindowDimensions } from "react-native";
 import type { PluginHostProps, PluginTimelineItemProps } from "@getpaseo/plugin/client";
-import { useRpc } from "@getpaseo/plugin/client";
+import { openExternalUrl, useRpc } from "@getpaseo/plugin/client";
 import { copyText, ScrollView, useToast } from "@getpaseo/plugin/client/react-native";
 import { useQuery } from "@tanstack/react-query";
 import { renderInput, renderMath, type RenderInput } from "../shared/contracts";
@@ -74,7 +74,7 @@ function InlineContent({ items, theme }: { items: Inline[]; theme: PluginTheme }
     if (item.kind === "code") return <Text key={i} style={{ color: theme.colors.foreground, backgroundColor: theme.colors.surface1, fontFamily: "monospace" }}>{item.text}</Text>;
     if (item.kind === "link") return <Text key={i} accessibilityRole="link"
       style={{ color: theme.colors.accent, textDecorationLine: "underline" }}
-      onPress={() => { void Linking.openURL(item.href).catch(() => toast.error("Could not open link")); }}>
+      onPress={() => { void openExternalUrl(item.href).catch(() => toast.error("Could not open link")); }}>
       <InlineContent items={item.children} theme={theme} />
     </Text>;
     if (!("children" in item)) return null;
