@@ -395,6 +395,47 @@ describe.sequential("MaKa ACP provider", () => {
     }
   });
 
+  it("preserves cumulative ACP tool updates before the authoritative result", async () => {
+    const { provider, connection } = await connected();
+    const collector = collect(connection);
+    try {
+      const open = await openSession(connection, collector, "tool-stream", cwdA);
+      await connection.send(messagePrompt(open.sessionId, "tool-stream-1", "tool-stream"));
+      const tool = await collector.waitFor(
+        (event) =>
+          event.type === "timeline.item" &&
+          event.sessionId === open.sessionId &&
+          event.item.type === "tool_call" &&
+          event.item.name === "read_file" &&
+          event.item.status === "completed",
+      );
+      expect(tool.type).toBe("timeline.item");
+      if (tool.type === "timeline.item" && tool.item.type === "tool_call") {
+        expect(tool.item.detail.type).toBe("unknown");
+        if (tool.item.detail.type === "unknown") {
+          expect(tool.item.detail.output).toEqual({ text: "tool output" });
+        }
+      }
+      expect(
+        collector.events.filter(
+          (event) =>
+            event.type === "timeline.item" &&
+            event.sessionId === open.sessionId &&
+            event.item.type === "tool_call",
+        ),
+      ).toHaveLength(3);
+      await collector.waitFor(
+        (event) =>
+          event.type === "session.turn" &&
+          event.sessionId === open.sessionId &&
+          event.state === "completed",
+      );
+    } finally {
+      collector.unsubscribe();
+      await provider.dispose();
+    }
+  });
+
   it("reports prompt errors and cancels a pending turn", async () => {
     const { provider, connection } = await connected();
     const collector = collect(connection);
