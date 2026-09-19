@@ -136,6 +136,19 @@ function finishPrompt(requestId, sessionId, text) {
       status: "in_progress",
       rawInput: { filePath: "maka-test.txt" },
     });
+    if (text.includes("tool-stream")) {
+      update(sessionId, {
+        sessionUpdate: "tool_call_update",
+        toolCallId: "tool-" + requestId,
+        status: "in_progress",
+        content: [
+          {
+            type: "content",
+            content: { type: "text", text: "partial tool output" },
+          },
+        ],
+      });
+    }
     update(sessionId, {
       sessionUpdate: "tool_call_update",
       toolCallId: "tool-" + requestId,

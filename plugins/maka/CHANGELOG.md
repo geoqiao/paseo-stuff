@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.3 — 2026-09-19
+
+- Confirm the published MaKa `.41`/`.42` ACP line and its standard tool-call/tool-call-update mapping.
+- Preserve the existing public-shim adapter path; add a regression for cumulative tool updates before an authoritative result.
+- Probe the official `.42` ACP executable in isolated roots. MCP remains rejected, session load remains unavailable, and real `.42` tool execution remains unverified without a configured isolated model.
+
 ## 0.1.0-beta.2 — 2026-09-18
 
 - Target Paseo 0.9.0-beta.1 with exact SDK dependencies and a bounded 0.9 compatibility range.
