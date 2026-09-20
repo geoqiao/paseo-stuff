@@ -1,6 +1,6 @@
 {
   "name": "paseo-maka",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "description": "MaKa through its ACP provider for Paseo 0.9.",
   "repository": {
     "type": "git",

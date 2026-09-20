@@ -2,8 +2,8 @@
 
 An experimental server-only plugin that adds **MaKa** to Paseo 0.9's provider picker through
 the official `maka --acp` interface. It supports streamed conversations, tool cards when MaKa
-emits them, real file and shell work, follow-up prompts, cancellation, and MaKa's configuration
-selectors.
+emits them, standard tool approvals, real file and shell work, follow-up prompts, cancellation,
+and MaKa's configuration selectors.
 
 ## Install
 
@@ -11,8 +11,8 @@ Requirements: Paseo 0.9.0-beta.1 with plugins enabled, Node.js 22.19 or newer, a
 MaKa CLI on the machine running the Paseo daemon. The tested signed MaKa release is
 [0.2.0-dev.39.20260916](https://github.com/apache/maka/releases/tag/v0.2.0-dev.39.20260916).
 Keep Desktop and CLI on the same MaKa release because they share a workspace database. The
-published `.41` and `.42` nightlies were checked only in isolated profiles; they are not a reason
-to migrate a normal dev39 profile.
+published `.41`, `.42`, and `.43` nightlies were checked only in isolated profiles; they are not a
+reason to migrate a normal dev39 profile.
 
 Install the matching CLI release:
 
@@ -28,7 +28,7 @@ The plugin neither imports credentials nor changes your MaKa profile.
 Install the pinned plugin prerelease:
 
 ```bash
-paseo plugin add geoqiao/paseo-stuff:plugins/maka --ref maka-v0.1.0-beta.3 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/maka --ref maka-v0.1.0-beta.4 --host <your-host>
 ```
 
 For local development, run from this directory:
@@ -58,15 +58,17 @@ The tested official MaKa ACP implementation has these boundaries:
 
 - **Tool visibility:** When MaKa publishes standard ACP tool-call and tool-call-update
   notifications, Paseo renders the call, bounded output/progress, and final result through its
-  public ACP shim. The published `.41` and `.42` ACP line includes this mapper. Real `.42` tool
-  execution was not observed in the isolated candidate profile, and MaKa still publishes no ACP
-  usage updates.
+  public ACP shim. The published `.41`, `.42`, and `.43` ACP line includes this mapper. Real `.42`
+  and `.43` tool execution was not observed in isolated candidate profiles, and MaKa still
+  publishes no ACP usage updates.
 - **MCP:** MaKa rejects MCP servers. The plugin omits Paseo's MCP configuration and emits an
   explicit session notice, without exposing its values. Paseo's agent-management MCP is also
   unavailable inside MaKa conversations.
-- **Permissions and questions:** the interactive bridge is unavailable. The plugin preserves
-  MaKa's permission mode and never automatically approves tools. Tasks requiring an unsupported
-  interaction fail; resolve configuration through MaKa's own UI.
+- **Permissions and questions:** Standard ACP tool permission requests are forwarded through
+  Paseo's permission flow when MaKa emits them; the plugin never automatically approves tools.
+  The public Paseo 0.9 ACP shim does not expose `elicitation/create`, so MaKa questions/forms and
+  other elicitation interactions remain unsupported and fail explicitly. Configure effective
+  behavior through MaKa's own UI where possible.
 - **History:** follow-ups work while the session is connected. MaKa's ACP interface has native
   session listing and close, but no load/resume operation. The plugin therefore withholds session
   listing from Paseo so it cannot offer imports that would fail when opened. Imported history and

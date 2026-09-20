@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.0-beta.4 — 2026-09-20
+
+- Track MaKa `.43`'s standard ACP permission bridge through Paseo's public permission flow.
+- Preserve explicit failure for question/form elicitation because Paseo 0.9's ACP shim does not
+  expose `elicitation/create` to providers.
+- Add synthetic approval and unsupported-elicitation regressions; real `.43` tool execution and
+  approval remain pending isolated model configuration.
+
 ## 0.1.0-beta.3 — 2026-09-19
 
 - Confirm the published MaKa `.41`/`.42` ACP line and its standard tool-call/tool-call-update mapping.

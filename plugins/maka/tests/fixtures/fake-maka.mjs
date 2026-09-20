@@ -6,6 +6,8 @@ import { createInterface } from "node:readline";
 const spawnLog = process.env.MAKA_FAKE_SPAWN_LOG;
 const sessions = new Map();
 const pendingPrompts = new Map();
+const pendingPermissions = new Map();
+const pendingElicitations = new Map();
 let sequence = 0;
 let outputEnded = false;
 let backgroundTimer;
@@ -199,6 +201,55 @@ function prompt(requestId, params) {
     backgroundTimer = setInterval(() => undefined, 1_000);
     return;
   }
+  if (text.includes("permission")) {
+    const permissionId = "permission-" + requestId;
+    pendingPermissions.set(permissionId, {
+      requestId,
+      sessionId: params.sessionId,
+    });
+    send({
+      jsonrpc: "2.0",
+      id: permissionId,
+      method: "session/request_permission",
+      params: {
+        sessionId: params.sessionId,
+        toolCall: {
+          toolCallId: "tool-" + requestId,
+          title: "Read file",
+          status: "pending",
+          rawInput: { filePath: "maka-test.txt" },
+        },
+        options: [
+          { optionId: "allow-once", name: "Allow once", kind: "allow_once" },
+          { optionId: "reject-once", name: "Reject", kind: "reject_once" },
+        ],
+      },
+    });
+    return;
+  }
+  if (text.includes("question")) {
+    const elicitationId = "elicitation-" + requestId;
+    pendingElicitations.set(elicitationId, {
+      requestId,
+    });
+    send({
+      jsonrpc: "2.0",
+      id: elicitationId,
+      method: "elicitation/create",
+      params: {
+        sessionId: params.sessionId,
+        toolCallId: "tool-" + requestId,
+        mode: "form",
+        message: "Answer the test question",
+        requestedSchema: {
+          type: "object",
+          properties: { answer: { type: "string" } },
+          required: ["answer"],
+        },
+      },
+    });
+    return;
+  }
   if (text.includes("eof")) {
     setImmediate(() => {
       outputEnded = true;
@@ -236,6 +287,42 @@ input.on("line", (line) => {
     configId: message.params?.configId,
     value: message.params?.value,
   });
+
+  if (message.id !== undefined && message.method === undefined) {
+    const pending = pendingPermissions.get(String(message.id));
+    if (pending) {
+      pendingPermissions.delete(String(message.id));
+      if (message.error) {
+        errorResponse(pending.requestId, -32001, "permission request failed");
+        return;
+      }
+      const outcome = message.result?.outcome;
+      const approved = outcome?.outcome === "selected";
+      log("permission-response", {
+        requestId: pending.requestId,
+        sessionId: pending.sessionId,
+        outcome: outcome?.outcome,
+        optionId: outcome?.optionId,
+      });
+      finishPrompt(
+        pending.requestId,
+        pending.sessionId,
+        approved ? "permission-approved" : "permission-denied",
+      );
+      return;
+    }
+    const elicitation = pendingElicitations.get(String(message.id));
+    if (elicitation) {
+      pendingElicitations.delete(String(message.id));
+      errorResponse(
+        elicitation.requestId,
+        -32001,
+        "question interaction unavailable",
+      );
+      return;
+    }
+    return;
+  }
 
   if (message.method === "initialize") {
     if (process.env.MAKA_FAKE_HANG_INITIALIZE === "1") {
