@@ -146,7 +146,7 @@ describe.sequential("MaKa ACP provider", () => {
       expect(connection.capabilities).not.toContain("prompt.command");
       expect(connection.capabilities).not.toContain("prompt.image");
       expect(connection.capabilities).not.toContain("prompt.steer");
-      expect(connection.capabilities).not.toContain("permission");
+      expect(connection.capabilities).toContain("permission");
       // The native ACP peer advertises a non-empty session/list result, but
       // MaKa cannot load those sessions. Do not offer unopenable imports to Paseo.
       expect(connection.capabilities).not.toContain("session.list");
@@ -195,7 +195,7 @@ describe.sequential("MaKa ACP provider", () => {
         expect(opened.persistence).toBeUndefined();
         expect(opened.restoration).toBe("core");
         expect(opened.capabilities).not.toContain("prompt.command");
-        expect(opened.capabilities).not.toContain("permission");
+        expect(opened.capabilities).toContain("permission");
         expect(opened.capabilities).not.toContain("session.list");
         expect(opened.capabilities).not.toContain("session.persistence");
       }
@@ -564,9 +564,11 @@ describe.sequential("MaKa ACP provider", () => {
     }
   });
 
-  it("rejects unsupported commands, sessions, permissions, and persistence", async () => {
+  it("forwards standard ACP permission requests and keeps unsupported inputs rejected", async () => {
     const { provider, connection } = await connected();
+    const collector = collect(connection);
     try {
+      expect(connection.capabilities).toContain("permission");
       await expect(
         connection.send({
           type: "session.prompt",
@@ -581,14 +583,44 @@ describe.sequential("MaKa ACP provider", () => {
       await expect(
         connection.send({ type: "sessions", requestId: "sessions-1" }),
       ).rejects.toThrow("persistent sessions are not importable");
-      await expect(
-        connection.send({
+
+      const open = await openSession(connection, collector, "permission", cwdA);
+      await connection.send(messagePrompt(open.sessionId, "permission-1", "permission"));
+      const permission = await collector.waitFor(
+        (event) =>
+          event.type === "session.permission" &&
+          event.sessionId === open.sessionId,
+      );
+      expect(permission.type).toBe("session.permission");
+      if (permission.type === "session.permission") {
+        expect(permission.request.kind).toBe("tool");
+        expect(permission.request.input).toEqual({ filePath: "maka-test.txt" });
+        const allow = permission.request.actions?.find(
+          (action) => action.behavior === "allow",
+        );
+        expect(allow).toBeDefined();
+        await connection.send({
           type: "session.permission",
-          sessionId: "not-opened",
-          permissionId: "permission-1",
-          response: { behavior: "deny" },
-        }),
-      ).rejects.toThrow("interactive permissions");
+          sessionId: open.sessionId,
+          permissionId: permission.request.id,
+          response: {
+            behavior: "allow",
+            selectedActionId: allow?.id,
+          },
+        });
+        await collector.waitFor(
+          (event) =>
+            event.type === "session.permission_resolved" &&
+            event.sessionId === open.sessionId &&
+            event.permissionId === permission.request.id,
+        );
+      }
+      await collector.waitFor(
+        (event) =>
+          event.type === "session.turn" &&
+          event.sessionId === open.sessionId &&
+          event.state === "completed",
+      );
 
       const before = (await readLog()).filter(
         (entry) => entry.event === "wire" && entry.method === "session/new",
@@ -604,6 +636,29 @@ describe.sequential("MaKa ACP provider", () => {
       ).length;
       expect(after).toBe(before);
     } finally {
+      collector.unsubscribe();
+      await provider.dispose();
+    }
+  });
+
+  it("keeps ACP question elicitation unsupported when the public shim has no form handler", async () => {
+    const { provider, connection } = await connected();
+    const collector = collect(connection);
+    try {
+      const open = await openSession(connection, collector, "question", cwdA);
+      await connection.send(messagePrompt(open.sessionId, "question-1", "question"));
+      const failed = await collector.waitFor(
+        (event) =>
+          event.type === "session.turn" &&
+          event.sessionId === open.sessionId &&
+          event.state === "failed",
+      );
+      expect(failed.type).toBe("session.turn");
+      if (failed.type === "session.turn") {
+        expect(failed.error?.message).toContain("question interaction unavailable");
+      }
+    } finally {
+      collector.unsubscribe();
       await provider.dispose();
     }
   });

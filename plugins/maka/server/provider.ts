@@ -21,7 +21,6 @@ const UNSUPPORTED_CAPABILITIES = new Set([
   "prompt.command",
   "prompt.image",
   "prompt.steer",
-  "permission",
   "permission.tool_policy",
   "session.list",
   "session.persistence",
@@ -502,9 +501,6 @@ function assertSupportedInput(input: ProviderInput): void {
       throw new Error("MaKa ACP does not support image prompts");
     }
   }
-  if (input.type === "session.permission") {
-    throw new Error("MaKa ACP does not support interactive permissions");
-  }
   if (
     input.type === "session.archive" ||
     input.type === "session.unarchive" ||
@@ -518,8 +514,6 @@ function filterProviderEvent(event: ProviderEvent): ProviderEvent | undefined {
   if (
     event.type === "session.commands" ||
     event.type === "sessions" ||
-    event.type === "session.permission" ||
-    event.type === "session.permission_resolved" ||
     event.type === "session.persistence"
   ) {
     return undefined;

@@ -1,12 +1,13 @@
 # Verification
 
-Verification date: 2026-09-19 UTC.
+Verification date: 2026-09-20 UTC.
 
 ## Runtime and release evidence
 
-Plugin version 0.1.0-beta.3 targets Paseo
+Plugin version 0.1.0-beta.4 targets Paseo
 0.9.0-beta.1 with exact 0.9.0-beta.1 client, plugin, and protocol packages and ACP SDK
-1.4.0. The checks below preceded publication of the pinned prerelease.
+1.4.0. The pinned prerelease tracks the public MaKa permission bridge while retaining explicit
+limits for elicitation forms.
 
 The signed MaKa release used for the normal profile is 0.2.0-dev.39.20260916:
 
@@ -19,11 +20,14 @@ The signed MaKa release used for the normal profile is 0.2.0-dev.39.20260916:
   The staged application passed codesign --verify --deep --strict and macOS notarization
   assessment before replacement.
 
-The published npm nightlies 0.2.0-dev.40.20260917, 0.2.0-dev.41.20260918, and
-0.2.0-dev.42.20260918 were inspected only in temporary profiles. The dev40 package integrity is
+The published npm nightlies 0.2.0-dev.40.20260917, 0.2.0-dev.41.20260918,
+0.2.0-dev.42.20260918, and 0.2.0-dev.43.20260919 were inspected only in temporary profiles. The
+dev40 package integrity is
 sha512-87VI79VN+wai7CEj3pXuuFjs1qf4dowhFZKsdgl8bOZBjZafL0bnRueBpdOSDEf9ePP6KkQ4Fh5cWO1mJFzZRw==.
 The dev42 package integrity is
 sha512-+Ne+n3VdqF4Llrt2scvlC6H+ioVsnwcLioAgkpqB80rvuZCKA0RdR5A5j2Cc7xnA77m8aphEFwLmYIjQSp0Rkg==.
+The dev43 package integrity is
+sha512-hUb5TtCpYR1Cf3MVHofsLXSaHsgn8j/+lfSk7pc12IqTLSyB60QXdaMKwGY+s/mK6MCZUOJ8IQba8ztBr7ehqQ==.
 These nightlies use runtime schema 19, while the signed dev39 release keeps runtime schema 18.
 The normal profile therefore continues to use the matching signed dev39 Desktop and CLI.
 
@@ -48,10 +52,12 @@ updates. Session creation uses MaKa's configured default model and does not expo
 The dev40 ACP source adds standard ACP tool-call and tool-call-update mapping for tool start,
 output deltas, progress, previews, and final results. Published dev41 contains that change, and
 dev42 keeps the same mapper while adding bounded cumulative-update reconciliation and authoritative
-result handling. The plugin preserves these events and the public Paseo 0.9 shim renders bounded
-tool output and progress. Tool lifecycle conversion was exercised through the synthetic
-fake-maka.mjs peer and public shim. The isolated dev42 run did not emit a real tool lifecycle, so
-live candidate tool execution remains unverified.
+result handling. Dev43 adds standard permission and elicitation interaction routing, pending and
+resolved interaction cards, and cancellation fences. The plugin preserves standard permission
+events through the public Paseo flow. The public shim does not expose `elicitation/create`, so
+questions and forms fail explicitly. Tool lifecycle conversion was exercised through the
+synthetic fake-maka.mjs peer and public shim; the isolated dev42 and dev43 runs did not emit a
+real tool lifecycle, so live candidate tool execution and approval remain unverified.
 
 The native MaKa session/list capability is deliberately withheld from Paseo. Paseo maps each
 listed result into an import offering and later supplies persistence when opening it; MaKa cannot
@@ -70,13 +76,14 @@ The plugin check uses the public Paseo 0.9 ACP shim and synthetic ACP peers. It 
 - streamed thinking and answer chunks with shared native IDs;
 - isolated working directories and environment;
 - MCP omission and notice delivery;
-- unsupported commands, images, steering, permissions, persistence, archive, revert, and
-  unarchive inputs;
+- standard permission request and resolution forwarding;
+- explicit failure for unsupported question/form elicitation;
+- unsupported commands, images, steering, persistence, archive, revert, and unarchive inputs;
 - prompt errors, cancellation, EOF, startup failure, and bounded disposal.
 
-The final check passed under Node.js 22 and Node.js 24 with TypeScript, oxlint, and 17 tests. The
-same check also passed under the installed Node.js 26.8.2 runtime. The checks do not require model
-credentials.
+The local final check passed under Node.js 26.8.2 with TypeScript, oxlint, and 18 tests. The
+required Node.js 22/24 CI matrix is the publication gate for this change. The checks do not
+require model credentials.
 
 A direct raw ACP probe against dev40 in a temporary HOME reported version 0.2.0-dev.40.20260917,
 session capabilities list and close, created a session with three config options, and listed the
@@ -92,6 +99,13 @@ rejected as unsupported, and session/load returned method not found. A separate 
 probe completed without a tool_call or tool_call_update notification because the isolated profile
 had no configured model/tool execution. These results are recorded as protocol evidence, not as
 live tool-execution evidence.
+
+A direct raw ACP probe against dev43 in fresh temporary HOME/XDG roots reported version
+0.2.0-dev.43.20260919, session capabilities list and close, created a session with three config
+options, completed two text prompts, and closed the session. A non-empty MCP request was rejected
+as unsupported, and session/load returned method not found. Its file-reading prompt produced no
+tool_call or tool_call_update notification. The process exited with no stderr; these results are
+protocol evidence, not live tool, permission, or approval evidence.
 
 The normal-profile dev39 ACP probe was the bounded inference check. It initialized, created a
 session, returned MAKA_PASEO_REAL_OK, closed the session, and left no running MaKa process.
@@ -112,12 +126,14 @@ Desktop picker's pixels. The Paseo daemon and app were not restarted.
   load/resume support exists.
 - MaKa's configured default model and collaboration/thinking selectors are supported.
 - Standard ACP tool events are supported when emitted by the installed MaKa build.
-- MCP servers, interactive permissions/questions, image prompts, provider commands, prompt
-  steering, persistence, imported history, resume/load, and usage updates are unsupported.
+- Standard ACP tool permission requests are supported when emitted by MaKa and presented through
+  Paseo's permission flow; the plugin never auto-approves them. Question/form elicitation,
+  additional MCP servers, image prompts, provider commands, prompt steering, persistence,
+  imported history, resume/load, and usage updates are unsupported.
 - The plugin does not apply Paseo custom system prompts, provider options, or tool policy to MaKa.
-- The signed dev39 normal profile remains the installed live target. The dev40-dev42 nightlies
+- The signed dev39 normal profile remains the installed live target. The dev40-dev43 nightlies
   require a Desktop release that supports runtime schema 19 before they can be used with that
-  profile; dev42 live tool execution remains pending isolated model configuration.
+  profile; dev42/dev43 live tool execution remains pending isolated model configuration.
 - Mobile, narrow-layout, light-theme, and post-reload Paseo UI pixels were not exercised in this
   migration. The installed provider conversation was verified through public Paseo APIs.
 
@@ -135,6 +151,11 @@ Desktop picker's pixels. The Paseo daemon and app were not restarted.
 - [MaKa dev42 ACP tool mapper](https://github.com/apache/maka/blob/v0.2.0-dev.42.20260918/packages/cli/src/acp/tool-event-mapper.ts)
 - [MaKa dev42 session registry](https://github.com/apache/maka/blob/v0.2.0-dev.42.20260918/packages/cli/src/acp/session-registry.ts)
 - [MaKa nightly package 0.2.0-dev.42.20260918](https://www.npmjs.com/package/maka-agent/v/0.2.0-dev.42.20260918)
+- [MaKa published release v0.2.0-dev.43.20260919](https://github.com/apache/maka/releases/tag/v0.2.0-dev.43.20260919)
+- [MaKa dev43 ACP interaction agent](https://github.com/apache/maka/blob/v0.2.0-dev.43.20260919/packages/cli/src/acp/maka-acp-agent.ts)
+- [MaKa dev43 ACP interactions](https://github.com/apache/maka/blob/v0.2.0-dev.43.20260919/packages/cli/src/acp/session-interactions.ts)
+- [MaKa dev43 ACP session registry](https://github.com/apache/maka/blob/v0.2.0-dev.43.20260919/packages/cli/src/acp/session-registry.ts)
+- [MaKa nightly package 0.2.0-dev.43.20260919](https://www.npmjs.com/package/maka-agent/v/0.2.0-dev.43.20260919)
 - [Paseo MaKa upstream maintenance guide](upstream-maintenance.md)
 
 Credentials, personal transcripts, local host configuration, and raw live logs are excluded from
