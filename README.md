@@ -11,11 +11,11 @@ shared runtime or root-hoisted dependency tree.
 | Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
-| MaKa | [plugins/maka](plugins/maka) | Experimental provider for the official MaKa ACP CLI; uses MaKa's configured default model. MCP forwarding, permission dialogs and session reopening are not supported by the tested MaKa release. |
+| MaKa | [plugins/maka](plugins/maka) | Experimental provider for the official MaKa ACP CLI; uses MaKa's configured default model. MCP forwarding and session reopening remain unsupported; standard permission requests are forwarded when MaKa emits them. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
 The four plugins above Pet support **Paseo 0.9.0-beta.1** in these prereleases:
-Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.4**, MaKa **0.1.0-beta.2**,
+Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.5**, MaKa **0.1.0-beta.4**,
 and Math Renderer **0.1.0-beta.3**. Pet remains on its existing 0.8 support range.
 Use each plugin's pinned installation command and read its verification limits.
 
@@ -40,9 +40,8 @@ available for existing installations. The existing Cafe entries keep their IDs;
 the registry migration in PR #97 has merged and points to this repository.
 
 Existing Git installations do **not** switch repositories automatically. See the
-[migration notes](MIGRATION.md) before changing an installed source. Activity beta.5
-includes the tested native-loading fix beyond the old standalone beta.4; DSH beta.3
-changes publication metadata and documentation only.
+[migration notes](MIGRATION.md) before changing an installed source. Each plugin
+README records its current immutable install tag and verification limits.
 
 ## Development
 
