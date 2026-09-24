@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.1.0-beta.6 — 2026-09-24
+
+- Add the published DSH `0.1.7-rc.1` CLI/ACP closure to the exact runtime
+  guard after an isolated official-closure ACP probe and a production provider
+  factory initialize/close check.
+- Retain exact rejection of untested DSH versions, the narrow
+  `session/load` to `session/resume` bridge, typed tool output projection,
+  opaque model IDs, and the existing no-auto-approval policy.
+- Update the pinned installation reference and verification record. No model
+  prompt or paid inference was used for this upstream compatibility check.
+
 ## 0.1.0-beta.5 — 2026-09-23
 
 - Add the published DSH `0.1.7-alpha.2` CLI/ACP closure to the exact runtime

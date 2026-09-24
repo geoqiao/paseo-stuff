@@ -15,7 +15,7 @@ shared runtime or root-hoisted dependency tree.
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
 The four plugins above Pet support **Paseo 0.9.0-beta.1** in these prereleases:
-Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.5**, MaKa **0.1.0-beta.4**,
+Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.6**, MaKa **0.1.0-beta.4**,
 and Math Renderer **0.1.0-beta.3**. Pet remains on its existing 0.8 support range.
 Use each plugin's pinned installation command and read its verification limits.
 
