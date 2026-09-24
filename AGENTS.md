@@ -12,6 +12,7 @@
 ## Publication direction
 - `geoqiao/paseo-stuff` is the canonical development and release repository for all plugins in this project. Keep each plugin independently installable from its subdirectory.
 - The current Cafe submission scope is Readable Agent Activity, DeepSeek Harness, Math Renderer and MaKa. Paseo Pet stays in this repository but is excluded from Cafe submissions unless the user changes that decision.
+- MaKa is unmaintained since 2026-09-24: its Cafe entry stays listed with an unmaintained caveat, and it is excluded from upstream tracking, compatibility work and releases unless the user revives it.
 - Preserve existing plugin/catalog IDs when migrating source pointers. Old standalone repositories retain history and migration notices, not parallel ongoing development.
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 

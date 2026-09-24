@@ -11,12 +11,13 @@ shared runtime or root-hoisted dependency tree.
 | Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
-| MaKa | [plugins/maka](plugins/maka) | Experimental provider for the official MaKa ACP CLI; uses MaKa's configured default model. MCP forwarding and session reopening remain unsupported; standard permission requests are forwarded when MaKa emits them. |
+| MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
 The four plugins above Pet support **Paseo 0.9.0-beta.1** in these prereleases:
-Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.6**, MaKa **0.1.0-beta.4**,
-and Math Renderer **0.1.0-beta.3**. Pet remains on its existing 0.8 support range.
+Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.6**, MaKa **0.1.0-beta.4**
+(final, unmaintained), and Math Renderer **0.1.0-beta.3**. Pet remains on its existing
+0.8 support range.
 Use each plugin's pinned installation command and read its verification limits.
 
 Read each plugin's README before installing. Plugins are trusted, unsandboxed code;
@@ -89,7 +90,7 @@ The current Cafe scope includes these four plugins, all sourced from this reposi
 | `maka` | `plugins/maka` | [Merged entry #120](https://github.com/paseo-cafe/paseo-cafe/pull/120) |
 
 Paseo Pet remains managed here but is not submitted to Cafe. All four entries have
-merged. Version/README updates appear after Cafe's next scan and deployment;
+merged. The MaKa entry stays listed with an unmaintained caveat. Version/README updates appear after Cafe's next scan and deployment;
 updated curator caveats require a separate Cafe review.
 
 ## Licenses and publication scope

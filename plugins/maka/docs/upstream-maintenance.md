@@ -1,5 +1,8 @@
 # MaKa upstream release maintenance
 
+> **Paused on 2026-09-24.** The plugin is unmaintained and no longer tracked by the daily
+> upstream check. Keep this procedure for reviving the provider; it is not an active process.
+
 This procedure covers compatibility updates to `plugins/maka` in `geoqiao/paseo-stuff`.
 The initial verified baseline is MaKa `v0.2.0-dev.31.20260913`, commit
 `0d4a6ba5f48de6807ab96d6b5aad3635cc6a1f57`, and plugin `0.1.0-beta.1`.

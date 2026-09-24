@@ -1,5 +1,10 @@
 # MaKa provider for Paseo
 
+> **Unmaintained since 2026-09-24.** MaKa is still changing too quickly to track release by
+> release. The last release is `maka-v0.1.0-beta.4`, tested with signed MaKa Desktop/CLI
+> `0.2.0-dev.39.20260916` on Paseo 0.9. Newer MaKa nightlies are not reviewed or supported.
+> The code stays here so the provider can be revived later.
+
 An experimental server-only plugin that adds **MaKa** to Paseo 0.9's provider picker through
 the official `maka --acp` interface. It supports streamed conversations, tool cards when MaKa
 emits them, standard tool approvals, real file and shell work, follow-up prompts, cancellation,
