@@ -13,7 +13,7 @@ patched Paseo app is required.
 > **Requirements:** Paseo 0.8.x or 0.9.0-beta.1, daemon Node.js 22.19.0 or
 > newer, and a separately installed official DeepSeek Harness executable. The
 > supported and tested DSH versions are **0.1.5-rc.1**, **0.1.5-rc.2**,
-> **0.1.6-alpha.2**, and **0.1.7-alpha.2**. The executable must be able to run
+> **0.1.6-alpha.2**, **0.1.7-alpha.2**, and **0.1.7-rc.1**. The executable must be able to run
 > `dsh --version` and
 > `dsh --profile acp`.
 
@@ -36,11 +36,11 @@ patched Paseo app is required.
 
 Install a verified official DSH version **on the daemon machine**, then check
 that the daemon can find the executable on its PATH. The npm `latest` and
-`next` dist-tags currently resolve to `0.1.5-rc.2` and `0.1.5-rc.3`; the
-separately tagged alpha release below is the newest tested official closure:
+`next` dist-tags currently resolve to `0.1.5-rc.3` and `0.1.7-rc.1`; the
+newest tested official closure is:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.1.7-alpha.2
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.1.7-rc.1
 dsh --version
 ~~~
 
@@ -68,8 +68,8 @@ The parent process environment is never mutated.
 The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, and the isolated published CLI/ACP
-closure `0.1.7-alpha.2`; all use ACP SDK `1.4.0`. The plugin probes the CLI
-version and explicitly accepts only the four DSH versions
+closures `0.1.7-alpha.2` and `0.1.7-rc.1`; all use ACP SDK `1.4.0`. The plugin probes the CLI
+version and explicitly accepts only the five DSH versions
 listed above; it does not claim compatibility with other package closures.
 
 ## ACP compatibility and limitations
@@ -124,7 +124,7 @@ Review this trusted, unsandboxed plugin and install the pinned prerelease on the
 intended daemon:
 
 ~~~sh
-paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.5 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.6 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -216,6 +216,13 @@ in an isolated `DSH_HOME`. Its ACP initialize response retained `session/list`,
 initialize and clean close through Paseo's public shim. No model prompt or paid
 inference was attempted. The exact-version guard now accepts this release while
 retaining the existing resume bridge and tool-output fidelity path.
+
+The beta.6 upstream check installed the published `0.1.7-rc.1` CLI/ACP closure
+in an isolated `DSH_HOME`. Its ACP initialize response retained `session/list`,
+`session/resume`, and `session/close`; a bounded `session/list` returned an empty
+catalog, and the production provider factory completed capability mapping and
+clean connection/provider close through Paseo's public shim. No model prompt,
+tool execution, approval, credential or paid inference was attempted.
 
 Separately, an installed macOS Paseo 0.8.0 daemon completed real turns and kept
 tool-output tails, prior displayed history and DSH context through a plugin

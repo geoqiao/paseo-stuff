@@ -11,6 +11,7 @@ export const SUPPORTED_DSH_VERSIONS = [
   "0.1.5-rc.2",
   "0.1.6-alpha.2",
   "0.1.7-alpha.2",
+  "0.1.7-rc.1",
 ] as const;
 
 const VERSION_PROBE_TIMEOUT_MS = 5_000;
@@ -94,7 +95,8 @@ export function isSupportedDshVersion(
     version === SUPPORTED_DSH_VERSIONS[0] ||
     version === SUPPORTED_DSH_VERSIONS[1] ||
     version === SUPPORTED_DSH_VERSIONS[2] ||
-    version === SUPPORTED_DSH_VERSIONS[3]
+    version === SUPPORTED_DSH_VERSIONS[3] ||
+    version === SUPPORTED_DSH_VERSIONS[4]
   );
 }
 
