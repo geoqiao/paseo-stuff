@@ -18,7 +18,8 @@
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 
 ## Paseo contracts
-- Current migration target is Paseo app/daemon and SDK 0.9.0-beta.1; Paseo Pet remains on 0.8.0. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
+- Current verification target is Paseo app/daemon 0.10.0-beta.1 and stable 0.9.2, with SDK devDependencies pinned to 0.9.2; Paseo Pet remains on 0.8.0. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
+- Declare `requirements.paseo` as a minimum (`>=`), following the Paseo requirements reference. Raise it only when adopting a newer API; add an upper bound only for a release known to be incompatible. Record the actually tested versions in each plugin's docs, not in the range.
 - Fetch https://paseo.sh/llms.txt, then the version-matching plugin reference before adopting unfamiliar APIs.
 - Client entries: `index.client.tsx`, client UI under `client/`.
 - Optional daemon entry: `index.server.ts`, daemon-only modules under `server/`.

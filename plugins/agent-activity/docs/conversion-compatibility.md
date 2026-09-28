@@ -70,6 +70,6 @@ The initial formatter pass preserved the disabled local installation. It was lat
 found enabled and reloaded for the minimal Thinking spacing trial; see the current
 verification record. The user accepted the local trial before authorizing beta.6.
 
-**Paseo 0.8 Full detail only remains required on every connected client.** Summary
+**Full detail only remains required on every connected client.** Summary
 still requires a public host grouping/detail-renderer contract. No private setting,
 DOM or React-state inspection is used to guess the user's display preference.

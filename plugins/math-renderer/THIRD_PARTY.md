@@ -33,4 +33,6 @@ https://github.com/getpaseo/paseo/pull/2562
 
 Five unmodified Paseo source fixtures are Apache-2.0, pinned to v0.8.0 commit
 b8e24677e12b226c7c38c1c3a40649daa9f1152f. See tests/fixtures/paseo-0.8/README.md
-and its LICENSE. They are test-only and excluded from production bundles.
+and its LICENSE. Eight further Apache-2.0 fixtures are pinned to v0.9.2 commit
+c67b7158b441bb09026b38d86ae335cc4b49190a; see tests/fixtures/paseo-0.9/README.md
+and its LICENSE. All are test-only and excluded from production bundles.

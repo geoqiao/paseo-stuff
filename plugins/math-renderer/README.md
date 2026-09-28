@@ -3,9 +3,10 @@
 Render **block LaTeX inside assistant reply bodies**, with one muted English action row
 per formula: **Show LaTeX** and **Copy LaTeX**. No extra panel or duplicate message toolbar.
 
-> **Experimental beta — 0.1.0-beta.3.** Requires Paseo app and daemon
-> **0.9.0-beta.1 or newer within 0.9**. Replies stay native while streaming; supported
-> block formulas render after completion.
+> **Experimental beta — 0.1.0-beta.4.** Requires Paseo app and daemon
+> **0.9.0-beta.1 or newer**. Checked offline against Paseo 0.9.2 and 0.10.0-beta.1,
+> and live on a 0.10.0-beta.1 daemon in the hosted web client. Replies stay native while
+> streaming; supported block formulas render after completion.
 > Inline math is not typeset. Native iOS/Android acceptance and complete native Markdown
 > parity are not finished. Read the limitations before enabling this trusted plugin.
 
@@ -20,7 +21,7 @@ Plugins run as trusted, unsandboxed code. Review the source, choose the target d
 and enable plugins in Paseo before installing the pinned prerelease:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.3 --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.4 --host <host:port>
 paseo --host <host:port> plugin ls
 ```
 
@@ -29,8 +30,10 @@ it does not import any sibling plugin or depend on root-installed packages.
 For local development, run the checks below, then install this directory or reload
 the existing runtime ID.
 
-Beta.3 adds 0.9 whole-message handling, host external-link opening and a native-reply
-mode for chat Find. Beta.2 fixed mobile bundle loading and added bold Greek symbols.
+Beta.4 removes the `<0.10.0` upper bound so Paseo 0.10 prereleases can load the plugin,
+and tests against Paseo 0.9.2 host sources. Beta.3 added 0.9 whole-message handling,
+host external-link opening and a native-reply mode for chat Find. Beta.2 fixed mobile
+bundle loading and added bold Greek symbols.
 See [verification details](docs/verification.md#native-bundle-loading-fix-beta2)
 for the reproduced Hermes error and the scope of the fix.
 
@@ -67,15 +70,17 @@ or wrap the entire reply in a code fence.
 ## Limitations
 
 - **Block math only:** `$...$` and `\(...\)` remain source, not inline math layout.
-- Paseo 0.9 does not expose its native Markdown renderer or math-node extensions.
+- The Paseo plugin SDK (0.9.0-beta.1 through 0.10.0-beta.1) does not expose the native
+  Markdown renderer or math-node extensions.
   The plugin replaces supported source rows with its own small Markdown renderer;
   code highlighting, workspace-file interactions and native selection behavior are not fully reproduced.
 - Tables, images, explicit HTML, non-HTTP(S) links, more than 32 formulas or more
   than 96,000 characters cause the entire completed source reply to remain native.
-- **Chat Find:** Paseo 0.9 cannot map a search hit to a replaced plugin row. Before
-  Cmd/Ctrl+F, choose **Math: use native replies for chat Find** in the Command Center.
+- **Chat Find:** Paseo 0.9.0-beta.1 through 0.10.0-beta.1 cannot map a search hit to a
+  replaced plugin row. Before Cmd/Ctrl+F, choose **Math: use native replies for chat
+  Find** in the Command Center.
   Choose **Math: render block formulas** afterwards. These actions affect this
-  client's selected host, restore original rows without changing history, and reset
+  client's selected host, restore native rows without changing history, and reset
   to formula rendering when the plugin/client reloads. Other clients are unaffected.
   Find inside rendered formula replies remains an upstream integration limitation.
 - Local formula viewing state does not survive every virtualization unmount.
@@ -137,7 +142,9 @@ the daemon or auto-enable a disabled installation.
 ## Verification
 
 The 0.9 migration adds real pinned host presentation/identity/Find-model tests and
-bundle lifecycle checks for both native-reply actions. Historical evidence follows;
+bundle lifecycle checks for both native-reply actions. Beta.4 pins those host sources
+to Paseo v0.9.2 (identical in v0.10.0-beta.1) and passes the checks with the 0.9.2 and
+0.10.0-beta.1 SDK packages. Historical evidence follows;
 see [verification details](docs/verification.md) for current checks and limits.
 
 - Typecheck, lint and **57 automated tests** passed locally, including the complete

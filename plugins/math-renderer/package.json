@@ -1,9 +1,9 @@
 {
   "name": "paseo-math-renderer",
-  "version": "0.1.0-beta.3",
+  "version": "0.1.0-beta.4",
   "private": true,
   "type": "module",
-  "description": "Render block LaTeX in completed Paseo replies, with source viewing, copying and native-reply mode. Experimental beta for Paseo 0.9.",
+  "description": "Render block LaTeX in completed Paseo replies, with source viewing, copying and native-reply mode. Experimental beta for Paseo 0.9.0-beta.1 or newer.",
   "license": "MIT",
   "author": "geoqiao",
   "repository": {
@@ -32,9 +32,9 @@
     "@xmldom/xmldom": "0.9.12"
   },
   "devDependencies": {
-    "@getpaseo/client": "0.9.0-beta.1",
-    "@getpaseo/plugin": "0.9.0-beta.1",
-    "@getpaseo/protocol": "0.9.0-beta.1",
+    "@getpaseo/client": "0.9.2",
+    "@getpaseo/plugin": "0.9.2",
+    "@getpaseo/protocol": "0.9.2",
     "@tanstack/react-query": "5.90.11",
     "@types/markdown-it": "14.1.2",
     "@types/node": "^22.0.0",

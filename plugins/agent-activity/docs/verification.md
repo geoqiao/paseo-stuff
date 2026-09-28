@@ -1,5 +1,40 @@
 # Verification and remaining gaps
 
+## Beta.8 — Paseo 0.9.2 / 0.10.0-beta.1 compatibility (2026-09-28)
+
+- Trigger: the local desktop daemon auto-updated to **0.10.0-beta.1** and rejected
+  beta.7 (`requires Paseo >=0.8.0 <0.10.0. Your daemon is 0.10.0-beta.1`). The
+  manifest now declares only `>=0.8.0`; see [compatibility](compatibility.md).
+- `npm run check` on Node **24.18.0** with the pinned SDK **0.9.2**: typecheck, lint
+  with no warnings/errors, **8 files / 252 tests**, including actual Hermes evaluation.
+  The same tree with SDK **0.10.0-beta.1** installed without saving gives the same
+  result. An isolated matrix of the unchanged beta.7 tree also passed with SDK
+  0.9.0-beta.1, 0.9.2 and 0.10.0-beta.1. Node 22 was not run locally; CI covers 22 and 24.
+- `@getpaseo/plugin` dist is byte-identical in 0.9.0-beta.1, 0.9.2 and 0.10.0-beta.1.
+  Protocol 0.9.0-beta.1 to 0.9.2 only adds an optional timeline search `count`; client
+  and protocol 0.9.2 to 0.10.0-beta.1 only add daemon password authentication and hello rejection.
+  `protocol/agent-types` and tool-name normalization are unchanged. The host app's
+  React, React Native, Expo, Zod, React Query and Lucide ranges are identical in all three tags.
+- Two 0.9 fixtures were replaced with unmodified v0.9.2 source (`agent-stream/presentation.ts`,
+  `utils/split-markdown-blocks.ts`); the other five were already identical. All seven
+  match v0.10.0-beta.1. The nine 0.9 host tests pass unchanged; only the suite label
+  now names 0.9.2. The 0.8 fixtures and their tests are unchanged.
+- Lockfile changes are limited to the four `@getpaseo` development packages and their
+  transitive `ws` (8.21.3 to 8.22.0). No runtime dependency is added.
+- Summary remains unsupported: grouping code and the public transform input are unchanged.
+- **Live 0.10.0-beta.1 check:** beta.8 at PR head `1f44a52` was reloaded into the existing
+  enabled directory installation `colorful-agent-activity` on the local macOS daemon,
+  which reports it running; Pet stayed disabled. The client was the hosted web app
+  (app.paseo.sh) in desktop Chromium at 1280×720, paired through the relay, with Full
+  detail. A real DeepSeek Harness turn's Bash call rendered as an Activity card.
+  Expanding it showed syntax-highlighted JSON Input and the `paseo-plugin-check` Output;
+  collapsing restored the header. Light and dark schemes both rendered.
+- **Not verified:** the Paseo desktop app, any live 0.9.2 daemon, Summary, narrow layouts,
+  streaming in a live UI (the turn had finished before viewing) and native iOS/Android.
+  Spacing was not measured. These prerelease checks are not stable 0.10 acceptance.
+
+The sections below record historical checks for earlier releases.
+
 ## Beta.7 — Paseo 0.9 migration (2026-09-18)
 
 - `npm run check` passed on Node **22.23.2** and **24**: typecheck, lint with no
@@ -15,8 +50,6 @@
   establish visual acceptance of its cards. No native mobile UI check was performed.
 - Summary remains unsupported: 0.9 preserves all custom cards but bypasses native
   grouping. No host preference was changed. DSH and Pet enable states were preserved.
-
-Earlier sections record historical checks for earlier releases.
 
 ## Beta.6 — unified formatter and local acceptance (2026-09-13)
 

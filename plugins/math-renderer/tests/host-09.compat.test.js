@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { createStreamPresentation, transformTimelineItem, ChatFindModel } from "./host-09";
+import {
+  createStreamPresentation, transformTimelineItem, ChatFindModel, getStreamItemMessageId, splitMarkdownBlocks,
+} from "./host-09";
 import { transformMessage } from "../client/transform";
 
 const plugins = [{ id: "math", timelineTransformers: [
@@ -33,7 +35,14 @@ describe("Paseo 0.9 whole-message presentation", () => {
     const first = present(input([message("$$x^2$$")]));
     expect(first.head[0].kind).toBe("assistant_message");
     const source = message(text);
-    expect(present(input([], [source])).tail).toEqual([source]);
+    const rows = present(input([], [source])).tail;
+    // Native history is split into host Markdown block rows that keep the source identity.
+    const blocks = splitMarkdownBlocks(text);
+    expect(blocks.join("\n\n")).toBe(text);
+    expect(rows).toEqual(blocks.map((block, blockIndex) => ({
+      ...source, id: `${source.id}:block:${blockIndex}`, blockGroupId: source.id, blockIndex, text: block,
+    })));
+    expect(rows).toEqual(createStreamPresentation()({ ...input([], [source]), transform: undefined }).tail);
   });
   it.each(["overview", "detailed"])("leaves tools unchanged in %s", level => {
     const tool = id => ({ id, kind: "tool_call", timestamp: new Date(0), payload: { source: "agent", data: {
@@ -44,7 +53,7 @@ describe("Paseo 0.9 whole-message presentation", () => {
     const native = createStreamPresentation()({ ...input([], tail), level, transform: undefined });
     expect(custom.tail.slice(0, -1)).toEqual(native.tail.slice(0, -1));
   });
-  it("native mode restores canonical row IDs required by Chat Find", async () => {
+  it("native mode restores the message identity required by Chat Find", async () => {
     vi.useFakeTimers();
     const source = message("$$x^2$$\n\nfind-me");
     const present = createStreamPresentation();
@@ -52,15 +61,20 @@ describe("Paseo 0.9 whole-message presentation", () => {
     const native = present({ ...input([], [source]), transform: undefined });
     const reveal = vi.fn(async () => ({ occurrence: 0, count: 1 }));
     const model = new ChatFindModel({
-      search: async () => ({ epoch: "epoch", locations: [{ seq: 1, role: "assistant" }], nextCursor: null }),
+      search: async () => ({ epoch: "epoch", locations: [{ seq: 1, role: "assistant", count: 1 }], nextCursor: null }),
       load: async () => {}, reveal, clear() {},
     });
     try {
       model.updateHistory("epoch", [source]); model.open(); model.setQuery("find-me");
       await vi.advanceTimersByTimeAsync(121);
       const target = reveal.mock.calls[0][0];
-      expect(custom.tail.some(item => item.id === target)).toBe(false); // Known host gap.
-      expect(native.tail.find(item => item.id === target)).toEqual(source);
+      expect(target).toBe(source.id);
+      expect(custom.tail.map(item => item.kind)).toEqual(["plugin"]);
+      expect(custom.tail.some(item => getStreamItemMessageId(item) === target)).toBe(false); // Known host gap.
+      const found = native.tail.filter(item => getStreamItemMessageId(item) === target);
+      expect(found).toEqual(native.tail);
+      expect(found.map(item => item.text)).toEqual(["$$x^2$$", "find-me"]);
+      expect(found.every(item => item.kind === "assistant_message" && item.timelineCursor === source.timelineCursor)).toBe(true);
     } finally { model.close(); vi.useRealTimers(); }
   });
 });
