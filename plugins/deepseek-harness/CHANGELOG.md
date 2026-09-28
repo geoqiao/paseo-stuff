@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.1.0-beta.7 — 2026-09-28
+
+- Replace the manifest range `>=0.8.0 <0.10.0` with the minimum-only
+  `>=0.8.0`, so Paseo 0.10 daemons no longer reject the plugin. Paseo defines
+  this range as admitting later prereleases and breaking releases; it is not a
+  compatibility promise for untested versions.
+- Move the exact Paseo SDK dev dependencies to `0.9.2`. Typecheck, lint and all
+  32 tests also pass against `0.9.0-beta.1` and `0.10.0-beta.1`. A live load
+  and one real turn passed on a 0.10.0-beta.1 daemon; no live 0.9.x daemon was tested.
+- Add the published DSH `0.1.7-rc.2` CLI/ACP closure to the exact runtime
+  guard after an isolated official-closure ACP probe and a production provider
+  factory initialize/catalog/close check. The guard now checks membership in
+  the version list, still without prefix, range or build-metadata matching.
+- Retain the narrow `session/load` to `session/resume` bridge, typed tool
+  output projection, opaque model IDs, ACP SDK `1.4.0`, and the existing
+  no-auto-approval policy.
+- Update the pinned installation reference and verification record. No model
+  prompt or paid inference was used for the isolated DSH `0.1.7-rc.2` check.
+
 ## 0.1.0-beta.6 — 2026-09-24
 
 - Add the published DSH `0.1.7-rc.1` CLI/ACP closure to the exact runtime

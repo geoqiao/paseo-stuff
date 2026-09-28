@@ -371,7 +371,13 @@ describe("DeepSeek Harness launch guards", () => {
     expect(isSupportedDshVersion("0.1.7-alpha.2+custom.1")).toBe(false);
     expect(extractDshVersion("dsh 0.1.7-rc.1")).toBe("0.1.7-rc.1");
     expect(isSupportedDshVersion("0.1.7-rc.1")).toBe(true);
-    expect(isSupportedDshVersion("0.1.7-rc.2")).toBe(false);
+    expect(extractDshVersion("dsh 0.1.7-rc.2")).toBe("0.1.7-rc.2");
+    expect(isSupportedDshVersion("0.1.7-rc.2")).toBe(true);
+    expect(isSupportedDshVersion("0.1.7-rc.2+custom.1")).toBe(false);
+    expect(isSupportedDshVersion("0.1.7-rc")).toBe(false);
+    expect(isSupportedDshVersion("0.1.7-rc.3")).toBe(false);
+    expect(isSupportedDshVersion("0.1.7")).toBe(false);
+    expect(isSupportedDshVersion(undefined)).toBe(false);
     expect(extractDshVersion("dsh 0.1.5-rc.2+custom.1")).toBe("0.1.5-rc.2+custom.1");
     expect(isSupportedDshVersion(extractDshVersion("dsh 0.1.5-rc.2+custom.1"))).toBe(false);
     expect(extractDshVersion("0.1.5-rc.2_not-a-version")).toBeUndefined();

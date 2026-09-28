@@ -13,7 +13,7 @@ const call = (id, status = "completed", name = "exec", detail = { type: "shell",
   } },
 });
 const input = (head, level = "detailed") => ({ head, tail: [], level, transform, isTurnActive: true });
-describe("Paseo 0.9.0-beta.1 actual presentation pipeline", () => {
+describe("Paseo 0.9.2 actual presentation pipeline", () => {
   it.each(["running", "completed", "failed", "canceled"])("retains all %s tool data in Full detail", status => {
     const original = [call("one"), call("two", status)];
     const before = JSON.stringify(original);

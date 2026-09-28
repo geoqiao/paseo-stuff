@@ -8,15 +8,18 @@ shared runtime or root-hoisted dependency tree.
 
 | Plugin | Directory | Status / important limits |
 | --- | --- | --- |
-| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
+| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9 or later; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
-| MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. |
+| MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
-The four plugins above Pet support **Paseo 0.9.0-beta.1** in these prereleases:
-Activity **0.1.0-beta.7**, DeepSeek Harness **0.1.0-beta.6**, MaKa **0.1.0-beta.4**
-(final, unmaintained), and Math Renderer **0.1.0-beta.3**. Pet remains on its existing
+Activity **0.1.0-beta.8**, DeepSeek Harness **0.1.0-beta.7** and Math Renderer
+**0.1.0-beta.4** declare minimum-only Paseo requirements and are checked against the
+Paseo **0.9.2** and **0.10.0-beta.1** SDKs and host pipeline source. A minimum is not
+a promise about later releases; each plugin's verification record lists what was
+tested. MaKa **0.1.0-beta.4** (final, unmaintained) stays limited to Paseo 0.9.
+Pet remains on its existing
 0.8 support range.
 Use each plugin's pinned installation command and read its verification limits.
 
@@ -25,11 +28,11 @@ their permissions and operational requirements differ.
 
 ## Install a plugin from this repository
 
-For Math Renderer on Paseo 0.9, run against the intended daemon after reviewing
+For Math Renderer, run against the intended daemon after reviewing
 the plugin and enabling plugins in Paseo:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.3 --host <host:port>
+paseo plugin add geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.4 --host <host:port>
 ```
 
 The `:plugins/<directory>` suffix selects one plugin, not the whole repository.
