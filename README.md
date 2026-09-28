@@ -12,15 +12,14 @@ shared runtime or root-hoisted dependency tree.
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 | MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
-| Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
+| Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | **Paused (unmaintained) since 2026-09-28.** Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
 Activity **0.1.0-beta.8**, DeepSeek Harness **0.1.0-beta.7** and Math Renderer
 **0.1.0-beta.4** declare minimum-only Paseo requirements and are checked against the
 Paseo **0.9.2** and **0.10.0-beta.1** SDKs and host pipeline source. A minimum is not
 a promise about later releases; each plugin's verification record lists what was
 tested. MaKa **0.1.0-beta.4** (final, unmaintained) stays limited to Paseo 0.9.
-Pet remains on its existing
-0.8 support range.
+Pet remains on its existing 0.8 support range (0.1.1, paused; not migrated to 0.9).
 Use each plugin's pinned installation command and read its verification limits.
 
 Read each plugin's README before installing. Plugins are trusted, unsandboxed code;
