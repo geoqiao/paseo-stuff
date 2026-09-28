@@ -22,10 +22,16 @@
 - Lockfile changes are limited to the four `@getpaseo` development packages and their
   transitive `ws` (8.21.3 to 8.22.0). No runtime dependency is added.
 - Summary remains unsupported: grouping code and the public transform input are unchanged.
-- **Not yet verified:** a live load of beta.8 on the 0.10.0-beta.1 daemon (possible
-  only after merge and reload of the existing directory installation), any live
-  0.9.2 daemon, desktop UI with 0.9.2/0.10.0-beta.1, and native iOS/Android. Spacing and
-  icons were not rechecked in a live UI. These prerelease checks are not stable 0.10 acceptance.
+- **Live 0.10.0-beta.1 check:** beta.8 at PR head `1f44a52` was reloaded into the existing
+  enabled directory installation `colorful-agent-activity` on the local macOS daemon,
+  which reports it running; Pet stayed disabled. The client was the hosted web app
+  (app.paseo.sh) in desktop Chromium at 1280×720, paired through the relay, with Full
+  detail. A real DeepSeek Harness turn's Bash call rendered as an Activity card.
+  Expanding it showed syntax-highlighted JSON Input and the `paseo-plugin-check` Output;
+  collapsing restored the header. Light and dark schemes both rendered.
+- **Not verified:** the Paseo desktop app, any live 0.9.2 daemon, Summary, narrow layouts,
+  streaming in a live UI (the turn had finished before viewing) and native iOS/Android.
+  Spacing was not measured. These prerelease checks are not stable 0.10 acceptance.
 
 The sections below record historical checks for earlier releases.
 

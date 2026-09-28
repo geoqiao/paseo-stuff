@@ -6,9 +6,9 @@ suite also passes against **0.9.0-beta.1** and **0.10.0-beta.1**. The earlier
 minimum-only `>=0.8.0` range follows Paseo's requirements contract: it admits
 0.8.0 and all later releases, including prereleases and future breaking
 releases, and is not a compatibility promise for untested versions. An upper
-bound is added only if a later release proves incompatible. No live 0.9.x or
-0.10.0-beta.1 daemon load has been recorded; the desktop daemon check is
-pending until this change is merged and the plugin reloaded.
+bound is added only if a later release proves incompatible. Beta.7 was loaded on
+the local 0.10.0-beta.1 daemon and completed a real turn (see below); no live
+0.9.x daemon was tested.
 
 ## Upstream evidence
 
@@ -101,11 +101,15 @@ not silently reclassified as a fresh beta.2 API or native-client run.
 | Client UI | No custom client entry. Desktop UI matrix, native iOS/Android, vision requests and real MCP services are untested. Fake image/MCP frame tests are not live service or device tests. |
 
 The 0.8.0 daemon and earlier 0.1.5-rc.1/rc.2 inference rows are retained from
-previous beta evidence. The beta.7 checks did not reload, enable, disable, or
-restart the installed Paseo daemon. That desktop daemon auto-updated to
-0.10.0-beta.1 on 2026-09-28 and rejects the installed beta.6 under its old
-`<0.10.0` range; loading beta.7 there is pending until this change is merged
-and the plugin reloaded.
+previous beta evidence. The installed desktop daemon auto-updated to
+0.10.0-beta.1 on 2026-09-28 and rejected beta.6 under its old `<0.10.0` range.
+Beta.7 at PR head `1f44a52` was then reloaded into the existing enabled
+`deepseek-harness` directory installation, without a daemon restart or
+enable-state change, and reports running. One real deepseek-v4-flash,
+thinking-off turn ran a single Bash tool call and returned its reply; the hosted
+web client (app.paseo.sh, via relay) displayed both, and the test agent was
+archived. The global `dsh` reports 0.1.6-alpha.2; 0.1.7-rc.2 was verified only
+in the isolated checks above.
 
 Real tests used only synthetic markers and temporary files. Personal conversations,
 credentials and raw private fixtures are not included in this repository. API calls

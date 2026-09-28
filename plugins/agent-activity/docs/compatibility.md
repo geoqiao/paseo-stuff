@@ -6,7 +6,8 @@ The original installed target was **0.8.0**, using **Full detail**. Beta.7 migra
 to SDK **0.9.0-beta.1** and loaded on that daemon. Beta.8 pins SDK **0.9.2** and also
 passes typecheck, lint and all tests with SDK **0.10.0-beta.1**. Host-pipeline tests
 pin unmodified 0.8.0 and 0.9.2 sources; the 0.9.2 files are byte-identical in
-0.10.0-beta.1. Beta.8 has not yet been loaded on a live 0.9.2 or 0.10.0-beta.1 daemon.
+0.10.0-beta.1. Beta.8 was loaded on a live 0.10.0-beta.1 daemon (see
+[verification](verification.md)); no live 0.9.2 daemon was tested.
 
 The manifest declares only a minimum, `>=0.8.0`. Per Paseo's
 [requirements contract](https://github.com/getpaseo/paseo/blob/52d345db7f271251787c1099a2fe48fde515f012/public-docs/plugins/reference.md),

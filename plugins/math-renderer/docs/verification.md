@@ -28,8 +28,18 @@
   Adding a supported reply to that case fails the test. In native-reply mode, every
   native row resolves to the chat Find target through `getStreamItemMessageId`; the
   rendered Math row still does not, which is the unchanged host gap.
-- Not verified: loading on the live 0.10.0-beta.1 daemon (pending merge and reload),
-  real desktop UI and chat Find in the app, and mobile. 0.10.0-beta.1 is a prerelease;
+- Live 0.10.0-beta.1 check: beta.4 at PR head `1f44a52` was reloaded into the existing
+  enabled `paseo-math-renderer-prototype` installation, which reports running. In the
+  hosted web app (app.paseo.sh, desktop Chromium, 1280×720, paired through the relay),
+  a completed real DeepSeek Harness reply rendered `\int_0^1 x^2\,dx = \frac{1}{3}` as
+  a block formula with Show LaTeX and Copy LaTeX, in light and dark schemes.
+- Chat Find in render mode reported `Failed` for a token in that reply's text, the
+  documented host gap; a control search in the user message found 1 of 1. After
+  "Math: use native replies for chat Find", the same search found 2 of 2 and highlighted
+  the reply text. The formula then showed as native Markdown, where the host renders
+  `\,` as `,`. "Math: render block formulas" restored the rendered formula.
+- Not verified: the Paseo desktop app, a live 0.9.2 daemon, live streaming (the turn had
+  finished before viewing), narrow layouts and mobile. 0.10.0-beta.1 is a prerelease;
   this is not stable 0.10 acceptance.
 
 ## Beta.3 — Paseo 0.9 migration (2026-09-18)

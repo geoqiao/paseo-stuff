@@ -140,8 +140,8 @@ a minimum-only range admits 0.8.0 and every later release, including
 prereleases and future breaking releases; it is not a promise that untested
 versions work. Tested Paseo versions: an installed 0.8.0 daemon (historical),
 and the automated public-SDK suite against 0.9.0-beta.1, 0.9.2 and
-0.10.0-beta.1. A live load on a 0.9.x or 0.10.0-beta.1 daemon has not been
-recorded yet. Do not restart the daemon for this plugin. Follow Paseo's
+0.10.0-beta.1, plus a live load and a real turn on a 0.10.0-beta.1 daemon.
+No live 0.9.x daemon was tested. Do not restart the daemon for this plugin. Follow Paseo's
 global plugin-enable and per-installation
 enable/disable rules; an existing disabled installation should remain
 disabled unless the user explicitly enables it.

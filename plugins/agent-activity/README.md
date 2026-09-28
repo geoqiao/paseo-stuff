@@ -75,7 +75,8 @@ Virtual-list remounts reset local disclosure state.
 
 **Paseo 0.8.0 to 0.10.0-beta.1 · Full detail only · experimental beta.**
 Beta.8 passes its checks with SDK 0.9.2 and 0.10.0-beta.1 and pinned 0.8.0/0.9.2 host
-fixtures; a live load on a 0.10.0-beta.1 daemon is still pending. The manifest sets
+fixtures, and rendered live on a 0.10.0-beta.1 daemon in the hosted web client with
+Full detail. The manifest sets
 only a minimum, `>=0.8.0`, as Paseo recommends; later releases are not tested.
 
 Paseo 0.8 groups Summary calls before running plugin transformers. Its public API

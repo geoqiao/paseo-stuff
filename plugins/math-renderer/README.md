@@ -4,8 +4,8 @@ Render **block LaTeX inside assistant reply bodies**, with one muted English act
 per formula: **Show LaTeX** and **Copy LaTeX**. No extra panel or duplicate message toolbar.
 
 > **Experimental beta — 0.1.0-beta.4.** Requires Paseo app and daemon
-> **0.9.0-beta.1 or newer**. Checked offline against Paseo 0.9.2 and 0.10.0-beta.1;
-> loading on a live 0.10.0-beta.1 daemon is not yet verified. Replies stay native while
+> **0.9.0-beta.1 or newer**. Checked offline against Paseo 0.9.2 and 0.10.0-beta.1,
+> and live on a 0.10.0-beta.1 daemon in the hosted web client. Replies stay native while
 > streaming; supported block formulas render after completion.
 > Inline math is not typeset. Native iOS/Android acceptance and complete native Markdown
 > parity are not finished. Read the limitations before enabling this trusted plugin.
