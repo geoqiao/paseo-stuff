@@ -2,7 +2,7 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.7** · [Release notes](CHANGELOG.md) · Paseo 0.8/0.9, Full detail only.
+**Version 0.1.0-beta.8** · [Release notes](CHANGELOG.md) · Paseo 0.8 to 0.10.0-beta.1, Full detail only.
 
 ## What it does
 
@@ -73,17 +73,19 @@ Virtual-list remounts reset local disclosure state.
 
 ## Compatibility
 
-**Paseo 0.8.0 and 0.9.0-beta.1 · Full detail only · experimental beta.**
-The manifest allows `>=0.8.0 <0.10.0`; future releases need verification.
+**Paseo 0.8.0 to 0.10.0-beta.1 · Full detail only · experimental beta.**
+Beta.8 passes its checks with SDK 0.9.2 and 0.10.0-beta.1 and pinned 0.8.0/0.9.2 host
+fixtures; a live load on a 0.10.0-beta.1 daemon is still pending. The manifest sets
+only a minimum, `>=0.8.0`, as Paseo recommends; later releases are not tested.
 
 Paseo 0.8 groups Summary calls before running plugin transformers. Its public API
 exposes neither the display mode nor group members. An enabled replacement can
 hide the native group's entry point; this plugin cannot automatically fall back.
 
-Paseo 0.9 transforms each original call **before** Summary grouping. All calls now
-remain visible, but plugin cards bypass grouping. Summary is still unsupported.
+Paseo 0.9 and 0.10.0-beta.1 transform each original call **before** Summary grouping.
+All calls now remain visible, but plugin cards bypass grouping. Summary is still unsupported.
 Native plan/approval tools pass through, preserving host suppression and expandable
-plan cards. No display-mode API is available in either version.
+plan cards. No display-mode API is available in any tested version.
 
 - Use **Full detail on every connected client**.
 - **Disable this plugin before switching to Summary**.
@@ -103,7 +105,7 @@ filesystem, process or daemon-side behavior. Contributions unregister on cleanup
 Install the pinned prerelease on the intended daemon:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.7 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.8 --host <your-host>
 ```
 
 Installation enables the plugin. Review its source/trust requirements and select

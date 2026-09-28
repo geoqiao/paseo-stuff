@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.8 — 2026-09-28
+
+- Support Paseo 0.9.2 and 0.10.0-beta.1. The manifest now declares only the minimum `>=0.8.0`, following Paseo's requirements contract; the beta.7 `<0.10.0` bound made the 0.10.0-beta.1 daemon reject the plugin. Later releases are not tested.
+- Pin the SDK development dependencies to 0.9.2. Typecheck, lint and all 252 tests pass with SDK 0.9.2 and with SDK 0.10.0-beta.1. Runtime behavior is unchanged; only code comments were updated.
+- Refresh the 0.9 host fixtures from v0.9.2, byte-identical in v0.10.0-beta.1. Only assistant-message Markdown splitting changed upstream; tool-call projection and grouping did not. Summary remains unsupported. A live 0.10.0-beta.1 daemon load, desktop UI and native mobile checks are still pending.
+
 ## 0.1.0-beta.7 — 2026-09-18
 
 - Support Paseo 0.9.0-beta.1 with updated SDK dependencies and a bounded compatibility range; retain 0.8 host regression fixtures.

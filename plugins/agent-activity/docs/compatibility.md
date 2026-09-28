@@ -1,12 +1,23 @@
-# Paseo 0.8 / 0.9 compatibility
+# Paseo 0.8 / 0.9 / 0.10 beta compatibility
 
 ## Supported beta scope
 
-The original installed target was **0.8.0**, using **Full detail**. The 0.9 migration
-uses SDK **0.9.0-beta.1**, with pinned host-pipeline tests for both versions.
-The manifest accepts `>=0.8.0 <0.10.0`; future releases must be rechecked.
+The original installed target was **0.8.0**, using **Full detail**. Beta.7 migrated
+to SDK **0.9.0-beta.1** and loaded on that daemon. Beta.8 pins SDK **0.9.2** and also
+passes typecheck, lint and all tests with SDK **0.10.0-beta.1**. Host-pipeline tests
+pin unmodified 0.8.0 and 0.9.2 sources; the 0.9.2 files are byte-identical in
+0.10.0-beta.1. Beta.8 has not yet been loaded on a live 0.9.2 or 0.10.0-beta.1 daemon.
+
+The manifest declares only a minimum, `>=0.8.0`. Per Paseo's
+[requirements contract](https://github.com/getpaseo/paseo/blob/52d345db7f271251787c1099a2fe48fde515f012/public-docs/plugins/reference.md),
+this matches later releases and prereleases, including future breaking releases.
+It is not a claim that those releases were tested. The previous `<0.10.0` bound
+made the 0.10.0-beta.1 daemon reject beta.7. Add an upper bound only when a
+specific later release is shown to be incompatible.
+
 macOS is the tested installed host. The current working tree also passes real RN 0.81.5
-Hermes bundle evaluation; native iOS/Android UI remains unverified.
+Hermes bundle evaluation; Paseo 0.9.0-beta.1, 0.9.2 and 0.10.0-beta.1 all declare
+React 19.1.0 and React Native 0.81.5 for the app. Native iOS/Android UI remains unverified.
 
 **Summary is not supported. All connected clients must use Full detail. Disable the plugin before switching to Summary.** The warning is not an automatic runtime guard.
 
@@ -35,11 +46,18 @@ beta.4 release tag does not contain this fix; the monorepo beta.5 includes it.
 
 ## Why Summary cannot safely fall back
 
-In [0.9.0-beta.1](https://github.com/getpaseo/paseo/tree/7c1958f5b0a4ae9f2cb12f77b0a754a644cd0081),
+In [0.9.2](https://github.com/getpaseo/paseo/tree/c67b7158b441bb09026b38d86ae335cc4b49190a),
 `agent-stream/presentation.ts` applies plugin transformation before native splitting
 and grouping. `tests/paseo-09.compat.test.js` proves that every call is retained,
 but plugin rows do not form Summary groups. The public transform input still has no
 display mode. This improvement is not Summary support.
+
+0.9.0-beta.1 already had this order. 0.9.2 changed only assistant-message Markdown
+rows: history now splits into blocks like live rows, and blocks containing only link
+reference definitions fold into a neighbor. Tool-call projection, grouping and plugin
+timeline files are unchanged, and `@getpaseo/plugin` is byte-identical from
+0.9.0-beta.1 through 0.10.0-beta.1, whose presentation files match 0.9.2.
+The Summary limitation therefore stands.
 
 The same pipeline applies native plan suppression after transformation. Beta.7
 passes `ExitPlanMode`, `plan_approval` and structured plan details through so that
