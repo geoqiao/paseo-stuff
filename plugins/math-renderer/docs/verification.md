@@ -1,5 +1,37 @@
 # Verification scope
 
+## Beta.4 — Paseo 0.9.2 / 0.10.0-beta.1 compatibility (2026-09-28)
+
+- Manifest range: `>=0.9.0-beta.1`, a minimum-only range under Paseo's requirements
+  contract. The previous `<0.10.0` bound made the 0.10.0-beta.1 daemon reject the
+  plugin. No newer API is adopted, so the minimum stays.
+- The public `@getpaseo/plugin` dist is byte-identical in 0.9.0-beta.1, 0.9.2 and
+  0.10.0-beta.1. The host app's React, React Native, Expo, Zod, React Query and
+  markdown-it versions are identical in all three tags. The daemon plugin compiler and
+  the app plugin loader are unchanged from v0.9.0-beta.1 to v0.10.0-beta.1.
+- Exact SDK/protocol/client target: **0.9.2**. After a clean `npm ci` and both prepare
+  steps, `npm run check` passed on Node **24.18.0**: typecheck, zero lint
+  warnings/errors and **6 files / 66 tests**, including RN 0.81.5 Hermes evaluation.
+  An isolated copy with the 0.10.0-beta.1 SDK/protocol/client packages passed the same
+  check. Node 22 was not run locally; CI covers Node 22 and 24.
+- Host fixtures now come from tag `v0.9.2` (`c67b7158b441`); all eight files are
+  byte-identical in `v0.10.0-beta.1` (`52d345db7f27`). Three changed since
+  v0.9.0-beta.1 (upstream PRs #5146 and #5167): history splits native assistant
+  messages into Markdown block rows (`<id>:block:<n>`, `blockGroupId` = message id)
+  as live rows already were; `getStreamItemMessageId` maps a row to its message;
+  link-reference-definition blocks fold into a neighbour; and chat Find reveals a
+  message ID, with per-location counts and typed failures.
+- Six stale expectations were updated without relaxing them. Unsupported and
+  oversized replies previously had to equal the single source row; they must now
+  equal the host's exact native block rows (kind, IDs, `blockGroupId`, cursor,
+  timestamp, lossless text) and match the presentation without the Math transformer.
+  Adding a supported reply to that case fails the test. In native-reply mode, every
+  native row resolves to the chat Find target through `getStreamItemMessageId`; the
+  rendered Math row still does not, which is the unchanged host gap.
+- Not verified: loading on the live 0.10.0-beta.1 daemon (pending merge and reload),
+  real desktop UI and chat Find in the app, and mobile. 0.10.0-beta.1 is a prerelease;
+  this is not stable 0.10 acceptance.
+
 ## Beta.3 — Paseo 0.9 migration (2026-09-18)
 
 - Exact SDK/protocol/client target: **0.9.0-beta.1**. `npm run check` passed on
