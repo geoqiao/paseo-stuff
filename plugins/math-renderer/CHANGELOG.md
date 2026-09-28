@@ -5,7 +5,7 @@
 - Require Paseo 0.9.0-beta.1 or newer (`>=0.9.0-beta.1`). The previous `<0.10.0` bound made the Paseo 0.10.0-beta.1 daemon reject the plugin. No newer API is adopted, so the minimum is unchanged.
 - Build and test against the exact 0.9.2 SDK, client and protocol packages. The same checks also pass with the 0.10.0-beta.1 packages.
 - Refresh the pinned host presentation, Markdown splitting and chat Find fixtures to Paseo v0.9.2, which are identical in v0.10.0-beta.1. The host now splits native history replies into Markdown block rows; tests assert that unsupported replies stay native and that native-reply mode resolves chat Find targets through the host message identity. Rendered formula rows still cannot be found.
-- Loading on a live 0.10.0-beta.1 daemon, real desktop chat Find and mobile remain unverified.
+- Loaded on a live 0.10.0-beta.1 daemon: the hosted web client rendered a block formula, and chat Find worked in native-reply mode. The desktop app and mobile remain unverified.
 
 ## 0.1.0-beta.3 — 2026-09-18
 
