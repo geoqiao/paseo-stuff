@@ -1,14 +1,33 @@
 # Verification and limits
 
-2026-09-24. Beta.6's migration target is
-Paseo public SDK **0.9.0-beta.1**, while the earlier 0.8.0 evidence remains
-historical evidence. The manifest's `>=0.8.0 <0.10.0` range expresses the two
-tested minor lines; it is not a promise about later 0.9 prereleases or 0.10.
+2026-09-28. Beta.7 pins the public Paseo SDK to **0.9.2**; the same automated
+suite also passes against **0.9.0-beta.1** and **0.10.0-beta.1**. The earlier
+0.8.0 daemon evidence remains historical evidence. The manifest's
+minimum-only `>=0.8.0` range follows Paseo's requirements contract: it admits
+0.8.0 and all later releases, including prereleases and future breaking
+releases, and is not a compatibility promise for untested versions. An upper
+bound is added only if a later release proves incompatible. No live 0.9.x or
+0.10.0-beta.1 daemon load has been recorded; the desktop daemon check is
+pending until this change is merged and the plugin reloaded.
 
 ## Upstream evidence
 
-- npm reports `latest` as DSH `0.1.5-rc.3`, `next` as `0.1.7-rc.1`, and
-  `alpha` as `0.1.7-alpha.2`. The previous tested alpha tarball is
+- Paseo `v0.9.2` is commit `c67b7158b441bb09026b38d86ae335cc4b49190a`
+  (2026-09-24); `v0.10.0-beta.1` is prerelease commit
+  `52d345db7f271251787c1099a2fe48fde515f012` (2026-09-27). The published
+  `@getpaseo/plugin` dist, including `server/acp`, `server/provider` and
+  `runAcpProvider`, is byte-identical across 0.9.0-beta.1, 0.9.2 and
+  0.10.0-beta.1 and still depends on `@agentclientprotocol/sdk` `^1.4.0`. The
+  relevant host changes are lifecycle fixes: a provider connection stays
+  registered until its close reports, input to a closing connection is
+  rejected, a failed plugin provider request no longer crashes the daemon
+  (Paseo #5298, #5231), and slash commands for custom ACP providers were fixed
+  (#5411). None changes the provider contract. Paseo's plugin reference at
+  v0.10.0-beta.1 defines `>=0.8.0` as including prereleases and future
+  breaking releases, and recommends an upper bound only for a known
+  incompatibility.
+- On 2026-09-28 npm reports both `latest` and `next` as DSH `0.1.7-rc.2`
+  (published 2026-09-24) and `alpha` as `0.1.7-alpha.2`. The previous tested alpha tarball is
   [`@deepseek-ai/dsh@0.1.6-alpha.2`](https://www.npmjs.com/package/%40deepseek-ai/dsh/v/0.1.6-alpha.2) with integrity
   `sha512-PHR/3ZHpJNWXlDQ3U9weFb7calWbSMJd2GD3z2iPJ8zAKL7ipuzyPy5xGbaXf2OA8hc0SAGJeoUW7nfatCNOYw==`.
 - The official DSH tag `dsh-v0.1.6-alpha.2` resolves to commit
@@ -35,6 +54,25 @@ tested minor lines; it is not a promise about later 0.9 prereleases or 0.10.
   `sha512-LPJvNjdoFBFb5QBOyq/UCdMYT/T51Yh7WkzbM7hdwqGQK8PVoaqNmRbvPCBQqUeO+HufhQ05vwwBAXoa0feDRA==`.
   The alpha.2-to-rc.1 source comparison changes the ACP package and bundle
   package versions; the ACP implementation files remain unchanged.
+- The official prerelease `dsh-v0.1.7-rc.2` (release ID `395756051`, published
+  2026-09-24) resolves to commit
+  [`477b4f420553e8a52c2fbccc464d7561b239c443`](https://github.com/deepseek-ai/deepseek-harness/commit/477b4f420553e8a52c2fbccc464d7561b239c443).
+  Locally recomputed tarball integrities match the registry:
+  `@deepseek-ai/dsh@0.1.7-rc.2`
+  `sha512-SQFhriLvza8GnFApnC5/32AgpcyKxrWnYXhvwDOLJdgWpkCX2EexyR9c8kCkMITJXnFLEN3Qb2CEh0W36vkLyw==`;
+  `@deepseek-ai/dsh-acp@0.1.7-rc.2`
+  `sha512-pYA/KH4ks/q/S82PEwdpGQ+Bdmyx8G4aspd2N0BVM9KAfupEszrgZyfNX7L0+hvy4sYTjP5LyUr6/2QmQVhXiw==`;
+  `@deepseek-ai/dsh-acp-app@0.1.7-rc.2`
+  `sha512-7Km0Fchvx/PoL3/By4M6ykKkrmmIgelXq/1l0624Ixt3JgTtFNSgko3dpL/32Hv/a5Fn/wEsuujBHzmcBBcZ7Q==`.
+  The ACP package's `lib/` is byte-identical to rc.1 (only `README.i18n.yaml`
+  and the version differ) and still uses `@agentclientprotocol/sdk` `1.4.0`.
+  The CLI closure did change: it adds `@deepseek-ai/dsh-experimental-auto-review`
+  (512 to 520 installed packages), reports skipped bundles on stderr at
+  startup, changes code in runtime packages including `dsh-llm`,
+  `dsh-agent-loop`, `dsh-session`, `dsh-user-approval` and tools, and makes
+  `dsh-base` load `dsh-llm-deepseek-api-key` in the DeepSeek LLM slot (provider
+  ID still `deepseek-official`) plus an `llm-deepseek-account` route whose
+  catalog is empty when signed out.
 - The 0.1.7 ACP implementation fixes tool-result projection to use the complete
   message content and identity. Its public initialize response retains ACP v1,
   `session/list`, `session/resume`, and `session/close`.
@@ -49,22 +87,25 @@ not silently reclassified as a fresh beta.2 API or native-client run.
 
 | Layer | Evidence |
 | --- | --- |
-| Public SDK + fake ACP process | Node 22.23.2 and Node 24.21.0 `npm run check` passed: typecheck, lint with zero warnings/errors, **32 tests / 2 files** against exact Paseo SDK `0.9.0-beta.1`. Catalog/model/thinking IDs, config changes, multiple turns, persistence, complete output, MCP/image frames, allow/deny permissions, cancellation/errors/EOF, concurrent cwd/env isolation and closure during version probe/initialize/prompt are covered. |
+| Public SDK + fake ACP process | For beta.7 on Node 24.18.0, `npm run check` passed: typecheck, lint with zero warnings/errors, **32 tests / 2 files** against the pinned exact Paseo SDK `0.9.2`, and again with the SDK swapped to exact `0.9.0-beta.1` and `0.10.0-beta.1`. Node 22 was not available locally for beta.7; earlier releases passed on Node 22.23.2 and 24.21.0 against `0.9.0-beta.1`. Catalog/model/thinking IDs, config changes, multiple turns, persistence, complete output, MCP/image frames, allow/deny permissions, cancellation/errors/EOF, concurrent cwd/env isolation and closure during version probe/initialize/prompt are covered. |
 | Real ACP control surface | The published rc.2 and alpha.2 CLIs each passed an initialize probe reporting ACP v1, `session/list`, `session/resume`, `session/close`, HTTP MCP, and no `loadSession`; each created and closed a temporary session. |
 | Official runtime + public provider factory | On Node 22.23.2, isolated CLI `0.1.5-rc.2` with ACP `0.1.5-rc.2` and global CLI `0.1.6-alpha.2` with ACP `0.1.6-alpha.2` each passed catalog discovery, session open/configuration, one bounded synthetic no-tools prompt with the exact marker `SYNTHETIC_DSH_PASEO_CHECK`, usage/timeline events validated by `ProviderEventSchema`, and clean close. No permission event occurred. |
 | New official alpha control surface + public provider factory | An isolated published CLI/ACP `0.1.7-alpha.2` closure reported the exact version and passed ACP initialize with `session/list`, `session/resume`, and `session/close`. The production `createDeepSeekHarnessProvider` completed initialize, capability mapping and clean connection/provider close through Paseo's public `runAcpProvider` shim. No model prompt, tool execution, approval, credential or paid inference was attempted. |
 | New official rc control surface + public provider factory | An isolated published CLI/ACP `0.1.7-rc.1` closure reported the exact version, passed ACP initialize with `session/list`, `session/resume`, and `session/close`, and returned an empty result from `session/list`. After the exact guard was updated, the production `createDeepSeekHarnessProvider` completed initialize, capability mapping and clean connection/provider close through Paseo's public `runAcpProvider` shim. No model prompt, tool execution, approval, credential or paid inference was attempted. |
+| New official rc.2 control surface + public provider factory | On Node 24.18.0, an isolated published CLI/ACP `0.1.7-rc.2` closure printed exactly `0.1.7-rc.2` for `dsh --version` and passed ACP initialize (protocol 1) with `session/list`, `session/resume`, `session/close` and no `loadSession`. `session/list` returned no sessions; `session/new` returned three `deepseek-official` models with reasoning effort off/low/high/max (default high); `session/close` returned `{}`; resume succeeded in the same and in a fresh process. The normalised output matched the same probe on rc.1. The unmodified beta.6 guard rejected rc.2 with its exact-version error. With rc.2 added to the guard, the production `createDeepSeekHarnessProvider` connected through Paseo's public `runAcpProvider` shim with capabilities `prompt.message`, `session.configure`, `session.list`, `session.persistence` and `permission`, returned an empty session list and a three-model catalog (default `deepseek-v4-flash`/high), and closed and disposed with no leftover processes; an rc.1 control run was identical. No model prompt, tool execution, approval, credential or paid inference was attempted. The signed-in account catalog, Node 22 and package install scripts were not exercised. |
 | Latest alpha persistence and tool regression | On Node 24.21.0 with global `@deepseek-ai/dsh@0.1.6-alpha.2`, a temporary wrapper recorded **6/6** owned ACP profile children closed across provider disposal. A first no-tools prompt stored a unique marker; a second provider reopened the returned persistence, the wrapper observed `session/resume` and no `session/load`, and a second prompt recalled the marker without including it. A temporary `read-probe.txt` read-tool prompt returned the synthetic file marker through a typed `tool_call` raw-output detail; no permission event or approval response was involved. |
 | Historical official runtime + production provider factory | CLI `0.1.5-rc.1` and `0.1.5-rc.2`, each with ACP package `0.1.5-rc.2` and ACP SDK `1.4.0`. Three real DeepSeek v4-flash/reasoning-off turns per version passed: memory, file write/read, complete >8,000-character tool-output tail, and native context after provider/child restart. All emitted events passed `ProviderEventSchema`; usage events arrived. |
-| Local CLI upgrade | The authorized global installation moved from `@deepseek-ai/dsh` `0.1.5-rc.2` to `0.1.6-alpha.2`. `$HOME/.dsh/.credentials.yaml` remained owner-only (`0600`) with unchanged metadata; its contents were never read or logged. The `0.1.7-alpha.2` check remained isolated and did not alter the global CLI. |
+| Local CLI upgrade | The authorized global installation moved from `@deepseek-ai/dsh` `0.1.5-rc.2` to `0.1.6-alpha.2`. `$HOME/.dsh/.credentials.yaml` remained owner-only (`0600`) with unchanged metadata; its contents were never read or logged. The `0.1.7-alpha.2`, `0.1.7-rc.1` and `0.1.7-rc.2` checks remained isolated and did not alter the global CLI. |
 | Historical actual macOS Paseo daemon | Installed server entry and provider discovery succeeded. Two real turns retained context and a 101-line tool result. After disabling/enabling only this plugin, a third turn recalled the same marker and filename, and Paseo retained earlier displayed messages. No credential was passed in the Paseo agent configuration. |
 | Real managed-child cleanup | An official DSH foreground shell tool launched a synthetic Node process that ignored SIGTERM. After closing the production provider, that owned child was gone. This is a targeted check, not a guarantee for arbitrary independently detached services. |
 | Client UI | No custom client entry. Desktop UI matrix, native iOS/Android, vision requests and real MCP services are untested. Fake image/MCP frame tests are not live service or device tests. |
 
-The 0.8.0 daemon and earlier rc.1/rc.2 inference rows are retained from the
-previous beta evidence. This migration did not reload, enable, disable, or
-restart the installed Paseo daemon; the existing DeepSeek Harness installation
-remained disabled.
+The 0.8.0 daemon and earlier 0.1.5-rc.1/rc.2 inference rows are retained from
+previous beta evidence. The beta.7 checks did not reload, enable, disable, or
+restart the installed Paseo daemon. That desktop daemon auto-updated to
+0.10.0-beta.1 on 2026-09-28 and rejects the installed beta.6 under its old
+`<0.10.0` range; loading beta.7 there is pending until this change is merged
+and the plugin reloaded.
 
 Real tests used only synthetic markers and temporary files. Personal conversations,
 credentials and raw private fixtures are not included in this repository. API calls
@@ -106,7 +147,7 @@ host shutdown or external detached-process scenario.
   sessions. The plugin does not delete native records or read private transcripts.
 - DSH profile settings stay authoritative. The generic ACP shim does not inject
   Paseo's extra system prompt. Custom profiles must still provide ACP over stdio.
-- The CLI version guard accepts only the five tested exact releases. It does
+- The CLI version guard accepts only the six tested exact releases. It does
   not pin the CLI's transitive packages or certify future dependency closures.
   DSH itself is a rapidly changing developer preview.
 - Complete output is intentionally retained. Large payload transfer, storage,
@@ -117,8 +158,16 @@ host shutdown or external detached-process scenario.
 
 ## Dependency review
 
-`npm audit --omit=dev` reported zero advisories for the adapter's production
-dependencies and the separately installed official CLI rc.2 dependency tree on
-the date above. This is a point-in-time package-advisory check, not a security
+On 2026-09-28 `npm audit --omit=dev` reported zero advisories for the
+adapter's production dependencies. Against the isolated official CLI
+lockfiles, `0.1.7-rc.1` and `0.1.7-rc.2` each report 8 moderate findings that
+trace to one advisory: `@deepseek-ai/libreoffice-kit` `0.1.2` pins a nested
+`fflate` `0.8.2`
+([GHSA-px8p-9vwx-vf98](https://github.com/advisories/GHSA-px8p-9vwx-vf98),
+an infinite loop on malformed ZIP64 archives), and the remaining findings are
+the DSH office/web/SDK packages that depend on it. This is in DSH's own
+dependency tree, is unchanged from rc.1, and the plugin neither installs nor
+updates DSH. An earlier zero-advisory check covered the `0.1.5-rc.2` CLI tree
+only. These are point-in-time package-advisory checks, not a security
 certification. Official DSH's safety notice and the user's tool permission policy
 still apply.
