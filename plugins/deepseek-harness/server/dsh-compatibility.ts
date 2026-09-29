@@ -400,7 +400,7 @@ export function createAcpCompatibilityStream(
       throw new Error("DeepSeek Harness ACP stream is closed");
     }
 
-    return projectToolOutput(message);
+    return projectToolOutput(projectThoughtMessageId(message));
   }
 
   function projectInitializeCapabilities(
@@ -473,6 +473,38 @@ export function createAcpCompatibilityStream(
     persistenceMode = "none";
     return message;
   }
+}
+
+function projectThoughtMessageId(message: AcpStreamMessage): AcpStreamMessage {
+  const params = (message as unknown as RecordValue).params;
+  if (
+    !isNotificationFrame(message) ||
+    message.method !== "session/update" ||
+    !isRecord(params) ||
+    !isRecord(params.update)
+  ) {
+    return message;
+  }
+  const update = params.update;
+  if (
+    update.sessionUpdate !== "agent_thought_chunk" ||
+    typeof update.messageId !== "string" ||
+    update.messageId.length === 0
+  ) {
+    return message;
+  }
+
+  // Paseo 0.9.2/0.10.1 resolveChunkId ignores chunk kind for explicit IDs,
+  // merging DSH's thought and answer buffers. Remove when upstream is fixed:
+  // https://github.com/getpaseo/paseo/blob/v0.10.1/packages/plugin/src/server/acp-internal/connection.ts#L922
+  // ACP IDs are strings, not UUID-only. Keep the answer's native ID untouched.
+  return {
+    ...message,
+    params: {
+      ...params,
+      update: { ...update, messageId: update.messageId + ":thought" },
+    },
+  } as AcpStreamMessage;
 }
 
 function projectToolOutput(message: AcpStreamMessage): AcpStreamMessage {
