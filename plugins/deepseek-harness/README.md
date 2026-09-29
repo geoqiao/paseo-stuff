@@ -7,9 +7,9 @@ replacement agent loop or an official DeepSeek/Paseo endorsement. It runs
 `dsh --profile acp`; Paseo owns the chat UI. No custom client surface or
 patched Paseo app is required.
 
-![DeepSeek Harness selected in Paseo's model picker beside a completed reply and Bash tool call](images/cover.png)
+![A completed DeepSeek Harness conversation with the selected model, Bash tool calls, and reply](images/cover.png)
 
-*Real hosted Paseo web-client capture using a synthetic prompt and `/tmp` workspace. [Screenshot provenance](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/screenshots.md).*
+*Real hosted Paseo web-client capture using synthetic prompts and a `/tmp` workspace. The model picker is closed because Paseo displays the opaque ACP route ID when it is open. [Screenshot provenance](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/screenshots.md).*
 
 [Install](#install-prerequisites) · [Compatibility](#acp-compatibility-and-limitations) · [Verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md) · [Code review](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/code-review.md)
 
