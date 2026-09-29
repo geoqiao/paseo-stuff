@@ -105,10 +105,13 @@ surfaces. DSH model and reasoning configuration is exposed when the ACP
 server advertises it. The public ACP shim emits complete timeline snapshots;
 this plugin does not claim token-level or UI streaming.
 
-Paseo 0.9's shim supplies fallback identities when an ACP assistant or
-reasoning chunk omits `messageId`. Both tested DSH ACP closures emit message
-IDs for those chunks, so the plugin preserves the host behavior and does not
-invent a second identity scheme.
+DSH's ACP bridge gives a message's reasoning and answer chunks the same
+`messageId`. ACP treats chunks with one `messageId` as one message, so Paseo's
+shim would show the reasoning again inside the answer. The plugin appends
+`:thought` to nonempty thought-chunk IDs and leaves answer IDs unchanged; see
+[docs/compatibility.md](docs/compatibility.md). The issue is reported upstream
+as [deepseek-harness#8235](https://github.com/deepseek-ai/deepseek-harness/discussions/8235),
+and the shim will be removed once DSH sends distinct IDs.
 
 The plugin has no local persistence layer, no daemon-side DSH session mirror,
 no custom persona or provider preset, and no permission-policy override.
@@ -143,7 +146,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.9 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.10 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
