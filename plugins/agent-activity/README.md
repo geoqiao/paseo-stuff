@@ -105,7 +105,8 @@ can hide the group entry on 0.8. Do not enable two plugins replacing the same
 tool-call timeline items.
 
 Pinned 0.9.2 host-pipeline tests show that native rows regroup existing history and
-that cards come back ungrouped; the commands were not exercised in an installed app.
+that cards come back ungrouped. On a live 0.10.1 daemon in the hosted web client, the
+commands regrouped an existing conversation in Summary and restored the cards.
 0.8 re-rendering after a switch is untested; reload the conversation if rows do not
 change. Hermes engine tests and compact browser previews are not on-device mobile
 UI tests. [Compatibility evidence](docs/compatibility.md).

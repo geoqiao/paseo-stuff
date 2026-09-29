@@ -95,7 +95,8 @@ not change Summary. Selecting a command repeatedly never registers a duplicate t
 presentation to native rows, existing history forms one Summary group of both calls;
 switching back yields ungrouped cards again. Math Renderer's commands use the same
 mechanism and switched rendered and native replies live on a 0.10.0-beta.1 daemon.
-Activity's commands have not been exercised in an installed app. 0.8 applies
+Activity's commands regrouped and restored an existing conversation live on a
+0.10.1 daemon in the hosted web client (see [verification](verification.md)). 0.8 applies
 transformers after grouping, so native rows there leave the native groups intact,
 but live re-rendering after a switch on 0.8 is untested.
 

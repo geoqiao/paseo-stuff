@@ -14,9 +14,18 @@
 - Unmodified 0.9.2 `presentation.ts`: one presentation instance renders history as
   ungrouped cards in Summary, regroups both calls after the switch to native rows
   (Thinking still transformed) and returns to ungrouped cards after switching back.
-- **Not verified:** the commands in an installed app, on any live daemon or on mobile.
-  The local installation stays disabled as the user left it and was not enabled for
-  this check. 0.8 re-rendering after a switch is untested.
+- **Live 0.10.1 check:** PR head `ad59967` was loaded into the existing disabled
+  `colorful-agent-activity` directory installation, enabled for the check and disabled
+  again afterwards; the checkout returned to `main`. Client: hosted web app
+  (app.paseo.sh) in a fresh desktop Chromium profile, paired through the relay, on an
+  existing Pi conversation. With Summary selected and cards active, four consecutive
+  `exec` calls stayed as four ungrouped cards. After **Activity: use native tool rows
+  (for Summary)**, the history immediately showed native groups ("Used 4 other tools",
+  "Searched 1 time and used 1 other tool") while Thinking rows stayed. After
+  **Activity: use tool cards (Full detail)**, the cards returned and one expanded with
+  Output and Show all.
+- **Not verified:** the Paseo desktop app, streaming during a switch, mobile, and
+  0.8 re-rendering after a switch.
 
 ## Beta.8 — Paseo 0.9.2 / 0.10.0-beta.1 compatibility (2026-09-28)
 

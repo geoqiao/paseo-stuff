@@ -4,7 +4,7 @@
 
 - Add two Command Center actions: **Activity: use native tool rows (for Summary)** unregisters only the tool-call transformer, so Summary groups native tool rows again; **Activity: use tool cards (Full detail)** restores the cards. The choice is per client, not saved, and resets to cards when the plugin loads. The plugin still never reads or changes the host display preference.
 - The Thinking adapter stays registered in both modes; reasoning rows never join Summary groups.
-- Typecheck, lint and 253 tests pass with SDK 0.9.2 and 0.10.1, including Hermes bundle evaluation of the commands and a pinned 0.9.2 host test that regroups existing history after the switch. The commands were not exercised in an installed app.
+- Typecheck, lint and 253 tests pass with SDK 0.9.2 and 0.10.1, including Hermes bundle evaluation of the commands and a pinned 0.9.2 host test that regroups existing history after the switch. On a live 0.10.1 daemon in the hosted web client, the commands regrouped an existing conversation in Summary and restored the cards; the desktop app and mobile were not checked.
 
 ## 0.1.0-beta.8 — 2026-09-28
 
