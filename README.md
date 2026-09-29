@@ -9,12 +9,12 @@ shared runtime or root-hoisted dependency tree.
 | Plugin | Directory | Status / important limits |
 | --- | --- | --- |
 | Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9 or later; block LaTeX after reply completion. Use native-reply mode for chat Find. Inline math and native mobile acceptance are not complete. |
-| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Full detail only; disable before using Summary on any connected client. |
+| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Tool cards need Full detail; before using Summary, choose "Activity: use native tool rows" in each client's Command Center. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 | MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | **Paused (unmaintained) since 2026-09-28.** Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
-Activity **0.1.0-beta.8**, DeepSeek Harness **0.1.0-beta.7** and Math Renderer
+Activity **0.1.0-beta.9**, DeepSeek Harness **0.1.0-beta.7** and Math Renderer
 **0.1.0-beta.4** declare minimum-only Paseo requirements and are checked against the
 Paseo **0.9.2** and **0.10.0-beta.1** SDKs and host pipeline source. A minimum is not
 a promise about later releases; each plugin's verification record lists what was

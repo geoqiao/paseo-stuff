@@ -2,7 +2,8 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.8** · [Release notes](CHANGELOG.md) · Paseo 0.8 to 0.10.0-beta.1, Full detail only.
+**Version 0.1.0-beta.9** · [Release notes](CHANGELOG.md) · Paseo 0.8 to 0.10.0-beta.1. Tool cards need Full detail;
+a Command Center action switches to native tool rows for Summary.
 
 ## What it does
 
@@ -73,9 +74,9 @@ Virtual-list remounts reset local disclosure state.
 
 ## Compatibility
 
-**Paseo 0.8.0 to 0.10.0-beta.1 · Full detail only · experimental beta.**
-Beta.8 passes its checks with SDK 0.9.2 and 0.10.0-beta.1 and pinned 0.8.0/0.9.2 host
-fixtures, and rendered live on a 0.10.0-beta.1 daemon in the hosted web client with
+**Paseo 0.8.0 to 0.10.0-beta.1 · tool cards need Full detail · experimental beta.**
+Beta.9 passes its checks with SDK 0.9.2 and 0.10.1 and pinned 0.8.0/0.9.2 host
+fixtures. Beta.8 rendered live on a 0.10.0-beta.1 daemon in the hosted web client with
 Full detail. The manifest sets
 only a minimum, `>=0.8.0`, as Paseo recommends; later releases are not tested.
 
@@ -84,17 +85,29 @@ exposes neither the display mode nor group members. An enabled replacement can
 hide the native group's entry point; this plugin cannot automatically fall back.
 
 Paseo 0.9 and 0.10.0-beta.1 transform each original call **before** Summary grouping.
-All calls now remain visible, but plugin cards bypass grouping. Summary is still unsupported.
-Native plan/approval tools pass through, preserving host suppression and expandable
-plan cards. No display-mode API is available in any tested version.
+All calls now remain visible, but plugin cards bypass grouping. Native plan/approval
+tools pass through, preserving host suppression and expandable plan cards. No
+display-mode API is available in any tested version, so the plugin cannot switch by itself.
 
-- Use **Full detail on every connected client**.
-- **Disable this plugin before switching to Summary**.
-- Do not enable two plugins replacing the same tool-call timeline items.
-- No host preference is changed and no private app state is inspected.
+### Switching between cards and native rows
 
-Pinned host-pipeline tests document this gap; passing them does not mean Summary
-support. Hermes engine tests and compact browser previews are not on-device mobile
+Open the Command Center on the client you are using and choose:
+
+- **Activity: use native tool rows (for Summary)** before selecting Summary. Tool calls
+  return to native rows, so Summary groups them again; Thinking keeps its compact row.
+- **Activity: use tool cards (Full detail)** to restore the cards.
+
+The choice applies only to that client and is not saved: tool cards return whenever
+the plugin loads again, for example after an app reload. Switch each client separately.
+The plugin does not detect or change the host display preference and does not inspect
+private app state. With cards active, Summary shows every call ungrouped on 0.9+ and
+can hide the group entry on 0.8. Do not enable two plugins replacing the same
+tool-call timeline items.
+
+Pinned 0.9.2 host-pipeline tests show that native rows regroup existing history and
+that cards come back ungrouped; the commands were not exercised in an installed app.
+0.8 re-rendering after a switch is untested; reload the conversation if rows do not
+change. Hermes engine tests and compact browser previews are not on-device mobile
 UI tests. [Compatibility evidence](docs/compatibility.md).
 
 ## Install and local development
@@ -106,11 +119,11 @@ filesystem, process or daemon-side behavior. Contributions unregister on cleanup
 Install the pinned prerelease on the intended daemon:
 
 ```sh
-paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.8 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.9 --host <your-host>
 ```
 
-Installation enables the plugin. Review its source/trust requirements and select
-Full detail first. Do not create a duplicate installation. Existing installations
+Installation enables the plugin with tool cards active. Review its source/trust
+requirements, then use Full detail or switch to native tool rows first. Do not create a duplicate installation. Existing installations
 may use a runtime alias such as `colorful-agent-activity`; manage that existing ID.
 [Repository migration notes](https://github.com/geoqiao/paseo-stuff/blob/main/MIGRATION.md).
 

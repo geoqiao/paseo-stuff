@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.9 — 2026-09-29
+
+- Add two Command Center actions: **Activity: use native tool rows (for Summary)** unregisters only the tool-call transformer, so Summary groups native tool rows again; **Activity: use tool cards (Full detail)** restores the cards. The choice is per client, not saved, and resets to cards when the plugin loads. The plugin still never reads or changes the host display preference.
+- The Thinking adapter stays registered in both modes; reasoning rows never join Summary groups.
+- Typecheck, lint and 253 tests pass with SDK 0.9.2 and 0.10.1, including Hermes bundle evaluation of the commands and a pinned 0.9.2 host test that regroups existing history after the switch. The commands were not exercised in an installed app.
+
 ## 0.1.0-beta.8 — 2026-09-28
 
 - Support Paseo 0.9.2 and 0.10.0-beta.1. The manifest now declares only the minimum `>=0.8.0`, following Paseo's requirements contract; the beta.7 `<0.10.0` bound made the 0.10.0-beta.1 daemon reject the plugin. Later releases are not tested.

@@ -1,5 +1,23 @@
 # Verification and remaining gaps
 
+## Beta.9 — manual native-row switch (2026-09-29)
+
+- Feature: two global Command Center actions switch this client between Activity tool
+  cards and native tool rows, so Summary can group native rows. See
+  [compatibility](compatibility.md#manual-native-row-switch-beta9).
+- `npm run check` on Node **24.18.0** with the pinned SDK **0.9.2**: typecheck, lint
+  with no warnings/errors, **8 files / 253 tests**. The same tree with SDK **0.10.1**
+  (client, plugin, protocol) installed without saving gives the same result.
+- Hermes and DOM-free bundle evaluation (not skipped) cover the default card mode,
+  repeated commands without duplicate transformers, native rows removing only the tool
+  transformer while Thinking stays, restoring cards, and complete reverse-order cleanup.
+- Unmodified 0.9.2 `presentation.ts`: one presentation instance renders history as
+  ungrouped cards in Summary, regroups both calls after the switch to native rows
+  (Thinking still transformed) and returns to ungrouped cards after switching back.
+- **Not verified:** the commands in an installed app, on any live daemon or on mobile.
+  The local installation stays disabled as the user left it and was not enabled for
+  this check. 0.8 re-rendering after a switch is untested.
+
 ## Beta.8 — Paseo 0.9.2 / 0.10.0-beta.1 compatibility (2026-09-28)
 
 - Trigger: the local desktop daemon auto-updated to **0.10.0-beta.1** and rejected

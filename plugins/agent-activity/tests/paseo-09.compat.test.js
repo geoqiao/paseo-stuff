@@ -32,6 +32,22 @@ describe("Paseo 0.9.2 actual presentation pipeline", () => {
     expect(custom.head.map(item => item.data.detail.command)).toEqual(["one", "two"]);
     expect(custom.groupsByHostId.size).toBe(0);
   });
+  it("regroups existing history in Summary after switching to native tool rows", () => {
+    const thought = { id: "thought", kind: "thought", status: "ready", text: "Plan", timestamp: new Date(0) };
+    const tail = [thought, call("one"), call("two")];
+    const present = createStreamPresentation();
+    const history = mode => present({ head: [], tail, level: "overview", transform: mode, isTurnActive: false });
+    expect(history(transform).groupsByHostId.size).toBe(0);
+    // The native-rows command unregisters only the tool transformer; Thinking stays.
+    const nativeRows = input => transformTimelineItem({ ...input, plugins: [{ ...plugins[0], timelineTransformers: [plugins[0].timelineTransformers[1]] }] });
+    const native = history(nativeRows);
+    expect(native.tail).toHaveLength(2);
+    expect(native.tail[0].data).toEqual({ text: "Plan", phase: "complete" });
+    expect(native.groupsByHostId.get(native.tail[1].id).run.calls.map(item => item.id)).toEqual(["one", "two"]);
+    const cards = history(transform);
+    expect(cards.groupsByHostId.size).toBe(0);
+    expect(cards.tail.slice(1).map(item => item.data.detail.command)).toEqual(["one", "two"]);
+  });
   it.each(["overview", "detailed"])("preserves native plan filtering and rendering in %s", level => {
     const calls = [call("exit", "completed", "ExitPlanMode"), call("pending", "running", "plan_approval"),
       call("done", "completed", "plan_approval", { type: "plan", plan: "Keep native" }),
