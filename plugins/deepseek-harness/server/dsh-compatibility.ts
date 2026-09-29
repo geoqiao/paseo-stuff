@@ -494,9 +494,10 @@ function projectThoughtMessageId(message: AcpStreamMessage): AcpStreamMessage {
     return message;
   }
 
-  // Paseo 0.9.2/0.10.1 resolveChunkId ignores chunk kind for explicit IDs,
-  // merging DSH's thought and answer buffers. Remove when upstream is fixed:
-  // https://github.com/getpaseo/paseo/blob/v0.10.1/packages/plugin/src/server/acp-internal/connection.ts#L922
+  // dsh-acp sends a message's thought and answer chunks with one messageId;
+  // ACP treats that as one message, so Paseo merges the two buffers. Remove
+  // once DSH sends distinct IDs:
+  // https://github.com/deepseek-ai/deepseek-harness/discussions/8235
   // ACP IDs are strings, not UUID-only. Keep the answer's native ID untouched.
   return {
     ...message,
