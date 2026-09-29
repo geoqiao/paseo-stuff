@@ -360,32 +360,31 @@ describe("DeepSeek Harness launch guards", () => {
     expect(diagnostic).not.toContain("review-secret");
   });
 
-  it("recognizes only the tested DSH release versions", () => {
-    expect(extractDshVersion("dsh 0.1.6")).toBe("0.1.6");
-    expect(isSupportedDshVersion("0.1.6")).toBe(false);
-    expect(extractDshVersion("dsh 0.1.6-alpha.2")).toBe("0.1.6-alpha.2");
-    expect(isSupportedDshVersion("0.1.6-alpha.2")).toBe(true);
-    expect(isSupportedDshVersion("0.1.6-alpha.1")).toBe(false);
-    expect(extractDshVersion("dsh 0.1.7-alpha.2")).toBe("0.1.7-alpha.2");
-    expect(isSupportedDshVersion("0.1.7-alpha.2")).toBe(true);
-    expect(isSupportedDshVersion("0.1.7-alpha.2+custom.1")).toBe(false);
-    expect(extractDshVersion("dsh 0.1.7-rc.1")).toBe("0.1.7-rc.1");
-    expect(isSupportedDshVersion("0.1.7-rc.1")).toBe(true);
-    expect(extractDshVersion("dsh 0.1.7-rc.2")).toBe("0.1.7-rc.2");
-    expect(isSupportedDshVersion("0.1.7-rc.2")).toBe(true);
-    expect(isSupportedDshVersion("0.1.7-rc.2+custom.1")).toBe(false);
-    expect(isSupportedDshVersion("0.1.7-rc")).toBe(false);
-    expect(isSupportedDshVersion("0.1.7-rc.3")).toBe(false);
-    expect(isSupportedDshVersion("0.1.7")).toBe(false);
+  it.each([
+    "0.1.5-rc.1", "0.1.5-rc.2", "0.1.5-rc.3", "0.1.5-rc.10", "0.1.5",
+    "0.1.6-alpha.1", "0.1.6-alpha.2", "0.1.6",
+    "0.1.7-alpha.2", "0.1.7-alpha.2+custom.1", "0.1.7-rc.1", "0.1.7-rc.2",
+    "0.1.7-rc.2+custom.1", "0.1.7-rc.3", "0.1.7",
+    "0.2.0-rc.1", "0.2.0", "1.0.0-alpha.1", "10.0.0",
+  ])("accepts %s at or above the minimum DSH version", (version) => {
+    expect(isSupportedDshVersion(version)).toBe(true);
+  });
+
+  it.each([
+    "0.1.5-rc.0", "0.1.5-rc", "0.1.5-beta.9", "0.1.5-alpha.2", "0.1.4", "0.1.2-rc.1",
+    "0.0.1-rc.5", "0.1.5-RC.2", "01.2.3", "0.1", "dsh", "",
+  ])("rejects %s below the minimum or unparseable", (version) => {
+    expect(isSupportedDshVersion(version)).toBe(false);
+  });
+
+  it("extracts DSH versions from command output", () => {
     expect(isSupportedDshVersion(undefined)).toBe(false);
+    expect(extractDshVersion("dsh 0.1.6")).toBe("0.1.6");
+    expect(extractDshVersion("dsh 0.2.0-rc.1")).toBe("0.2.0-rc.1");
     expect(extractDshVersion("dsh 0.1.5-rc.2+custom.1")).toBe("0.1.5-rc.2+custom.1");
-    expect(isSupportedDshVersion(extractDshVersion("dsh 0.1.5-rc.2+custom.1"))).toBe(false);
     expect(extractDshVersion("0.1.5-rc.2_not-a-version")).toBeUndefined();
-    expect(extractDshVersion("dsh 0.1.5-rc.1")).toBe("0.1.5-rc.1");
     expect(extractDshVersion("version: 0.1.5-rc.2\n")).toBe("0.1.5-rc.2");
-    expect(isSupportedDshVersion("0.1.5-rc.1")).toBe(true);
-    expect(isSupportedDshVersion("0.1.5-rc.3")).toBe(false);
-    expect(extractDshVersion("0.1.5-rc.3")).toBe("0.1.5-rc.3");
+    expect(extractDshVersion("no version here")).toBeUndefined();
   });
 
   it("enforces the DSH Node requirement and redacts diagnostics", () => {
