@@ -12,9 +12,10 @@ patched Paseo app is required.
 > [!IMPORTANT]
 > **Requirements:** Paseo 0.8.0 or later (tested Paseo versions are listed
 > under [Paseo installation](#paseo-installation)), daemon Node.js 22.19.0 or
-> newer, and a separately installed official DeepSeek Harness executable. The
-> supported and tested DSH versions are **0.1.5-rc.1**, **0.1.5-rc.2**,
-> **0.1.6-alpha.2**, **0.1.7-alpha.2**, **0.1.7-rc.1**, and **0.1.7-rc.2**.
+> newer, and a separately installed official DeepSeek Harness executable,
+> **DSH 0.1.5-rc.1 or newer**. Newer DSH releases are accepted without an
+> exact-version check. Tested: **0.1.5-rc.1**, **0.1.5-rc.2**, **0.1.6-alpha.2**,
+> **0.1.7-alpha.2**, **0.1.7-rc.1**, **0.1.7-rc.2** and **0.2.0-rc.1**.
 > The executable must be able to run `dsh --version` and
 > `dsh --profile acp`.
 
@@ -36,9 +37,8 @@ patched Paseo app is required.
 ## Install prerequisites
 
 Install a verified official DSH version **on the daemon machine**, then check
-that the daemon can find the executable on its PATH. The npm `latest` and
-`next` dist-tags currently both resolve to `0.1.7-rc.2`, which is also the
-newest tested official closure:
+that the daemon can find the executable on its PATH. The npm `latest` dist-tag
+currently resolves to `0.1.7-rc.2` and `next` to `0.2.0-rc.1`; both are tested:
 
 ~~~sh
 npm install -g --ignore-scripts @deepseek-ai/dsh@0.1.7-rc.2
@@ -69,10 +69,11 @@ The parent process environment is never mutated.
 The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, and the isolated published CLI/ACP
-closures `0.1.7-alpha.2`, `0.1.7-rc.1` and `0.1.7-rc.2`; all use ACP SDK
-`1.4.0`. The plugin probes the CLI version and explicitly accepts only the six
-DSH versions
-listed above; it does not claim compatibility with other package closures.
+closures `0.1.7-alpha.2`, `0.1.7-rc.1`, `0.1.7-rc.2` and `0.2.0-rc.1`; all use
+ACP SDK `1.4.0`. The plugin probes the CLI version and rejects only releases
+older than `0.1.5-rc.1` or output it cannot parse. Newer releases are accepted
+but untested until listed here; ACP behaviour follows the capabilities DSH
+advertises; resuming against a peer without `session/resume` fails with a clear error.
 
 ## ACP compatibility and limitations
 
@@ -126,7 +127,7 @@ Review this trusted, unsandboxed plugin and install the pinned prerelease on the
 intended daemon:
 
 ~~~sh
-paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.7 --host <your-host>
+paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.8 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -242,11 +243,18 @@ closed and disposed cleanly without leftover processes through Paseo's public
 shim. No model prompt, tool execution, approval, credential or paid inference
 was attempted, and the signed-in account model catalog was not checked.
 
+The beta.8 check installed the published `0.2.0-rc.1` CLI closure (ACP SDK
+`1.4.0`) in an isolated home on Node 24.18.0. Beta.7's exact-version guard
+rejected it. With the minimum-only guard, the production provider factory
+mapped the same capabilities and three-model catalog as an `0.1.7-rc.2`
+control run, listed sessions and closed without leftover processes. No model
+prompt, tool execution, credential or paid inference was attempted.
+
 Separately, an installed macOS Paseo 0.8.0 daemon completed real turns and kept
 tool-output tails, prior displayed history and DSH context through a plugin
 disable/enable cycle. An initial host IPC shutdown race was fixed by explicit
 async cleanup ownership; the repeated installed cycle had no new IPC errors,
-and the following real turn retained context and history. The current **32-test** suite
+and the following real turn retained context and history. The current **65-test** suite
 includes pending-connect and close-ordering regressions; exact evidence is
 tracked in [verification](docs/verification.md).
 The [post-release review](docs/code-review.md) adds diagnostic-redaction, timeout,

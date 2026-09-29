@@ -831,10 +831,10 @@ describe.sequential("DeepSeek Harness provider", () => {
   });
 
   it("rejects unsupported versions and cleans up a no-response initialize", async () => {
-    await withEnvironment({ DSH_FAKE_VERSION: "0.1.5-rc.3" }, async () => {
+    await withEnvironment({ DSH_FAKE_VERSION: "0.1.5-alpha.2" }, async () => {
       const provider = createDeepSeekHarnessProvider({ startupTimeoutMs: 500 });
       await expect(provider.connect(connectRequest())).rejects.toThrow(
-        "supports only 0.1.5-rc.1 and 0.1.5-rc.2 and 0.1.6-alpha.2 and 0.1.7-alpha.2 and 0.1.7-rc.1 and 0.1.7-rc.2 (tested)",
+        "Unsupported DeepSeek Harness version 0.1.5-alpha.2. This plugin requires DeepSeek Harness 0.1.5-rc.1 or newer",
       );
     });
 
@@ -855,6 +855,16 @@ describe.sequential("DeepSeek Harness provider", () => {
     });
   });
 
+  it.each(["0.1.7-rc.3", "0.2.0-rc.1"])(
+    "connects to newer DSH release %s without an exact-version gate",
+    async (version) => {
+      await withEnvironment({ DSH_FAKE_VERSION: version }, async () => {
+        const connection = await connect();
+        await connection.close();
+      });
+    },
+  );
+
   it("names the working directory when a spawn path is missing", async () => {
     const resources = new Set<ConnectorResource>();
     const cwd = join(testRoot, "missing-workspace");
@@ -873,7 +883,7 @@ describe.sequential("DeepSeek Harness provider", () => {
   it("redacts JSON credential fields from public-provider startup diagnostics", async () => {
     await withEnvironment(
       {
-        DSH_FAKE_VERSION: "0.1.5-rc.3",
+        DSH_FAKE_VERSION: "0.1.5-alpha.2",
         DSH_FAKE_VERSION_STDERR: '{"apiKey":"review-secret","reason":"synthetic diagnostic"}',
       },
       async () => {

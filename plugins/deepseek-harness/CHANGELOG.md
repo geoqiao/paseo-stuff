@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-beta.8 — 2026-09-29
+
+- Replace the exact DSH version allowlist with a minimum, `0.1.5-rc.1`, so new
+  DSH releases are no longer rejected before they are listed. Beta.7 refused the
+  official `0.2.0-rc.1`. Versions are compared by Semantic Versioning
+  precedence; only older releases and unparseable `--version` output fail.
+- Verify the official `0.2.0-rc.1` closure through the production provider
+  factory (capabilities, catalog, session list, clean close), matching a
+  `0.1.7-rc.2` control. No prompt or paid inference was used.
+
 ## 0.1.0-beta.7 — 2026-09-28
 
 - Replace the manifest range `>=0.8.0 <0.10.0` with the minimum-only
