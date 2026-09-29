@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Keep DSH reasoning out of assistant replies when ACP thought and message
+  chunks share a native message ID. The compatibility bridge adds `:thought`
+  only to nonempty thought IDs; answer IDs, text, and metadata are preserved.
+  This mitigates Paseo's ACP buffer collision in SDK 0.9.2 and 0.10.1.
+- Add regression coverage for incremental and interleaved chunks, missing IDs,
+  restored sessions, and history updates during load/resume. The nine new
+  cases pass with both SDKs; see `docs/compatibility.md` for verification scope.
+
 ## 0.1.0-beta.9 — 2026-09-29
 
 - Add a Cafe cover screenshot and publishable npm package metadata. The Git
