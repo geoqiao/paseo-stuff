@@ -7,7 +7,11 @@ replacement agent loop or an official DeepSeek/Paseo endorsement. It runs
 `dsh --profile acp`; Paseo owns the chat UI. No custom client surface or
 patched Paseo app is required.
 
-[Install](#install-prerequisites) · [Compatibility](#acp-compatibility-and-limitations) · [Verification](docs/verification.md) · [Code review](docs/code-review.md)
+![DeepSeek Harness selected in Paseo's model picker beside a completed reply and Bash tool call](images/cover.png)
+
+*Real hosted Paseo web-client capture using a synthetic prompt and `/tmp` workspace. [Screenshot provenance](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/screenshots.md).*
+
+[Install](#install-prerequisites) · [Compatibility](#acp-compatibility-and-limitations) · [Verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md) · [Code review](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/code-review.md)
 
 > [!IMPORTANT]
 > **Requirements:** Paseo 0.8.0 or later (tested Paseo versions are listed
@@ -119,15 +123,27 @@ adds bounded readable previews; **that separate renderer** requires Full detail.
 and can leave empty sessions in DSH's native session list. DSH profile settings
 remain authoritative; the generic ACP shim does not inject Paseo's extra
 `systemPrompt`. Real vision/MCP services, custom profiles, Windows and native
-iOS/Android clients have not been exercised. See [verification](docs/verification.md).
+iOS/Android clients have not been exercised. See [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md).
 
 ## Paseo installation
 
-Review this trusted, unsandboxed plugin and install the pinned prerelease on the
-intended daemon:
+Review this trusted, unsandboxed plugin and install it on the intended daemon.
+For the published npm package, run:
 
 ~~~sh
-paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.8 --host <your-host>
+paseo plugin add paseo-deepseek-harness --host <your-host>
+paseo plugin ls --host <your-host>
+~~~
+
+Paseo installs this package's runtime dependencies. The package omits the Git
+source build because that build runs `npm ci` and `npm run check`, which require
+the lockfile, tests and development dependencies; those are not included in the
+npm package. The `paseo-plugin.json` in the Git source retains those build steps.
+
+To install the pinned Git prerelease instead, run:
+
+~~~sh
+paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.9 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -191,7 +207,7 @@ not part of the automated fixture.
 ## Verification record
 
 Automated checks use `npm run typecheck`, `npm run lint` and `npm test`.
-The [verification record](docs/verification.md) distinguishes fake-peer protocol
+The [verification record](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md) distinguishes fake-peer protocol
 tests, real official-API calls, actual daemon integration and untested clients.
 
 A separate live check in the parent workspace exercised this production
@@ -209,7 +225,7 @@ Node 22.23.2 with isolated CLI `0.1.5-rc.2` and the upgraded global CLI
 `0.1.6-alpha.2`. Both completed catalog discovery, session configuration, one
 bounded synthetic no-tools prompt, usage/timeline validation and clean close;
 the prompt produced no permission event. The exact closure and ACP probe are
-recorded in [verification](docs/verification.md). No daemon reload, enable,
+recorded in [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md). No daemon reload, enable,
 disable or restart was performed for this migration.
 
 A follow-up Node 24.21.0 check completed the latest alpha.2 persistence
@@ -256,8 +272,8 @@ disable/enable cycle. An initial host IPC shutdown race was fixed by explicit
 async cleanup ownership; the repeated installed cycle had no new IPC errors,
 and the following real turn retained context and history. The current **65-test** suite
 includes pending-connect and close-ordering regressions; exact evidence is
-tracked in [verification](docs/verification.md).
-The [post-release review](docs/code-review.md) adds diagnostic-redaction, timeout,
+tracked in [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md).
+The [post-release review](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/code-review.md) adds diagnostic-redaction, timeout,
 missing-workspace and defensive-input regressions without changing the ACP mappings.
 These are backend tests, not a desktop UI matrix or mobile-device test. Official DSH does not provide raw token deltas,
 provider-specific commands, steering, transcript replay, or its own plan/
@@ -271,7 +287,7 @@ was merged. Migration to this monorepo is a separate registry change that retain
 the existing `deepseek-harness` catalog ID. The entry uses the
 `provider` category and flags prerequisites, beta compatibility, safety,
 persistence semantics, unsupported surfaces and verification limits. Its source
-is [docs/catalog-entry.json](docs/catalog-entry.json); publication of this plugin
+is [the catalog entry](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/catalog-entry.json); publication of this plugin
 and acceptance into the community catalog are separate actions.
 
 ## License
