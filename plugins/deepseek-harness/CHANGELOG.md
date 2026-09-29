@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-beta.9 — 2026-09-29
+
+- Add a Cafe cover screenshot and publishable npm package metadata. The Git
+  source build remains in the repository manifest; npm packages omit that build
+  because its `npm ci` and `npm run check` steps require the lockfile, tests and
+  development dependencies, while Paseo installs runtime dependencies for npm
+  sources.
+- No runtime code changes.
+
 ## 0.1.0-beta.8 — 2026-09-29
 
 - Replace the exact DSH version allowlist with a minimum, `0.1.5-rc.1`, so new
