@@ -6,14 +6,10 @@ import type {
   AcpStreamMessage,
 } from "@getpaseo/plugin/server/acp";
 
-export const SUPPORTED_DSH_VERSIONS = [
-  "0.1.5-rc.1",
-  "0.1.5-rc.2",
-  "0.1.6-alpha.2",
-  "0.1.7-alpha.2",
-  "0.1.7-rc.1",
-  "0.1.7-rc.2",
-] as const;
+// Minimum only, like the Paseo requirements range: newer DSH releases are
+// accepted, and ACP behaviour is chosen from the capabilities DSH advertises.
+// Add an exclusion only for a release known to be incompatible.
+export const MINIMUM_DSH_VERSION = "0.1.5-rc.1";
 
 const VERSION_PROBE_TIMEOUT_MS = 5_000;
 const STARTUP_TIMEOUT_MS = 5_000;
@@ -82,21 +78,54 @@ export function assertSupportedNodeVersion(version = process.versions.node): voi
 }
 
 export function extractDshVersion(output: string): string | undefined {
-  // Include stable releases and build metadata in diagnostics; never accept a
-  // tested prefix of an otherwise untested version such as rc.2+custom.
+  // Keep prerelease and build metadata so diagnostics show the exact version.
   return /(?:^|[^0-9A-Za-z.+_-])([0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)(?=$|[^0-9A-Za-z.+_-])/.exec(
     output,
   )?.[1];
 }
 
-export function isSupportedDshVersion(
-  version: string | undefined,
-): version is (typeof SUPPORTED_DSH_VERSIONS)[number] {
-  // Exact membership only: no prefix, range or build-metadata matching.
-  return (
-    version !== undefined &&
-    (SUPPORTED_DSH_VERSIONS as readonly string[]).includes(version)
-  );
+export function isSupportedDshVersion(version: string | undefined): boolean {
+  if (version === undefined) return false;
+  const parsed = parseSemver(version);
+  const minimum = parseSemver(MINIMUM_DSH_VERSION);
+  return parsed !== undefined && minimum !== undefined && compareSemver(parsed, minimum) >= 0;
+}
+
+interface Semver {
+  core: [number, number, number];
+  prerelease: string[];
+}
+
+function parseSemver(version: string): Semver | undefined {
+  const match = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/.exec(version);
+  if (!match) return undefined;
+  return {
+    core: [Number(match[1]), Number(match[2]), Number(match[3])],
+    prerelease: match[4]?.split(".") ?? [],
+  };
+}
+
+/** Semantic Versioning 2.0 precedence; build metadata is ignored. */
+function compareSemver(a: Semver, b: Semver): number {
+  for (let i = 0; i < 3; i++) {
+    if (a.core[i] !== b.core[i]) return a.core[i] - b.core[i];
+  }
+  if (a.prerelease.length === 0 || b.prerelease.length === 0) {
+    return b.prerelease.length - a.prerelease.length;
+  }
+  for (let i = 0; i < Math.max(a.prerelease.length, b.prerelease.length); i++) {
+    const x = a.prerelease[i];
+    const y = b.prerelease[i];
+    if (x === undefined) return -1;
+    if (y === undefined) return 1;
+    if (x === y) continue;
+    const xNumeric = /^\d+$/.test(x);
+    const yNumeric = /^\d+$/.test(y);
+    if (xNumeric && yNumeric) return Number(x) - Number(y);
+    if (xNumeric !== yNumeric) return xNumeric ? -1 : 1;
+    return x < y ? -1 : 1;
+  }
+  return 0;
 }
 
 export function redactDiagnostic(value: string): string {
@@ -854,9 +883,9 @@ async function probeDshVersion(
       throw new Error(
         "Unsupported DeepSeek Harness version " +
           (version ?? "unknown") +
-          ". This plugin supports only " +
-          SUPPORTED_DSH_VERSIONS.join(" and ") +
-          " (tested); install one of those versions or set DSH_PASEO_COMMAND to the intended executable." +
+          ". This plugin requires DeepSeek Harness " +
+          MINIMUM_DSH_VERSION +
+          " or newer; upgrade DSH or set DSH_PASEO_COMMAND to the intended executable." +
           diagnosticSuffix(stdout.value + "\n" + stderr.value),
       );
     }

@@ -1,5 +1,34 @@
 # Verification and limits
 
+## Beta.8 — minimum-only DSH version check (2026-09-29)
+
+- Beta.7 accepted only six exact DSH releases, so the official `0.2.0-rc.1`
+  (npm `next`, published 2026-09-28) was rejected even though nothing in its
+  ACP surface changed. The exact list is replaced by a minimum, `0.1.5-rc.1`
+  (the oldest tested release), compared with Semantic Versioning 2.0 precedence;
+  build metadata is ignored. Only older releases and unparseable `--version`
+  output are rejected. No DSH release is known to be incompatible, so none is
+  excluded. ACP behaviour was already chosen from the advertised capabilities.
+- `npm run check` on Node 24.18.0 with SDK 0.9.2: typecheck, lint with zero
+  warnings/errors and **65 tests / 2 files**. New cases accept `0.1.5-rc.3`,
+  `0.1.6-alpha.1`, `0.1.7-rc.3`, `0.2.0-rc.1`, `1.0.0-alpha.1` and build
+  metadata, reject `0.1.5-rc.0`, `0.1.5-alpha.2`, `0.1.4` and malformed
+  versions, and connect the provider to fake `0.1.7-rc.3`/`0.2.0-rc.1` CLIs.
+- Official `@deepseek-ai/dsh@0.2.0-rc.1` and a `0.1.7-rc.2` control were
+  installed with `--ignore-scripts` in separate prefixes and isolated `HOME`
+  directories (no credentials). Both use ACP SDK `1.4.0`. The production
+  `createDeepSeekHarnessProvider` returned identical results for both:
+  capabilities `prompt.message`, `session.configure`, `session.list`,
+  `session.persistence` and `permission`; default model `deepseek-v4-flash`
+  among three `deepseek-official` models; thinking `off/low/high/max`; one
+  listed session (the empty one catalog discovery creates); clean close and
+  dispose with no leftover DSH processes. No prompt or paid inference ran.
+- Not verified for 0.2.0-rc.1: real turns, tool calls, resume after restart and
+  the signed-in model catalog. The local daemon (Paseo 0.10.1) still uses the
+  global DSH 0.1.6-alpha.2 and was not reloaded for this change.
+
+## Beta.7 — Paseo 0.10.0-beta.1 and DSH 0.1.7-rc.2 (2026-09-28)
+
 2026-09-28. Beta.7 pins the public Paseo SDK to **0.9.2**; the same automated
 suite also passes against **0.9.0-beta.1** and **0.10.0-beta.1**. The earlier
 0.8.0 daemon evidence remains historical evidence. The manifest's
@@ -151,8 +180,9 @@ host shutdown or external detached-process scenario.
   sessions. The plugin does not delete native records or read private transcripts.
 - DSH profile settings stay authoritative. The generic ACP shim does not inject
   Paseo's extra system prompt. Custom profiles must still provide ACP over stdio.
-- The CLI version guard accepts only the six tested exact releases. It does
-  not pin the CLI's transitive packages or certify future dependency closures.
+- The CLI version guard is minimum-only (`0.1.5-rc.1`). Newer releases load
+  without being tested; it does not pin the CLI's transitive packages or
+  certify future dependency closures.
   DSH itself is a rapidly changing developer preview.
 - Complete output is intentionally retained. Large payload transfer, storage,
   Raw and copying can be expensive. An optional renderer may bound display work;
