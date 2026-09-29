@@ -1,5 +1,32 @@
 # Verification and remaining gaps
 
+## Beta.9 — manual native-row switch (2026-09-29)
+
+- Feature: two global Command Center actions switch this client between Activity tool
+  cards and native tool rows, so Summary can group native rows. See
+  [compatibility](compatibility.md#manual-native-row-switch-beta9).
+- `npm run check` on Node **24.18.0** with the pinned SDK **0.9.2**: typecheck, lint
+  with no warnings/errors, **8 files / 253 tests**. The same tree with SDK **0.10.1**
+  (client, plugin, protocol) installed without saving gives the same result.
+- Hermes and DOM-free bundle evaluation (not skipped) cover the default card mode,
+  repeated commands without duplicate transformers, native rows removing only the tool
+  transformer while Thinking stays, restoring cards, and complete reverse-order cleanup.
+- Unmodified 0.9.2 `presentation.ts`: one presentation instance renders history as
+  ungrouped cards in Summary, regroups both calls after the switch to native rows
+  (Thinking still transformed) and returns to ungrouped cards after switching back.
+- **Live 0.10.1 check:** PR head `ad59967` was loaded into the existing disabled
+  `colorful-agent-activity` directory installation, enabled for the check and disabled
+  again afterwards; the checkout returned to `main`. Client: hosted web app
+  (app.paseo.sh) in a fresh desktop Chromium profile, paired through the relay, on an
+  existing Pi conversation. With Summary selected and cards active, four consecutive
+  `exec` calls stayed as four ungrouped cards. After **Activity: use native tool rows
+  (for Summary)**, the history immediately showed native groups ("Used 4 other tools",
+  "Searched 1 time and used 1 other tool") while Thinking rows stayed. After
+  **Activity: use tool cards (Full detail)**, the cards returned and one expanded with
+  Output and Show all.
+- **Not verified:** the Paseo desktop app, streaming during a switch, mobile, and
+  0.8 re-rendering after a switch.
+
 ## Beta.8 — Paseo 0.9.2 / 0.10.0-beta.1 compatibility (2026-09-28)
 
 - Trigger: the local desktop daemon auto-updated to **0.10.0-beta.1** and rejected

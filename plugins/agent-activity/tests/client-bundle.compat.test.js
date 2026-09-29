@@ -53,17 +53,33 @@ function smoke() {
 var contributions = [];
 var removed = [];
 function register(item) { contributions.push(item); return function() { removed.push(item); }; }
+function active(predicate) { return contributions.filter(function(item) { return predicate(item) && removed.indexOf(item) === -1; }); }
+function isToolTransformer(item) { return item.query && item.query.itemType === "tool_call"; }
 var entry = evaluate(${JSON.stringify(entryBundle)})(runtimeRequire);
 var cleanup = entry.default({
   addSettingsScreen: function() { throw new Error("Redundant Activity settings entry"); },
-  addTimelineTransformer: register, addTimelineRenderer: register
+  addTimelineTransformer: register, addTimelineRenderer: register, addCommandCenterItem: register
 });
-check(contributions.length === 4, "Expected only tool and minimal Thinking timeline contributions");
-check(contributions[0].query.itemType === "tool_call", "Missing tool transformer");
-check(typeof contributions[1].Component === "function", "Missing tool renderer");
-check(contributions[2].query.itemType === "reasoning" && typeof contributions[3].Component === "function", "Missing density-only Thinking adapter");
-check(contributions[2].transform({ item: { text: "**original**" }, phase: "streaming" }).items[0].data.text === "**original**", "Thinking text was rewritten");
-var projected = contributions[0].transform({ phase: "streaming", item: {
+check(contributions.length === 6, "Expected tool/Thinking timeline contributions and two commands");
+var renderers = active(function(item) { return typeof item.Component === "function"; });
+var thinking = active(function(item) { return item.query && item.query.itemType === "reasoning"; });
+var commands = active(function(item) { return typeof item.onSelect === "function"; });
+check(renderers.length === 2 && thinking.length === 1, "Missing renderers or density-only Thinking adapter");
+check(thinking[0].transform({ item: { text: "**original**" }, phase: "streaming" }).items[0].data.text === "**original**", "Thinking text was rewritten");
+check(commands.length === 2 && commands.every(function(item) { return item.context === "global" && item.title.indexOf("Activity: ") === 0; }), "Missing global mode commands");
+var nativeRows = commands.filter(function(item) { return item.id === "native-tool-rows"; })[0];
+var toolCards = commands.filter(function(item) { return item.id === "tool-cards"; })[0];
+check(active(isToolTransformer).length === 1, "Tool cards are not the default");
+toolCards.onSelect({});
+check(active(isToolTransformer).length === 1, "Repeated card command duplicated the transformer");
+nativeRows.onSelect({});
+nativeRows.onSelect({});
+check(active(isToolTransformer).length === 0 && active(function(item) { return item === thinking[0]; }).length === 1, "Native rows did not remove only the tool transformer");
+toolCards.onSelect({});
+toolCards.onSelect({});
+var toolTransformers = active(isToolTransformer);
+check(toolTransformers.length === 1 && contributions.filter(isToolTransformer).length === 2, "Tool cards were not restored once");
+var projected = toolTransformers[0].transform({ phase: "streaming", item: {
   type: "tool_call", callId: "outer", name: "exec", status: "running", error: null,
   detail: { type: "unknown", input: { code: "compose tools" }, output: { content: [], details: {
     cellId: "cell", status: "running", traces: [{
@@ -83,7 +99,8 @@ check(formatted.language === "json" && JSON.parse(formatted.text).details.traces
 check(details.previewText(formatted.text).text.split("\\n").length === 20, "Native preview is not twenty lines");
 check(details.prettyJson('{"n":9007199254740993,"n":1}').indexOf("9007199254740993") !== -1, "Numeric lexeme lost");
 cleanup();
-check(removed.length === 4 && removed[0] === contributions[3], "Cleanup did not unregister contributions");
+check(contributions.every(function(item) { return removed.indexOf(item) !== -1; }) && removed.length === contributions.length, "Cleanup did not unregister every contribution once");
+check(removed[removed.length - 1] === contributions[0], "Cleanup did not unregister in reverse order");
 var highlight = evaluate(${JSON.stringify(highlightBundle)})(runtimeRequire).highlightCode;
 var colors = { foreground: "#dddddd", foregroundMuted: "#aaaaaa", accent: "#9ab8ce", surface1: "#181818" };
 var samples = {

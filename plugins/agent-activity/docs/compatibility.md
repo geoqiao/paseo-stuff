@@ -20,7 +20,12 @@ macOS is the tested installed host. The current working tree also passes real RN
 Hermes bundle evaluation; Paseo 0.9.0-beta.1, 0.9.2 and 0.10.0-beta.1 all declare
 React 19.1.0 and React Native 0.81.5 for the app. Native iOS/Android UI remains unverified.
 
-**Summary is not supported. All connected clients must use Full detail. Disable the plugin before switching to Summary.** The warning is not an automatic runtime guard.
+**Tool cards do not support Summary.** Since beta.9, a client using Summary chooses
+**Activity: use native tool rows (for Summary)** in the Command Center; **Activity: use
+tool cards (Full detail)** restores the cards. The choice is per client, not saved, and
+resets to cards whenever the plugin loads. It is a manual switch, not an automatic
+runtime guard: the plugin never reads or changes the display preference. See
+[Manual native-row switch](#manual-native-row-switch-beta9).
 
 ## Native bundle loading (beta.5 fix)
 
@@ -75,6 +80,25 @@ Evidence is pinned to [Paseo v0.8.0, commit b8e2467](https://github.com/getpaseo
 5. A replacement plugin row uses a different branch from the native group renderer, removing the group's entry point.
 
 The plugin therefore cannot recognize a Summary group and preserve all its members. It does not read private storage, inspect host DOM/React state, force Full detail or patch the app.
+
+## Manual native-row switch (beta.9)
+
+The switch uses only public contributions available since the 0.8.0 SDK:
+`addCommandCenterItem` and the cleanup returned by `addTimelineTransformer`.
+Native tool rows unregister only the `tool-calls` transformer; renderers, commands
+and the Thinking adapter stay registered. Reasoning rows are never groupable
+(`isGroupableToolCall` accepts only `tool_call`), so keeping the Thinking adapter does
+not change Summary. Selecting a command repeatedly never registers a duplicate transformer.
+
+`presentation.ts` in 0.9.2 recomputes history when the transform function changes.
+`tests/paseo-09.compat.test.js` runs that unmodified code: after switching one
+presentation to native rows, existing history forms one Summary group of both calls;
+switching back yields ungrouped cards again. Math Renderer's commands use the same
+mechanism and switched rendered and native replies live on a 0.10.0-beta.1 daemon.
+Activity's commands regrouped and restored an existing conversation live on a
+0.10.1 daemon in the hosted web client (see [verification](verification.md)). 0.8 applies
+transformers after grouping, so native rows there leave the native groups intact,
+but live re-rendering after a switch on 0.8 is untested.
 
 The [host integration tests](../tests/paseo-display.compat.test.js) run the real pinned projection functions with synthetic data. The Summary regression intentionally demonstrates the gap; a passing test is **not Summary support**. A future public host API that preserves groups or adds a detail-renderer slot is needed.
 
