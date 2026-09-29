@@ -68,6 +68,16 @@ See [AGENTS.md](AGENTS.md) for repository development rules.
 Each plugin maintains its own `package.json.version`. Git tags use
 `<plugin-id>-v<version>` so releases remain independent in the monorepo.
 
+Publishing a GitHub release for an npm-distributed plugin (currently DeepSeek
+Harness) runs [`publish-npm.yml`](.github/workflows/publish-npm.yml), which
+checks the tag against `package.json`, runs the plugin checks and publishes
+with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers). No
+npm token or OTP is involved, and npm attaches provenance. To publish an
+existing tag again, run the workflow manually with that tag; versions already
+on npm are skipped. A new npm package must first trust the workflow once with
+`npm trust github <package> --file publish-npm.yml --repo geoqiao/paseo-stuff --allow-publish`
+and be added to the workflow's plugin list.
+
 A [Paseo Cafe](https://github.com/paseo-cafe/paseo-cafe) entry can point to a subdirectory:
 
 ```json
