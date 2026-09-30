@@ -1,6 +1,7 @@
 {
   "repo": "geoqiao/paseo-stuff",
   "path": "plugins/deepseek-harness",
+  "package": "paseo-deepseek-harness",
   "categories": [
     "provider"
   ],
