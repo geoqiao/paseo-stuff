@@ -1,5 +1,43 @@
 # Verification and limits
 
+## Unreleased — Windows launch (2026-10-16)
+
+- Reported on Windows 11 (10.0.26200) with a Paseo 0.11.2 daemon, Node 24.19.0
+  and the DSH `0.2.0-rc.2` that ships with the DeepSeek Harness desktop app.
+  That install provides `dsh.cmd` only; there is no `dsh.exe` on `PATH`. The
+  provider listed as `unavailable` and
+  `paseo provider diagnostic deepseek-harness` reported
+  `DeepSeek Harness version probe failed for dsh with exit -4058`.
+- The exit code is libuv's `UV_ENOENT`. Reproduced against Node directly:
+  `spawn("dsh", ["--version"])` reports `ENOENT` because libuv's PATH search
+  tries only `.exe` and `.com`, and an absolute `.cmd` path throws `EINVAL`
+  because Node refuses to start a batch file without a shell. The `.cmd` shim
+  cannot be replaced with `node cli.js`, because its entry point lives inside
+  the app's `app.asar` archive, which plain Node cannot read.
+- After the fix, the same daemon reported `Provider is available`,
+  `Models: 5`, `Status: Ready`, and `paseo provider models deepseek-harness`
+  returned the five signed-in models (`deepseek-v4-flash`, `deepseek-v4-pro`
+  and `deepseek-flash` across the `deepseek-official` and `deepseek-account`
+  routes). Catalog discovery drives a real `dsh --profile acp` child through
+  the ACP handshake, so this covers the session launch path as well as the
+  version probe. The plugin log showed `Loading plugin` and `Plugin ready`
+  with no spawn error and no `DEP0190` warning.
+- Cleanup was checked separately: after `cmd.exe` is killed, the DSH child
+  exits on its own. `tasklist` reported no surviving `DeepSeek Harness.exe`
+  process at the end of the check.
+- `npm run typecheck` and `npm run lint` pass with zero warnings and errors,
+  and the five new launch-guard cases pass (47 tests in
+  `server/dsh-compatibility.test.ts`).
+- Not verified on Windows: a real prompt turn or tool call, resume, and paid
+  inference. This check used no model prompt.
+- Pre-existing and unrelated: the full automated suite does not pass on
+  Windows. Seventeen `provider.test.ts` cases fail with `spawn EFTYPE` because
+  its fake-DSH fixture is a `.mjs` script, which Windows cannot execute
+  directly. The same seventeen fail on the unpatched tree, so this change
+  neither causes nor fixes them. CI runs on `ubuntu-latest`, so the new cases
+  execute through their injected platform parameter rather than a Windows
+  runner.
+
 ## Beta.11 — npm package icon (2026-10-11)
 
 - The install commands were run on an isolated Paseo 0.11.2 daemon (temporary
