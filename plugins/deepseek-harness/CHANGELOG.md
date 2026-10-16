@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Start DSH through the Windows shell when the command is a bare name. Windows
+  ships the official CLI as `dsh.cmd`, which Node cannot start directly:
+  libuv's PATH search only tries `.exe`/`.com` and reports `ENOENT` (errno
+  -4058), and an explicit `.cmd` path is rejected without a shell as `EINVAL`.
+  The version probe therefore failed on every Windows daemon and the provider
+  was reported `unavailable`, with no models. A command containing a path
+  separator keeps the direct spawn, because a shell strips the backslashes out
+  of a quoted Windows path.
+- Reject shell metacharacters in `DSH_PASEO_COMMAND` and `DSH_PASEO_PROFILE`
+  on Windows instead of handing them to a shell, and correct the launch-failure
+  message, which claimed the plugin never invokes a shell.
+- Add five launch-guard cases for the Windows branch. The platform is a
+  parameter, so they run on any CI host; see `docs/verification.md` for the
+  Windows daemon check and its limits.
+
 ## 0.1.0-beta.11 — 2026-10-11
 
 - Fix npm installation on Paseo 0.11. The npm package omitted `icon.svg`, the

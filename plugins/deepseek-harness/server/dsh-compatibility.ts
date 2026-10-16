@@ -152,15 +152,17 @@ export async function createDshAcpStream(
   const cwd = context.cwd || process.cwd();
   const command = nonEmpty(env.DSH_PASEO_COMMAND) ?? "dsh";
   const profile = nonEmpty(env.DSH_PASEO_PROFILE) ?? "acp";
+  const target = resolveDshSpawn(command, ["--profile", profile]);
 
   await probeDshVersion(command, cwd, env, context);
   assertConnectorOpen(context, "after version probe");
 
-  const child = spawn(command, ["--profile", profile], {
+  const child = spawn(target.file, target.argv, {
     cwd,
     env,
     stdio: ["pipe", "pipe", "pipe"],
     windowsHide: true,
+    shell: target.shell,
   });
   const stderr = new BoundedCapture(STDERR_CAPTURE_LIMIT);
   const owner = new ChildProcessOwner(child, command, () => stderr.value);
@@ -686,6 +688,54 @@ function nonEmpty(value: string | undefined): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+// A Windows shell concatenates its arguments rather than escaping them, so
+// every token that reaches it must be free of shell metacharacters. The tokens
+// are the command name and the profile; both come from the environment.
+const SHELL_SAFE_TOKEN = /^[A-Za-z0-9._-]+$/;
+
+export interface DshSpawnTarget {
+  file: string;
+  argv: string[];
+  shell: boolean;
+}
+
+/**
+ * Resolve how to launch DSH, which Windows ships as a `.cmd` shim.
+ *
+ * Node cannot launch that shim directly: libuv's PATH search only tries
+ * `.exe`/`.com` and reports `ENOENT`, and an explicit `.cmd` path is rejected
+ * without a shell as `EINVAL`. A bare command name therefore goes through the
+ * shell so PATHEXT resolves the shim. A command with a path separator keeps the
+ * direct spawn, because `shell: true` strips the backslashes out of a quoted
+ * Windows path, which would break an absolute path containing a space.
+ *
+ * The platform is a parameter so the Windows branch is covered on any CI host.
+ */
+export function resolveDshSpawn(
+  command: string,
+  args: readonly string[],
+  platform: NodeJS.Platform = process.platform,
+): DshSpawnTarget {
+  if (platform !== "win32" || /[\\/]/.test(command)) {
+    return { file: command, argv: [...args], shell: false };
+  }
+  const tokens = [command, ...args];
+  for (const token of tokens) {
+    if (!SHELL_SAFE_TOKEN.test(token)) {
+      throw new Error(
+        "DeepSeek Harness cannot pass " +
+          JSON.stringify(token) +
+          " through the Windows shell; DSH_PASEO_COMMAND and " +
+          "DSH_PASEO_PROFILE must use only letters, digits, dot, underscore " +
+          "and dash.",
+      );
+    }
+  }
+  // A shell takes one command line, not an argument vector: with a separate
+  // argv, Node concatenates without escaping (and warns as DEP0190).
+  return { file: tokens.join(" "), argv: [], shell: true };
+}
+
 function assertConnectorOpen(
   context: DshConnectorContext,
   phase: string,
@@ -856,13 +906,15 @@ async function probeDshVersion(
   context: DshConnectorContext,
 ): Promise<void> {
   assertConnectorOpen(context, "before version probe");
+  const target = resolveDshSpawn(command, ["--version"]);
   let child: ChildProcess;
   try {
-    child = spawn(command, ["--version"], {
+    child = spawn(target.file, target.argv, {
       cwd,
       env,
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
+      shell: target.shell,
     });
   } catch (error) {
     throw launchPathError(command, cwd, error);
@@ -1096,7 +1148,11 @@ function launchPathError(command: string, cwd: string, cause: unknown): Error {
     "DeepSeek Harness could not start executable " +
       command +
       " in working directory " + cwd +
-      ". Check that both the executable and working directory exist. Install the official DeepSeek Harness package or set DSH_PASEO_COMMAND to an executable path if needed; this plugin never invokes a shell.",
+      ". Check that both the executable and working directory exist. Install " +
+      "the official DeepSeek Harness package or set DSH_PASEO_COMMAND to an " +
+      "executable path if needed. On Windows a bare command name is started " +
+      "through the shell, which is what resolves the official `dsh.cmd`; an " +
+      "explicit path is started directly and must not point at a `.cmd` file.",
     { cause },
   );
 }

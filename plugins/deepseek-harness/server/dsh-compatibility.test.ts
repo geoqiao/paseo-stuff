@@ -9,6 +9,7 @@ import {
   extractDshVersion,
   isSupportedDshVersion,
   redactDiagnostic,
+  resolveDshSpawn,
   type AcpStreamOwner,
 } from "./dsh-compatibility";
 
@@ -399,5 +400,77 @@ describe("DeepSeek Harness launch guards", () => {
     expect(diagnostic).toContain("Authorization: [redacted]");
     expect(diagnostic).not.toContain("secret-value");
     expect(diagnostic).not.toContain("abc123");
+  });
+
+  it("launches a bare command name through the Windows shell", () => {
+    // Windows ships dsh as a .cmd shim: without the shell, libuv reports
+    // ENOENT and an explicit .cmd path is rejected as EINVAL. The command line
+    // travels as one string with an empty argv, because a shell concatenates
+    // arguments instead of escaping them.
+    expect(resolveDshSpawn("dsh", ["--version"], "win32")).toEqual({
+      file: "dsh --version",
+      argv: [],
+      shell: true,
+    });
+    expect(resolveDshSpawn("dsh", ["--profile", "acp"], "win32")).toEqual({
+      file: "dsh --profile acp",
+      argv: [],
+      shell: true,
+    });
+  });
+
+  it("keeps the direct spawn when the command is a path", () => {
+    for (const command of [
+      "C:\\tools\\dsh.exe",
+      "C:\\Program Files\\DeepSeek Harness\\dsh.cmd",
+      "/usr/local/bin/dsh",
+    ]) {
+      expect(resolveDshSpawn(command, ["--version"], "win32")).toEqual({
+        file: command,
+        argv: ["--version"],
+        shell: false,
+      });
+    }
+  });
+
+  it("keeps the direct spawn off Windows", () => {
+    for (const platform of ["darwin", "linux"] as const) {
+      expect(resolveDshSpawn("dsh", ["--profile", "acp"], platform)).toEqual({
+        file: "dsh",
+        argv: ["--profile", "acp"],
+        shell: false,
+      });
+    }
+  });
+
+  it("rejects tokens the Windows shell would interpret", () => {
+    for (const token of [
+      "dsh&calc",
+      "dsh|calc",
+      "dsh>out",
+      "dsh;calc",
+      "a b",
+      'a"b',
+      "a%b",
+      "",
+    ]) {
+      expect(() => resolveDshSpawn(token, ["--version"], "win32")).toThrow(
+        "through the Windows shell",
+      );
+      expect(() =>
+        resolveDshSpawn("dsh", ["--profile", token], "win32"),
+      ).toThrow("through the Windows shell");
+    }
+  });
+
+  it("does not restrict tokens off Windows", () => {
+    expect(() =>
+      resolveDshSpawn("dsh", ["--profile", "a b"], "linux"),
+    ).not.toThrow();
+    expect(resolveDshSpawn("dsh", ["--profile", "a b"], "linux")).toEqual({
+      file: "dsh",
+      argv: ["--profile", "a b"],
+      shell: false,
+    });
   });
 });
