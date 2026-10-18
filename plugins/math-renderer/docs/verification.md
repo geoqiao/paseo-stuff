@@ -22,16 +22,22 @@
     and at 390px width. The DOM text contains U+2060 before that punctuation.
   - Tapping `E=mc^2` showed `\(E=mc^2\)`; tapping the source showed the formula again.
   - The browser console showed no plugin errors or warnings.
-- **Page reload:** after reloading the page, the most recent reply stayed native while
-  earlier replies rendered. A temporary console log in the transform showed the host
-  passing that reply with `phase: "streaming"`. In Paseo's
-  `packages/app/src/agent-stream/presentation.ts`, every head item is projected with
-  `"streaming"` regardless of `isTurnActive`. The same code is in v0.11.4 and in
-  upstream `main` (`2a9e86b`, 2026-10-18). The same behaviour occurred with the
-  unchanged beta.4 code, so it is not caused by inline math. Reported as
-  [getpaseo/paseo#7322](https://github.com/getpaseo/paseo/issues/7322).
-- **Not verified:** the desktop app, native iOS/Android, chat Find on 0.12, and the
-  0.11.4 daemon with this beta.
+- **Page reload (hosted client, 0.11.4):** after reloading the page, the most recent
+  reply stayed native while earlier replies rendered. A temporary console log in the
+  transform showed the host passing that reply with `phase: "streaming"`. The same
+  behaviour occurred with the unchanged beta.4 code, so it is not caused by inline math.
+  Reported as [getpaseo/paseo#7322](https://github.com/getpaseo/paseo/issues/7322),
+  then closed because the 0.12.0-beta.3 client does not show it.
+- The same daemon with the **0.12.0-beta.3** web client (`app-dist` from the desktop
+  app, served locally):
+  - After a page reload, the most recent reply rendered, including `$y^2$`.
+  - Chat Find for `Prices stay` found 2 of 2 and highlighted the match inside the
+    rendered reply. `。价格是` found 1 of 1 next to a formula, so U+2060 does not
+    break Find. `mc^2` found no match: formula source is not searchable.
+  - A reply with inline math, a table and `$$` stayed native as a whole, as intended.
+  - Chat outline jumped from the second prompt back to the first, past rendered rows.
+- **Not verified:** the desktop app, native iOS/Android, and the 0.11.4 daemon with
+  this beta.
 
 ## Paseo 0.11.2 check (2026-10-11)
 

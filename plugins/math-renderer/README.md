@@ -86,10 +86,10 @@ or wrap the entire reply in a code fence.
 
 ## Limitations
 
-- **Most recent reply after a page reload:** Paseo 0.11.4 through 0.12.0-beta.3 pass
-  the last reply of a reloaded agent to plugins as still streaming, so that reply stays
-  native until the agent's next turn. Earlier replies render. The plugin cannot detect
-  this case ([getpaseo/paseo#7322](https://github.com/getpaseo/paseo/issues/7322)).
+- **Most recent reply after a page reload:** in the 0.11.4 web client, the last reply
+  of a reloaded agent stays native until the agent's next turn. Earlier replies render.
+  The plugin cannot detect this case. The 0.12.0-beta.3 web client renders that reply
+  ([getpaseo/paseo#7322](https://github.com/getpaseo/paseo/issues/7322)).
 - Inline formulas are images, so a long formula does not wrap across lines.
   Punctuation after a formula is joined to it with an invisible U+2060 word joiner,
   which appears in copied text.
@@ -101,13 +101,14 @@ or wrap the entire reply in a code fence.
   code highlighting, workspace-file interactions and native selection behavior are not fully reproduced.
 - Tables, images, explicit HTML, non-HTTP(S) links, more than 64 formulas (block and
   inline) or more than 96,000 characters cause the entire completed source reply to remain native.
-- **Chat Find:** Paseo 0.9.0-beta.1 through 0.10.0-beta.1 cannot map a search hit to a
-  replaced plugin row. Before Cmd/Ctrl+F, choose **Math: use native replies for chat
-  Find** in the Command Center.
+- **Chat Find:** in the 0.12.0-beta.3 web client, Find matches and highlights text in
+  rendered replies, but not formula source such as `mc^2`. Paseo 0.9.0-beta.1 through
+  0.11.4 cannot reliably jump to a match in a rendered reply. To search formula source,
+  or on those versions, choose **Math: use native replies for chat Find** in the
+  Command Center before Cmd/Ctrl+F.
   Choose **Math: render block formulas** afterwards. These actions affect this
   client's selected host, restore native rows without changing history, and reset
   to formula rendering when the plugin/client reloads. Other clients are unaffected.
-  Find inside rendered formula replies remains an upstream integration limitation.
 - Local formula viewing state does not survive every virtualization unmount.
 - MathJax base + AMS + boldsymbol only. `\boldsymbol{\mu}` and other bold math
   symbols are supported. Missing glyphs (including many non-Latin text glyphs),

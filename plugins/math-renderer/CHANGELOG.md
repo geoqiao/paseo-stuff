@@ -6,7 +6,7 @@
 - Keep prices as text. Like Pandoc, `$` needs no space just inside either delimiter and no digit right after the closing `$`, so `$5 and $10` stays text. `\[...\]` and `$$...$$` in the middle of a paragraph and unclosed delimiters still keep their source.
 - Keep punctuation after an inline formula on the formula's line. The plugin puts an invisible word joiner (U+2060) before the punctuation, so copied text contains that character.
 - Raise the per-reply formula limit from 32 to 64, counting inline formulas. The render RPC now takes `display` and returns the image's depth below the baseline.
-- Live-tested on a Paseo 0.12.0-beta.2 daemon in the hosted web client. `npm run check` passes with the 0.9.2 and 0.11.4 packages. After a page reload, the most recent reply stays native until the next turn; see the README limitations.
+- Live-tested on a Paseo 0.12.0-beta.2 daemon with the hosted 0.11.4 web client and the 0.12.0-beta.3 web client. `npm run check` passes with the 0.9.2 and 0.11.4 packages. In the 0.11.4 web client, the most recent reply stays native after a page reload until the next turn; see the README limitations. In the 0.12.0-beta.3 web client, chat Find matches text in rendered replies.
 
 ## 0.1.0-beta.4 — 2026-09-28
 
