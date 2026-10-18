@@ -609,11 +609,7 @@ describe.sequential("DeepSeek Harness provider", () => {
 
         const records = await waitForFakeSpawnLog(
           logPath,
-          (current) => {
-            const starts = current.filter((record) => record.event === "start");
-            const exits = current.filter((record) => record.event === "exit");
-            return starts.length > 0 && starts.length === exits.length;
-          },
+          allStartedExited,
         );
         expect(
           records.filter(
@@ -665,11 +661,7 @@ describe.sequential("DeepSeek Harness provider", () => {
 
         const records = await waitForFakeSpawnLog(
           logPath,
-          (current) => {
-            const starts = current.filter((record) => record.event === "start");
-            const exits = current.filter((record) => record.event === "exit");
-            return starts.length > 0 && starts.length === exits.length;
-          },
+          allStartedExited,
         );
         expect(
           records.filter(
@@ -715,11 +707,7 @@ describe.sequential("DeepSeek Harness provider", () => {
 
         const records = await waitForFakeSpawnLog(
           logPath,
-          (current) => {
-            const starts = current.filter((record) => record.event === "start");
-            const exits = current.filter((record) => record.event === "exit");
-            return starts.length > 0 && starts.length === exits.length;
-          },
+          allStartedExited,
         );
         expect(
           records.filter(
@@ -757,11 +745,7 @@ describe.sequential("DeepSeek Harness provider", () => {
 
         const records = await waitForFakeSpawnLog(
           logPath,
-          (current) => {
-            const starts = current.filter((record) => record.event === "start");
-            const exits = current.filter((record) => record.event === "exit");
-            return starts.length > 0 && starts.length === exits.length;
-          },
+          allStartedExited,
         );
         expect(
           records.filter(
@@ -795,11 +779,7 @@ describe.sequential("DeepSeek Harness provider", () => {
 
         const records = await waitForFakeSpawnLog(
           logPath,
-          (current) => {
-            const starts = current.filter((record) => record.event === "start");
-            const exits = current.filter((record) => record.event === "exit");
-            return starts.length > 0 && starts.length === exits.length;
-          },
+          allStartedExited,
         );
         expect(
           records.filter(
@@ -994,14 +974,11 @@ describe.sequential("DeepSeek Harness provider", () => {
           await expect(provider.connect(connectRequest())).rejects.toThrow(
             "version probe timed out after 5000ms",
           );
-          const records = await waitForFakeSpawnLog(logPath, (current) =>
-            current.some((record) => record.event === "exit"),
-          );
+          const records = await waitForFakeSpawnLog(logPath, allStartedExited);
           expect(records.filter((record) => record.event === "start")).toHaveLength(1);
           expect(records.find((record) => record.event === "start")?.args).toEqual([
             "--profile", "acp", "--version",
           ]);
-          expect(records.filter((record) => record.event === "exit")).toHaveLength(1);
         } finally {
           await provider.dispose();
         }
@@ -1273,6 +1250,24 @@ async function waitForCondition(
       throw new Error("timed out waiting for test condition");
     }
     await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+}
+
+/**
+ * Every logged fake process has exited. On Windows terminateProcess uses
+ * taskkill /F, so a killed fake cannot log its own exit; check the PID instead.
+ */
+function allStartedExited(records: readonly FakeLogRecord[]): boolean {
+  const starts = records.filter((record) => record.event === "start");
+  return starts.length > 0 && starts.every((record) => !isRunning(record.pid));
+}
+
+function isRunning(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM";
   }
 }
 
