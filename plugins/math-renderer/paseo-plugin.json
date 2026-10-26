@@ -1,6 +1,11 @@
 {
   "id": "math-renderer",
-  "requirements": { "paseo": ">=0.9.0-beta.1" },
+  "requirements": { "paseo": ">=0.13.0" },
+  "translations": {
+    "zh-CN": {
+      "description": "在已完成的 Paseo 回复中渲染块级和行内 LaTeX 公式，其余 Markdown 保持原生显示，可查看和复制公式源码，并提供原生回复模式。实验性 beta，适用于 Paseo 0.13 及以上版本。"
+    }
+  },
   "build": [
     ["npm", "ci", "--ignore-scripts", "--legacy-peer-deps", "--no-audit", "--no-fund"],
     ["npm", "run", "prepare:markdown"],

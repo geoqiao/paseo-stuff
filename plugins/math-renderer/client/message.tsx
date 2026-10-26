@@ -2,12 +2,18 @@ import { useMemo, useState, type ReactNode } from "react";
 import { Image, Pressable, Text, View, useWindowDimensions } from "react-native";
 import type { PluginHostProps, PluginTimelineItemProps } from "@getpaseo/plugin/client";
 import { openExternalUrl, useRpc } from "@getpaseo/plugin/client";
-import { copyText, ScrollView, useToast } from "@getpaseo/plugin/client/react-native";
+import { copyText, Markdown, ScrollView, useToast } from "@getpaseo/plugin/client/ui";
 import { useQuery } from "@tanstack/react-query";
 import { renderInput, renderMath, type RenderInput } from "../shared/contracts";
 import { parseDocument, type Block, type Inline } from "../shared/markdown";
 
 type PluginTheme = PluginHostProps["theme"];
+// The SDK exposes colors, not typography: match the host Markdown defaults
+// (15px desktop / 14px compact text at 1.4 line height, 16px / 12px block gap).
+function textMetrics(compact: boolean) {
+  const fontSize = compact ? 14 : 15;
+  return { fontSize, lineHeight: Math.round(fontSize * 1.4), gap: compact ? 12 : 16 };
+}
 
 function Action({ label, onPress, theme, compact }: {
   label: string; onPress(): void; theme: PluginTheme; compact: boolean;
@@ -51,7 +57,7 @@ export function Formula({ tex, raw, theme, compact }: { tex: string; raw: string
   const { valid, query } = useFormula(tex, theme, 18, true, source);
   const result = query.data;
   const rawView = <Text selectable style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 14, lineHeight: 22 }}>{raw}</Text>;
-  return <View testID="formula" style={{ gap: 6, marginVertical: 8, minWidth: 0 }}>
+  return <View testID="formula" style={{ gap: 6, minWidth: 0 }}>
     <View accessibilityRole="image" accessibilityLabel={"Formula: " + tex}>
       <ScrollView horizontal style={{ flexGrow: 0 }} contentContainerStyle={{ paddingVertical: 8, paddingHorizontal: 2 }}>
         {!source && result?.ok
@@ -94,7 +100,7 @@ function InlineContent({ items, theme }: { items: Inline[]; theme: PluginTheme }
     if (item.kind === "math") return <InlineFormula key={i} tex={item.tex} raw={item.raw} theme={theme} />;
     if (item.kind === "code") return <Text key={i} style={{ color: theme.colors.foreground, backgroundColor: theme.colors.surface1, fontFamily: "monospace" }}>{item.text}</Text>;
     if (item.kind === "link") return <Text key={i} accessibilityRole="link"
-      style={{ color: theme.colors.accent, textDecorationLine: "underline" }}
+      style={{ color: theme.colors.accent }}
       onPress={() => { void openExternalUrl(item.href).catch(() => toast.error("Could not open link")); }}>
       <InlineContent items={item.children} theme={theme} />
     </Text>;
@@ -108,36 +114,42 @@ function InlineContent({ items, theme }: { items: Inline[]; theme: PluginTheme }
   });
 }
 function Blocks({ blocks, theme, compact, prefix = "" }: { blocks: Block[]; theme: PluginTheme; compact: boolean; prefix?: string }) {
-  return blocks.map((block, i) => {
+  const { fontSize, lineHeight, gap } = textMetrics(compact);
+  return <View style={{ gap, minWidth: 0 }}>{blocks.map((block, i) => {
     const key = prefix + i; // Position identity survives text/status updates and preserves manual source state.
+    if (block.kind === "markdown") return <Markdown key={key}>{block.text}</Markdown>;
     if (block.kind === "math") return <Formula key={key} tex={block.tex} raw={block.raw} theme={theme} compact={compact} />;
-    if (block.kind === "rule") return <View key={key} style={{ height: 1, backgroundColor: theme.colors.border, marginVertical: 12 }} />;
-    if (block.kind === "paragraph" || block.kind === "heading") return <Text key={key} selectable
-      style={{ color: theme.colors.foreground, fontSize: block.kind === "heading" ? 23 - Math.min(block.level, 5) : 15,
-        lineHeight: block.kind === "heading" ? 30 : 25, fontWeight: block.kind === "heading" ? "600" : "400", marginBottom: 10 }}>
-      <InlineContent items={block.inline} theme={theme} />
-    </Text>;
+    if (block.kind === "rule") return <View key={key} style={{ height: 1, backgroundColor: theme.colors.border }} />;
+    if (block.kind === "paragraph" || block.kind === "heading") {
+      const scale = block.kind === "heading" ? [1.6, 1.4, 1.2, 1.1, 1, 1][Math.min(block.level, 6) - 1] ?? 1 : 1;
+      return <Text key={key} selectable style={{
+        color: block.kind === "heading" && block.level === 6 ? theme.colors.foregroundMuted : theme.colors.foreground,
+        fontSize: Math.round(fontSize * scale), lineHeight: block.kind === "heading" ? Math.round(fontSize * scale * 1.3) : lineHeight,
+        fontWeight: block.kind === "heading" ? "700" : "400" }}>
+        <InlineContent items={block.inline} theme={theme} />
+      </Text>;
+    }
     if (block.kind === "code" || block.kind === "pending") return <View key={key}
-      style={{ padding: 12, borderRadius: 6, backgroundColor: theme.colors.surface1, marginBottom: 10 }}>
-      <Text selectable style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 13, lineHeight: 21 }}>{block.text}</Text>
+      style={{ padding: 12, borderRadius: 6, backgroundColor: theme.colors.surface1 }}>
+      <Text selectable style={{ color: theme.colors.foreground, fontFamily: "monospace", fontSize: 12, lineHeight: 18 }}>{block.text}</Text>
     </View>;
-    if (block.kind === "list") return <View key={key} style={{ marginBottom: 8 }}>
+    if (block.kind === "list") return <View key={key} style={{ gap: 4 }}>
       {block.children.map((child, n) => <View key={n} style={{ flexDirection: "row", gap: 10 }}>
-        <Text style={{ color: theme.colors.foregroundMuted, fontSize: 15, lineHeight: 25 }}>{block.start ? block.start + n + "." : "•"}</Text>
+        <Text style={{ color: theme.colors.foregroundMuted, fontSize, lineHeight }}>{block.start ? block.start + n + "." : "•"}</Text>
         <View style={{ flex: 1, minWidth: 0 }}><Blocks blocks={[child]} theme={theme} compact={compact} prefix={key + ":" + n + ":"} /></View>
       </View>)}
     </View>;
     if (!("children" in block)) return null;
-    return <View key={key} style={block.kind === "quote" ? { borderLeftWidth: 2, borderLeftColor: theme.colors.border, paddingLeft: 14, marginVertical: 8 } : undefined}>
+    return <View key={key} style={block.kind === "quote" ? { borderLeftWidth: 2, borderLeftColor: theme.colors.border, paddingLeft: 14 } : undefined}>
       <Blocks blocks={block.children} theme={theme} compact={compact} prefix={key + ":"} />
     </View>;
-  });
+  })}</View>;
 }
 
 export function MathMessage({ item, theme, layout }: PluginTimelineItemProps<{ text: string }>) {
   const doc = useMemo(() => parseDocument(item.data.text), [item.data.text]);
   return <View testID="math-message" style={{ minWidth: 0 }}>
-    {!doc ? <Text selectable style={{ color: theme.colors.foreground, fontSize: 14, lineHeight: 24 }}>{item.data.text}</Text> :
+    {!doc ? <Markdown>{item.data.text}</Markdown> :
       <Blocks blocks={doc.blocks} theme={theme} compact={layout.compact} />}
   </View>;
 }

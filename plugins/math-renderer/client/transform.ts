@@ -3,7 +3,7 @@ import { MATH_KIND } from "../shared/contracts";
 import { parseDocument } from "../shared/markdown";
 
 export const transformMessage: PluginTimelineTransformerContribution<"assistant_message">["transform"] = ({ item, phase }) => {
-  // 0.9 supplies the entire growing reply. Keep streaming native: a later image,
+  // Paseo supplies the entire growing reply. Keep streaming native: a later image,
   // file link or size limit must not tear down an already interactive math card.
   // This also avoids parsing the whole document on every token update.
   if (phase === "streaming") return undefined;

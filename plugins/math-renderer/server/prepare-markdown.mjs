@@ -1,5 +1,5 @@
-// Build-time only. Paseo 0.8 evaluates client bundles without Metro/Babel;
-// Hermes cannot load the class expression in markdown-it's UMD entity decoder.
+// Build-time only. Paseo evaluates client bundles without Metro/Babel; the
+// older Hermes used by the tests cannot load the class expression in markdown-it's UMD entity decoder.
 // Lower the pinned, self-contained parser without changing its behavior or version.
 import { createRequire } from "node:module";
 import { mkdir, readFile, writeFile } from "node:fs/promises";

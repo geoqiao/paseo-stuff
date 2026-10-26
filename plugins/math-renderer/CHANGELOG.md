@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-beta.7 — 2026-10-26
+
+- Require Paseo 0.13.0 or newer (`>=0.13.0`) and drop Paseo 0.9 to 0.12. Those releases should keep beta.6.
+- Render top-level blocks without a formula, such as tables, images, code, file links and HTML, with the host `Markdown` component from `@getpaseo/plugin/client/ui`. These blocks no longer force the whole reply native. Blocks that contain a formula keep the plugin renderer, so ordered lists keep their numbering. Link reference definitions are repeated in each host segment so reference links still resolve.
+- Match the host Markdown text size, line height and block spacing, and drop the link underline so plugin links look like host links.
+- Rename the Command Center actions to "Math: use native replies to search formula source" and "Math: render formulas". On Paseo 0.13.2, chat Find reaches rendered replies; only formula source still needs native-reply mode.
+- Add the `zh-CN` manifest translation and `OVERVIEW.zh-CN.md`.
+- Pin the SDK, client and protocol packages to 0.13.2. Replace the 0.8 and 0.9 host fixtures with seven unmodified v0.13.2 sources.
+- `npm run check` passes: 5 files and 90 tests. Live-tested on a Paseo 0.13.2 daemon in the 0.13.2 web client; see the verification record.
+
 ## 0.1.0-beta.6 — 2026-10-18
 
 - Publish on npm as `paseo-math-renderer`, so the Paseo registry can track new versions without a manual pull request. Rendering is unchanged from beta.5.

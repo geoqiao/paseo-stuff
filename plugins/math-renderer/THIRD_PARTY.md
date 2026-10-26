@@ -31,8 +31,6 @@ The parser was written for this prototype. PR #2562 informed delimiter/streaming
 test cases, but its application renderer and tokenizer were not copied:
 https://github.com/getpaseo/paseo/pull/2562
 
-Five unmodified Paseo source fixtures are Apache-2.0, pinned to v0.8.0 commit
-b8e24677e12b226c7c38c1c3a40649daa9f1152f. See tests/fixtures/paseo-0.8/README.md
-and its LICENSE. Eight further Apache-2.0 fixtures are pinned to v0.9.2 commit
-c67b7158b441bb09026b38d86ae335cc4b49190a; see tests/fixtures/paseo-0.9/README.md
-and its LICENSE. All are test-only and excluded from production bundles.
+Seven unmodified Paseo source fixtures are Apache-2.0, pinned to v0.13.2 commit
+d2941157a8f91512daf54fc688241d416e8f5ebd. See tests/fixtures/paseo-0.13/README.md
+and its LICENSE. They are test-only and excluded from production bundles.

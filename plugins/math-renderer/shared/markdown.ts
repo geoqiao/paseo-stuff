@@ -17,10 +17,13 @@ export type Block =
   | { kind: "code" | "pending"; text: string }
   | { kind: "math"; tex: string; raw: string }
   | { kind: "quote" | "list" | "item"; children: Block[]; start: number }
-  | { kind: "rule" };
+  | { kind: "rule" }
+  // Top level only: consecutive formula-free source blocks for the host Markdown renderer.
+  | { kind: "markdown"; text: string };
 export type Document = { blocks: Block[]; formulas: number };
 
-const md = new MarkdownIt({ html: false, linkify: false, breaks: false });
+// HTML blocks end where CommonMark ends them, so source segment boundaries match the host parser.
+const md = new MarkdownIt({ html: true, linkify: false, breaks: false });
 // Deliberately original, conservative block parser: no arbitrary regex replacement of Markdown.
 // Full-line display delimiters only; code fences/indentation remain Markdown's responsibility.
 md.block.ruler.before("fence", "display_math", (state, start, end, silent) => {
@@ -124,15 +127,35 @@ function inline(tokens: Token[]): Inline[] {
 function inlineFormulas(items: Inline[]): number {
   return items.reduce((n, item) => n + (item.kind === "math" ? 1 : "children" in item ? inlineFormulas(item.children) : 0), 0);
 }
+type References = Record<string, { href: string; title?: string }>;
+// Each host Markdown segment parses alone, so repeat every link reference definition
+// in each one; definitions render nothing.
+function definitions(references: References | undefined) {
+  const lines = Object.entries(references ?? {}).map(([label, { href, title }]) =>
+    "[" + label + "]: <" + href + ">" + (title ? ' "' + title.replace(/["\\]/g, "\\$&") + '"' : ""));
+  return lines.length ? "\n\n" + lines.join("\n") : "";
+}
+function hasMath(tokens: Token[], text: string) {
+  return tokens.some(t => t.type === "math_block" || t.type === "math_pending"
+    || (t.type === "fence" && t.info.trim() === "math" && closedFence(t, text))
+    || (t.type === "inline" && (t.children ?? []).some(child => child.type === "math_inline")));
+}
+// Top-level blocks with a formula become plugin blocks. Consecutive formula-free blocks
+// stay one exact source slice for the host Markdown component, which also renders
+// tables, images, HTML and file links. An unsupported construct inside a formula
+// block still keeps the whole reply native.
 export function parseDocument(text: string): Document | null {
   if (!text || text.length > MAX_TEXT) return null;
   try {
-    const tokens = md.parse(text, {});
+    const env: { references?: References } = {};
+    const tokens = md.parse(text, env);
+    const lines = text.split("\n");
+    const shared = definitions(env.references);
     let i = 0, formulas = 0;
-    function take(end?: string, depth = 0): Block[] {
+    function take(end?: string, depth = 0, stop = tokens.length): Block[] {
       if (depth > 12) throw new Error("Nesting limit");
       const out: Block[] = [];
-      while (i < tokens.length) {
+      while (i < stop) {
         const t = tokens[i++];
         if (t.type === end) return out;
         if (t.type === "paragraph_open" || t.type === "heading_open") {
@@ -157,7 +180,30 @@ export function parseDocument(text: string): Document | null {
       }
       return out;
     }
-    const blocks = take();
+    const blocks: Block[] = [];
+    let native: { from: number; to: number; open: boolean } | undefined;
+    const flush = () => {
+      // Definitions appended after an unclosed fence would become visible code.
+      // List ranges include their trailing blank line.
+      if (native) blocks.push({ kind: "markdown",
+        text: lines.slice(native.from, native.to).join("\n").replace(/(?:\r?\n[ \t]*)+$/, "") + (native.open ? "" : shared) });
+      native = undefined;
+    };
+    while (i < tokens.length) {
+      let end = i + 1;
+      for (let depth = tokens[i].nesting; depth > 0; end++) depth += tokens[end].nesting;
+      const group = tokens.slice(i, end);
+      if (hasMath(group, text)) {
+        flush();
+        blocks.push(...take(undefined, 0, end));
+      } else {
+        const [from, to] = tokens[i].map ?? [0, 0];
+        const open = group.some(t => t.type === "fence" && !closedFence(t, text));
+        native = native ? { from: native.from, to, open } : { from, to, open };
+        i = end;
+      }
+    }
+    flush();
     return formulas <= MAX_FORMULAS ? { blocks, formulas } : null;
   } catch { return null; }
 }

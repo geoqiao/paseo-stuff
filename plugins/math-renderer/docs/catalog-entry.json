@@ -1,12 +1,14 @@
 {
   "repo": "geoqiao/paseo-stuff",
   "path": "plugins/math-renderer",
-  "categories": ["productivity"],
+  "categories": [
+    "productivity"
+  ],
   "caveats": [
-    "Experimental beta for Paseo 0.9.0-beta.1+; 0.9.2 checked offline, 0.12.0-beta.2 live. Block and inline math in completed replies; in the 0.11 web client the latest reply stays native after a page reload.",
-    "macOS host and browser components checked; native mobile UI and sustained multi-client load are untested.",
-    "Unsupported whole replies stay native; code highlighting and native file interactions are not fully reproduced.",
-    "Chat Find cannot search formula source, and before Paseo 0.12 cannot reliably jump into rendered replies; use the Math native-reply Command Center action first.",
+    "Experimental beta for Paseo 0.13.0+, tested live on 0.13.2. Block and inline math in completed replies; blocks without a formula keep the host Markdown renderer.",
+    "macOS host and web client checked; the desktop app, native mobile UI and sustained multi-client load are untested.",
+    "Blocks that contain a formula use the plugin's own renderer, without code highlighting or native file links.",
+    "Chat Find cannot search formula source; use the Math native-reply Command Center action first.",
     "Unsupported TeX falls back to source. Local MathJax/resvg input bounds are not a hard CPU or memory sandbox.",
     "Avoid enabling another assistant-message replacement plugin for the same content."
   ],

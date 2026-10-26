@@ -21,7 +21,7 @@
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 
 ## Paseo contracts
-- Current verification target is stable Paseo app/daemon 0.13.2. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity, 0.11.4 for DeepSeek Harness, 0.9.2 for Math Renderer until its 0.13 release) and install the 0.13.2 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
+- Current verification target is stable Paseo app/daemon 0.13.2. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity and Math Renderer, 0.11.4 for DeepSeek Harness) and install the 0.13.2 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
 - DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.3). Test a new DSH release before listing it as tested.
 - Paseo 0.8 to 0.10 reject unknown `paseo-plugin.json` fields. Add `translations`, `name`, `icon` or `media` only to plugins whose minimum is 0.11.0 or later. Keep a Simplified Chinese `OVERVIEW.zh-CN.md` beside each maintained plugin's `OVERVIEW.md`, list it in the npm `files`, and update both together.
 - Readable Agent Activity and Math Renderer support only current Paseo (user decision, 2026-10-26): Paseo 0.8 to 0.12 are dropped. Do not add compatibility code, fixtures or tests for releases below their minimum; pin host fixtures to the target release.
@@ -36,7 +36,7 @@
 - Keep transforms synchronous, deterministic and JSON-safe. Preserve source information and stable item identity.
 - Host Tool call display preferences take precedence. Never silently force Full detail or replace grouped Summary rows with a single call.
 - A compatibility gap must be documented and tested, not hidden behind a guessed configuration value.
-- Since 0.9, timeline transforms run before Summary grouping and plan suppression (0.9 to 0.12 also split native Markdown afterwards; 0.13 does not). Pass native plan tools through. Math retains native streaming and offers native-reply mode for the host's unresolved chat Find identity gap.
+- Since 0.9, timeline transforms run before Summary grouping and plan suppression (0.9 to 0.12 also split native Markdown afterwards; 0.13 does not). Pass native plan tools through. Math retains native streaming, renders formula-free blocks with the SDK `Markdown` component and offers native-reply mode because chat Find cannot match formula source.
 - Preserve per-card manual-only expansion through streaming and status updates.
 
 ## Safety and lifecycle
