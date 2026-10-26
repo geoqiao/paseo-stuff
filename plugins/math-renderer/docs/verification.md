@@ -1,24 +1,5 @@
 # Verification scope
 
-## Beta.7 — Paseo 0.13.2 support target (2026-10-26)
-
-- `npm run check` on Node 24.18.0 with the pinned packages and, in a copy, with the
-  **0.13.2** client, plugin and protocol packages installed without saving: typecheck,
-  lint with zero warnings/errors and **6 files / 82 tests** each time. The 0.13.0 and 0.13.2 SDK
-  packages differ only in `package.json`.
-- The packed tarball contains `OVERVIEW.zh-CN.md`. The manifest has no `translations`,
-  because Paseo 0.9 and 0.10 parse it with `.strict()` and would reject the field.
-- Isolated Paseo **0.13.2** daemon (temporary home, port 6815, relay off): the packed
-  package, unpacked and installed as a directory with its shrinkwrapped runtime
-  dependencies, reached status `running`.
-- In the 0.13.2 web client (the desktop app's `app-dist` served locally), a finished
-  DeepSeek Harness reply showed `E = mc^2` as an image on the text line and the display
-  integral as an image with Show LaTeX and Copy LaTeX.
-- Registry installs behind an npm mirror still fail on 0.13.2; see the DeepSeek Harness
-  verification record.
-- **Not verified:** the desktop app, native mobile, chat Find on 0.13.2 and live
-  streaming (the reply had finished before viewing).
-
 ## Beta.6 — Paseo 0.13.0 registry install (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the **0.13.0** client, plugin and protocol

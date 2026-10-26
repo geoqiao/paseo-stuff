@@ -2,9 +2,11 @@
 
 ## 0.1.0-beta.12 — 2026-10-26
 
-- Add a Simplified Chinese listing overview, `OVERVIEW.zh-CN.md`. The manifest gets no `translations` field, because Paseo 0.8 to 0.10 reject unknown manifest fields and this plugin still supports them.
-- Paseo 0.13.2 is the current support target. Behavior is unchanged from beta.11.
-- Typecheck, lint and 275 tests pass with SDK 0.9.2 and 0.13.2. The packed package showed tool cards for real DeepSeek Harness tool calls on a Paseo 0.13.2 daemon in the 0.13.2 web client; the desktop app and native mobile were not checked.
+- Require Paseo 0.13.0 or later. Paseo 0.8 to 0.12 are no longer supported; beta.11 stays on npm for them. Rendering and the Command Center actions are unchanged from beta.11.
+- Pin the 0.13.2 SDK and `@getpaseo/protocol` 0.13.2, and import host UI from `@getpaseo/plugin/client/ui` instead of the deprecated `client/react-native` path.
+- Add a Simplified Chinese listing: `OVERVIEW.zh-CN.md` and a `translations.zh-CN` description in the manifest.
+- Replace the pinned 0.8.0 and 0.9.2 host fixtures with unmodified 0.13.2 sources. The bundle test now uses the 0.13.2 compiler options.
+- Typecheck, lint and 266 tests pass with SDK 0.13.2, including Hermes evaluation of the bundle. The bundle also compiles with React Native 0.86.3's `hermesc`. See the [verification record](docs/verification.md) for the live checks.
 
 ## 0.1.0-beta.11 — 2026-10-18
 

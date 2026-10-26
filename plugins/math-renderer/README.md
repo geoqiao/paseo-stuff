@@ -4,11 +4,12 @@ Render **block and inline LaTeX inside assistant reply bodies**. Block formulas 
 muted English action row: **Show LaTeX** and **Copy LaTeX**. Inline formulas sit in the
 text; tap one to see its source. No extra panel or duplicate message toolbar.
 
-> **Experimental beta — 0.1.0-beta.7.** Requires Paseo app and daemon
+> **Experimental beta — 0.1.0-beta.6.** Requires Paseo app and daemon
 > **0.9.0-beta.1 or newer**. Checked offline against Paseo 0.9.2 and 0.10.0-beta.1; the
-> checks also pass with the 0.13.2 SDK, the current support target. The beta.7 package
-> rendered inline and block formulas on a 0.13.2 daemon in the 0.13.2 web client; beta.6,
-> from the registry, did the same on 0.13.0. Replies stay native while streaming; supported formulas
+> checks also pass with the 0.11.4 SDK. Beta.5 was tested live on a 0.12.0-beta.2 daemon
+> in the hosted web client; the beta.6 npm package was loaded on a 0.12.0-beta.3 daemon
+> and, from the registry, rendered on a 0.13.0 daemon in the 0.13.0 web client, whose SDK
+> also passes the checks. Replies stay native while streaming; supported formulas
 > render after completion. Native iOS/Android acceptance and complete native Markdown
 > parity are not finished. Read the limitations before enabling this trusted plugin.
 
@@ -31,7 +32,7 @@ paseo --host <host:port> plugin ls
 To install the published npm package directly:
 
 ```sh
-paseo plugin add npm:paseo-math-renderer@0.1.0-beta.7 --host <host:port>
+paseo plugin add npm:paseo-math-renderer@0.1.0-beta.6 --host <host:port>
 ```
 
 Paseo installs the package's runtime dependencies (MathJax and resvg) from its
@@ -43,7 +44,7 @@ typecheck.
 To install the pinned prerelease directly from Git instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.7 --host <host:port>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.6 --host <host:port>
 ```
 
 Paseo 0.11 reads a bare `owner/name` source as a registry ID, so the `git:` prefix is

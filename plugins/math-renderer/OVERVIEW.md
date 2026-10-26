@@ -8,4 +8,4 @@ Rendering happens on the daemon host with MathJax and a bundled resvg WASM modul
 - Replies with tables, images or HTML stay entirely native, as do very large replies.
 - Matching replies are drawn by the plugin's own simple Markdown renderer, so code highlighting, workspace file interactions and native text selection are not fully reproduced. Do not combine it with other plugins that replace assistant messages.
 - Chat Find cannot search formula source. Before Paseo 0.12 it also cannot reliably jump into rendered replies. A Command Center action switches back to native replies for that.
-- Its automated checks pass with the Paseo 0.13.2 SDK, and it was last tested live on a Paseo 0.13.2 daemon in the 0.13.2 web client. Native iOS and Android are not accepted as tested.
+- Its automated checks pass with the Paseo 0.11.4 SDK, and beta.5 was tested live on a 0.12.0-beta.2 daemon in the hosted web client. Native iOS and Android are not accepted as tested.

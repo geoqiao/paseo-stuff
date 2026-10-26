@@ -5,7 +5,7 @@ import { TOOL_CALL_RENDERER_KIND, TOOL_CALL_RENDERER_VERSION, toolCallItemDataSc
   REASONING_RENDERER_KIND, REASONING_RENDERER_VERSION, reasoningItemDataSchema } from "./shared/timeline";
 
 export default function contribute(client: PluginClientContext) {
-  // Paseo 0.8 to 0.10 expose no public display-mode/group context, so cards bypass Summary
+  // Paseo (checked through 0.13.2) exposes no public display-mode/group context, so cards bypass Summary
   // grouping. Never change the host preference or guess it from private app state; the user
   // switches this client to native tool rows instead. Reasoning rows never join tool groups,
   // so the Thinking adapter stays. The choice is client-local and resets on reload.

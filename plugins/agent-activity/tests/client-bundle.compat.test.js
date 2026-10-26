@@ -11,14 +11,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const hermesPlatform = { darwin: "osx-bin", linux: "linux64-bin", win32: "win64-bin" }[process.platform];
 const hermes = process.env.HERMES_BIN || join(root, "node_modules/react-native/sdks/hermesc", hermesPlatform || "unsupported", process.platform === "win32" ? "hermes.exe" : "hermes");
 
-// Match Paseo v0.8.0 compiler.ts: neutral + ES2020, lowered async and eager CJS
-// interop, then evaluate the wrapped bundle from a string (no Metro/Babel pass).
-// https://github.com/getpaseo/paseo/blob/b8e24677e12b226c7c38c1c3a40649daa9f1152f/packages/server/src/server/plugins/compiler.ts
+// Match Paseo v0.13.2 compiler.ts: neutral + ES2020 with module/main fields, lowered
+// async and eager CJS interop, then evaluate the wrapped bundle from a string (no Metro/Babel pass).
+// https://github.com/getpaseo/paseo/blob/d2941157a8f91512daf54fc688241d416e8f5ebd/packages/server/src/server/plugins/compiler.ts
 async function bundle(entry) {
   const result = await build({
     absWorkingDir: root, entryPoints: [entry], bundle: true, format: "cjs", jsx: "automatic",
-    platform: "neutral", target: "es2020", supported: { "async-await": false },
-    external: ["@getpaseo/plugin", "@getpaseo/plugin/client", "@getpaseo/plugin/client/ui", "@getpaseo/plugin/client/react-native", "react", "react/jsx-runtime", "react-native", "zod", "@tanstack/react-query"],
+    platform: "neutral", target: "es2020", mainFields: ["module", "main"], supported: { "async-await": false },
+    external: ["@getpaseo/plugin", "@getpaseo/plugin/client", "@getpaseo/plugin/client/ui", "react", "react/jsx-runtime", "react-native", "zod", "@tanstack/react-query"],
     write: false, treeShaking: true,
   });
   const code = result.outputFiles[0].text.replaceAll("get: () => from[key]", "value: from[key]");
@@ -35,7 +35,7 @@ var z = {};
 ["object", "string", "number", "enum", "json", "array"].forEach(function(key) { z[key] = function() { return schema; }; });
 function runtimeRequire(name) {
   if (name === "zod") return { z: z };
-  if (["react", "react/jsx-runtime", "react-native", "@getpaseo/plugin/client/react-native"].indexOf(name) !== -1) return {};
+  if (["react", "react/jsx-runtime", "react-native", "@getpaseo/plugin/client/ui"].indexOf(name) !== -1) return {};
   throw new Error("Unexpected external module: " + name);
 }
 var evaluate = globalThis.eval;

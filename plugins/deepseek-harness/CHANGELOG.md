@@ -8,7 +8,8 @@
 - Add the upgrade note for `DSH_PASEO_COMMAND` and `DSH_PASEO_PROFILE` to
   `OVERVIEW.md`, as the registry review of beta.13 suggested (getpaseo/plugins#670).
 - Paseo 0.13.2 is the current support target, and the README installs DSH
-  0.2.1-rc.3. Runtime code is unchanged from beta.13.
+  0.2.1-rc.3. Runtime code is unchanged from beta.13. Repository CI now loads the
+  package and the Windows `dsh.cmd` launcher in a Paseo 0.13.2 daemon.
 - `npm run check` passes with the 0.11.4 and 0.13.2 SDKs. The packed package ran real
   tool turns with DSH 0.2.1-rc.3 on a Paseo 0.13.2 daemon on macOS.
 

@@ -1,41 +1,38 @@
-# Paseo 0.8 / 0.9 / 0.10 beta compatibility
+# Paseo 0.13 compatibility
 
-## Supported beta scope
+## Supported scope
 
-The original installed target was **0.8.0**, using **Full detail**. Beta.7 migrated
-to SDK **0.9.0-beta.1** and loaded on that daemon. Beta.8 pins SDK **0.9.2** and also
-passes typecheck, lint and all tests with SDK **0.10.0-beta.1**. Host-pipeline tests
-pin unmodified 0.8.0 and 0.9.2 sources; the 0.9.2 files are byte-identical in
-0.10.0-beta.1. Beta.8 was loaded on a live 0.10.0-beta.1 daemon (see
-[verification](verification.md)); no live 0.9.2 daemon was tested.
+Beta.12 requires **Paseo 0.13.0** and is checked against **0.13.2**, using **Full detail**.
+It pins the 0.13.2 SDK and protocol packages. Host-pipeline tests run unmodified
+0.13.2 sources (see [fixture provenance](../tests/fixtures/paseo-0.13/README.md)), and
+the packed package ran on a live 0.13.2 daemon in the 0.13.2 web client (see
+[verification](verification.md)). Paseo 0.8 to 0.12 are no longer supported; beta.11
+remains on npm for them.
 
-The manifest declares only a minimum, `>=0.8.0`. Per Paseo's
-[requirements contract](https://github.com/getpaseo/paseo/blob/52d345db7f271251787c1099a2fe48fde515f012/public-docs/plugins/reference.md),
+The manifest declares only a minimum, `>=0.13.0`. Per Paseo's
+[requirements contract](https://github.com/getpaseo/paseo/blob/d2941157a8f91512daf54fc688241d416e8f5ebd/public-docs/plugins/reference.md),
 this matches later releases and prereleases, including future breaking releases.
-It is not a claim that those releases were tested. The previous `<0.10.0` bound
-made the 0.10.0-beta.1 daemon reject beta.7. Add an upper bound only when a
+It is not a claim that those releases were tested. Add an upper bound only when a
 specific later release is shown to be incompatible.
 
-macOS is the tested installed host. The current working tree also passes real RN 0.81.5
-Hermes bundle evaluation; Paseo 0.9.0-beta.1, 0.9.2 and 0.10.0-beta.1 all declare
-React 19.1.0 and React Native 0.81.5 for the app. Native iOS/Android UI remains unverified.
+macOS is the tested installed host. Paseo 0.13.2's app uses React 19.2.3 and
+React Native 0.86.3. Native iOS/Android UI remains unverified.
 
-**Tool cards do not support Summary.** Since beta.9, a client using Summary chooses
+**Tool cards do not support Summary.** A client using Summary chooses
 **Activity: use native tool rows (for Summary)** in the Command Center; **Activity: use
 tool cards (Full detail)** restores the cards. The choice is per client, not saved, and
 resets to cards whenever the plugin loads. It is a manual switch, not an automatic
 runtime guard: the plugin never reads or changes the display preference. See
-[Manual native-row switch](#manual-native-row-switch-beta9).
+[Manual native-row switch](#manual-native-row-switch).
 
-## Native bundle loading (beta.5 fix)
+## Native bundle loading
 
-An iOS client reported `Cannot read property 'prototype' of undefined` while the
-daemon catalog and logs still reported running/ready. The old entry eagerly loaded
-Shiki, including class-based dependencies and HTML serialization code. A try/catch
-inside the later tokenization call cannot catch a module-initialization failure.
-With Paseo 0.8's actual build settings, the old bundle also fails to evaluate in
-the RN 0.81.5 Hermes executable (class-expression syntax error). The phone supplied
-no stack trace, so its exact failing `prototype` expression is not established.
+An iOS client once reported `Cannot read property 'prototype' of undefined` while the
+daemon catalog and logs still reported running/ready (beta.5 fix). The old entry eagerly
+loaded Shiki, including class-based dependencies and HTML serialization code. A
+try/catch inside the later tokenization call cannot catch a module-initialization
+failure. The phone supplied no stack trace, so its exact failing `prototype`
+expression is not established.
 
 The replacement uses only the tokenization API of `prism-react-renderer@2.4.1`'s
 non-global, function-based Prism. Its explicit ESM distribution avoids both neutral
@@ -43,80 +40,62 @@ package resolution and premature export snapshots from Paseo's CommonJS interop.
 No global polyfill, DOM access, host patch or native highlighter disable switch is used.
 Shell uses a small local grammar; this is not identical token classification to Shiki.
 
-`tests/client-bundle.compat.test.js` builds the complete entry with the matching
+`tests/client-bundle.compat.test.js` builds the complete entry with the 0.13.2
 compiler options, evaluates it from a string, registers/cleans up contributions and
-exercises all supported grammars in Hermes. Host UI/hooks and schema construction
-are stubbed in this test: it does not prove on-device rendering or the phone's app version.
-The existing Node tests still exercise real Zod validation. The old standalone
-beta.4 release tag does not contain this fix; the monorepo beta.5 includes it.
+exercises all supported grammars in Hermes. React Native 0.86.3 ships only the
+`hermesc` compiler, not the Hermes VM, so the test runs the VM from React Native
+0.81.5, an older and stricter engine. The beta.12 bundle also compiled with the
+0.86.3 `hermesc`. Host UI/hooks and schema construction are stubbed in this test:
+it does not prove on-device rendering. The other Node tests exercise real Zod validation.
 
 ## Why Summary cannot safely fall back
 
-In [0.9.2](https://github.com/getpaseo/paseo/tree/c67b7158b441bb09026b38d86ae335cc4b49190a),
-`agent-stream/presentation.ts` applies plugin transformation before native splitting
-and grouping. `tests/paseo-09.compat.test.js` proves that every call is retained,
-but plugin rows do not form Summary groups. The public transform input still has no
-display mode. This improvement is not Summary support.
+In [0.13.2](https://github.com/getpaseo/paseo/tree/d2941157a8f91512daf54fc688241d416e8f5ebd),
+`agent-stream/presentation.ts` applies plugin transformation before tool-call
+grouping, and the native Markdown block splitting of 0.9 to 0.12 is gone.
+`tests/paseo-host.compat.test.js` proves that every call is retained, but plugin rows
+do not form Summary groups. The public transform input, unchanged since 0.9, still
+has only the item and phase, no display mode. This is not Summary support.
 
-0.9.0-beta.1 already had this order. 0.9.2 changed only assistant-message Markdown
-rows: history now splits into blocks like live rows, and blocks containing only link
-reference definitions fold into a neighbor. Tool-call projection, grouping and plugin
-timeline files are unchanged, and `@getpaseo/plugin` is byte-identical from
-0.9.0-beta.1 through 0.10.0-beta.1, whose presentation files match 0.9.2.
-The Summary limitation therefore stands.
-
-The same pipeline applies native plan suppression after transformation. Beta.7
+The same pipeline applies native plan suppression after transformation. The plugin
 passes `ExitPlanMode`, `plan_approval` and structured plan details through so that
 native pending/rejected/completed plan handling remains intact in both modes.
 
-The earlier **0.8** behavior differs:
+The plugin therefore cannot recognize a Summary group and preserve all its members.
+It does not read private storage, inspect host DOM/React state, force Full detail or
+patch the app.
 
-Evidence is pinned to [Paseo v0.8.0, commit b8e2467](https://github.com/getpaseo/paseo/tree/b8e24677e12b226c7c38c1c3a40649daa9f1152f):
+## Manual native-row switch
 
-1. `packages/app/src/agent-stream/view.tsx` calls `projectToolCallDetailLevel` before `projectPluginTimelineItems`.
-2. `packages/app/src/tool-calls/detail-level/grouping.ts` gives a grouped host the latest call's payload and first call's ID.
-3. `packages/app/src/plugins/timeline/projection.ts` removes group context before calling the plugin transformer.
-4. The public contract in `packages/plugin/src/client/contracts.ts` exposes item and phase, not display mode or group members.
-5. A replacement plugin row uses a different branch from the native group renderer, removing the group's entry point.
+The switch uses only public contributions: `addCommandCenterItem` and the cleanup
+returned by `addTimelineTransformer`. Native tool rows unregister only the
+`tool-calls` transformer; renderers, commands and the Thinking adapter stay
+registered. Reasoning rows are never groupable (`isGroupableToolCall` accepts only
+`tool_call`), so keeping the Thinking adapter does not change Summary. Selecting a
+command repeatedly never registers a duplicate transformer.
 
-The plugin therefore cannot recognize a Summary group and preserve all its members. It does not read private storage, inspect host DOM/React state, force Full detail or patch the app.
-
-## Manual native-row switch (beta.9)
-
-The switch uses only public contributions available since the 0.8.0 SDK:
-`addCommandCenterItem` and the cleanup returned by `addTimelineTransformer`.
-Native tool rows unregister only the `tool-calls` transformer; renderers, commands
-and the Thinking adapter stay registered. Reasoning rows are never groupable
-(`isGroupableToolCall` accepts only `tool_call`), so keeping the Thinking adapter does
-not change Summary. Selecting a command repeatedly never registers a duplicate transformer.
-
-`presentation.ts` in 0.9.2 recomputes history when the transform function changes.
-`tests/paseo-09.compat.test.js` runs that unmodified code: after switching one
+`presentation.ts` recomputes history when the transform function changes.
+`tests/paseo-host.compat.test.js` runs that unmodified code: after switching one
 presentation to native rows, existing history forms one Summary group of both calls;
-switching back yields ungrouped cards again. Math Renderer's commands use the same
-mechanism and switched rendered and native replies live on a 0.10.0-beta.1 daemon.
-Activity's commands regrouped and restored an existing conversation live on a
-0.10.1 daemon in the hosted web client (see [verification](verification.md)). 0.8 applies
-transformers after grouping, so native rows there leave the native groups intact,
-but live re-rendering after a switch on 0.8 is untested.
-
-The [host integration tests](../tests/paseo-display.compat.test.js) run the real pinned projection functions with synthetic data. The Summary regression intentionally demonstrates the gap; a passing test is **not Summary support**. A future public host API that preserves groups or adds a detail-renderer slot is needed.
+switching back yields ungrouped cards again. See [verification](verification.md) for
+the live checks. A future public host API that preserves groups or adds a
+detail-renderer slot is needed for real Summary support.
 
 ## Spacing and icons
 
-The pinned host spacing function adds 16px between plugin rows, versus zero inside
-native tool/Thinking sequences. Native collapsed badges use a 22px icon slot plus
-8px padding and 2px borders, giving 32px center pitch with default text sizing.
-The host disables standalone badge outer margins; do not count them again.
+The host adds 16px between plugin rows, versus zero inside native tool/Thinking
+sequences. Native collapsed badges use a 22px icon slot plus 8px padding and 2px
+borders, giving 32px center pitch with default text sizing. The host disables
+standalone badge outer margins; do not count them again.
 
-The native default label is 14px with natural leading, and its glyph is 12px. The
-plugin now uses those sizes on both desktop and compact layouts, with a flexible
-16px minimum header and no vertical padding. The source-adapted browser comparison
-measures 17px natural header height plus the host's 16px gap: **33px pitch**, versus
-**32px all-native**. Earlier 13px-text desktop trials squeezed pitch to 30px while
-keeping a 44px compact minimum, producing the unwanted **60px mobile pitch**.
-That mobile minimum is removed; desktop density is no longer pursued by reducing
-the native font size or forcing a tight text line height.
+The native default label is 14px (`theme.fontSize.base`) with natural leading, and its
+glyph is 12px. The plugin uses those sizes on both desktop and compact layouts, with a
+flexible 16px minimum header and no vertical padding. The source-adapted browser
+comparison measured 17px natural header height plus the host's 16px gap: **33px
+pitch**, versus **32px all-native**. Earlier 13px-text desktop trials squeezed pitch to
+30px while keeping a 44px compact minimum, producing an unwanted **60px mobile pitch**.
+That mobile minimum is removed; desktop density is not pursued by reducing the native
+font size or forcing a tight text line height.
 
 Thinking remains a minimal disclosure with the original plain-text body, not the
 former Markdown renderer. All layout stays in normal flow, with no negative
@@ -124,15 +103,16 @@ margins, translations or overlap compensation. First/last/footer gaps remain
 host-owned and can be zero; native message-boundary spacing is not reproduced.
 
 This is **visual density compatibility, not identical touch geometry**. A collapsed
-header's pressable is only its natural height: it no longer guarantees 44px and is
+header's pressable is only its natural height: it does not guarantee 44px and is
 smaller than the native 32px badge. The plugin cannot make the host-owned gap
 clickable through the public API; guessed hitSlop would not establish that. The
 standalone Show all control retains its 44px compact minimum. Native-device tapping
 and font scaling still need user validation. Larger text may grow the header; font
 scaling is not disabled. The SDK exposes color tokens but not custom typography,
-so comparison is against the verified native default rather than arbitrary host fonts.
+so comparison is against the native default rather than arbitrary host fonts.
 
-Host Icon supports name, size and color, not a plugin stroke-width option. New host releases need spacing and icon rechecks.
+Host Icon supports name, size and color, not a plugin stroke-width option. New host
+releases need spacing and icon rechecks.
 
 ## Coexistence and lifecycle
 
