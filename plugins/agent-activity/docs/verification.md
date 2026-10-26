@@ -1,5 +1,24 @@
 # Verification and remaining gaps
 
+## Beta.12 — Paseo 0.13 only (2026-10-26)
+
+- `npm run check` on Node 24.18.0 with the pinned **0.13.2** client, plugin and protocol
+  packages: typecheck, lint with zero warnings/errors and **7 files / 266 tests**. Host
+  tests use six unmodified v0.13.2 sources.
+- The client bundle, built with the 0.13.2 compiler options, compiles with `hermesc`
+  from RN 0.86.3 (`hermes-compiler@250829098.0.17`). This compiles the bundle only.
+- The packed tarball contains `OVERVIEW.zh-CN.md`, and its manifest keeps
+  `requirements.paseo: ">=0.13.0"` and the `zh-CN` translation.
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6816, relay off): the packed
+  package, unpacked, installed with `npm ci --omit=dev` and added as a directory beside
+  Math Renderer beta.7 and DeepSeek Harness beta.14, reached status `running`.
+- In the 0.13.2 web client (the desktop app's `app-dist` served locally), a DeepSeek
+  Harness turn ran `ls -la`. The collapsed card showed `bash ls -la`; the expanded card
+  showed the Input JSON and the real Output. With the plugin disabled, the same row was
+  the native "Bash" row; enabling it again restored the card. The card rendered in light
+  and dark mode and at 390 × 844.
+- **Not verified:** the desktop app, native mobile, Summary mode and live streaming.
+
 ## Beta.11 — Paseo 0.13.0 registry install (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the **0.13.0** client, plugin and protocol

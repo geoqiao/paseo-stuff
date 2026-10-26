@@ -47,10 +47,11 @@ patched Paseo app is required.
 
 Install a verified official DSH version **on the daemon machine**, then check
 that the daemon can find the executable on its PATH. The npm `latest` dist-tag
-currently resolves to `0.2.1-rc.2` and `next` to `0.2.1-rc.3`; both are tested:
+currently resolves to `0.2.1-rc.2` and `next` to `0.2.1-rc.3`; both are tested, and
+the plugin is maintained against the newest, `0.2.1-rc.3`:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.2
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.3
 dsh --version
 ~~~
 
@@ -99,7 +100,7 @@ The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, the isolated published CLI/ACP
 closures `0.1.7-alpha.2`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`,
-`0.2.1-rc.2` and `0.2.1-rc.3`, and the global CLI `0.2.0-rc.2`; all use
+`0.2.1-rc.2` and `0.2.1-rc.3`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
 ACP SDK `1.4.0`. The plugin probes the CLI version and rejects only releases
 older than `0.1.5-rc.1` or output it cannot parse. Newer releases are accepted
 but untested until listed here; ACP behaviour follows the capabilities DSH
@@ -150,7 +151,7 @@ adds bounded readable previews; **that separate renderer** requires Full detail.
 **Displayed history after a reload:** when Paseo reopens a session, after
 `paseo agent reload` or a daemon restart, it rebuilds the timeline from the
 provider's replay and deletes the timeline it stored. DSH does not replay, so
-on Paseo 0.12.0-beta.2 and 0.13.0 the agent keeps its DSH context but shows an
+on Paseo 0.12.0-beta.2, 0.13.0 and 0.13.2 the agent keeps its DSH context but shows an
 empty timeline. Paseo 0.13.0 restores history that an ACP agent replays during
 `session/load` (getpaseo/paseo#7717); DSH resumes with `session/resume`, which
 replays nothing, so that fix does not apply. Reloading the plugin keeps the timeline.
@@ -187,7 +188,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.13 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.14 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -205,9 +206,9 @@ The source manifest requires `>=0.11.0`, the first release whose SDK supplies
 the resolved launch, the process helpers, provider `status()` and usage
 sources. Under Paseo's requirements contract, a minimum-only range admits
 0.11.0 and every later release, including prereleases and future breaking
-releases; it is not a promise that untested versions work. Beta.13 is tested
-with the 0.11.4 SDK and on live 0.11.4, 0.12.0-beta.2 and 0.13.0 daemons on
-macOS; its checks also pass with the 0.13.0 SDK. Do not restart the daemon for this plugin. Follow Paseo's
+releases; it is not a promise that untested versions work. Beta.14 is tested
+with the 0.11.4 SDK and on live 0.11.4, 0.12.0-beta.2, 0.13.0 and 0.13.2 daemons
+on macOS; its checks also pass with the 0.13.2 SDK, the current support target. Do not restart the daemon for this plugin. Follow Paseo's
 global plugin-enable and per-installation
 enable/disable rules; an existing disabled installation should remain
 disabled unless the user explicitly enables it.

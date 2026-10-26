@@ -1,5 +1,5 @@
 import type { PluginTimelineItemProps } from "@getpaseo/plugin/client";
-import { Icon, ScrollView } from "@getpaseo/plugin/client/react-native";
+import { Icon, ScrollView } from "@getpaseo/plugin/client/ui";
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { ActivityIndicator, Platform, Pressable, Text, View, useWindowDimensions, type TextStyle, type ViewStyle } from "react-native";
 import { detailSections, presentValue, previewText, PREVIEW_LINES } from "../shared/details";
@@ -15,7 +15,7 @@ function useStyles(theme: Theme, layout: Layout) {
     const { colors } = theme;
     return {
       row: { minWidth: 0 } satisfies ViewStyle,
-      // Native 0.8 labels use 14px with natural leading on every platform.
+      // Native tool labels default to 14px with natural leading on every platform.
       // Host plugin rows already add 16px between cards: don't add a mobile
       // 44px minimum on top. Let larger system text grow the header naturally.
       header: { flexDirection: "row", alignItems: "center", gap: 8, minWidth: 0,

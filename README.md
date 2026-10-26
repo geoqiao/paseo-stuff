@@ -9,16 +9,18 @@ shared runtime or root-hoisted dependency tree.
 | Plugin | Directory | Status / important limits |
 | --- | --- | --- |
 | Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.9 or later; block and inline LaTeX after reply completion. Use native-reply mode to search formula source with chat Find. Native mobile acceptance is not complete. |
-| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Tool cards need Full detail; before using Summary, choose "Activity: use native tool rows" in each client's Command Center. |
+| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Paseo 0.13 or later. Tool cards need Full detail; before using Summary, choose "Activity: use native tool rows" in each client's Command Center. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Paseo 0.11 or later. Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 | MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | **Paused (unmaintained) since 2026-09-28.** Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
-Activity **0.1.0-beta.11** and Math Renderer **0.1.0-beta.6** declare minimum-only
-Paseo requirements and are checked against the Paseo **0.9.2** SDK and host pipeline
-source, and their checks also pass with the **0.11.4** and **0.13.0** SDKs.
-DeepSeek Harness **0.1.0-beta.13** requires Paseo **0.11.0** and is checked against
-the **0.11.4** SDK; its checks also pass with the **0.13.0** SDK. A minimum is not
+The current support target is Paseo **0.13.2**. Activity **0.1.0-beta.12** requires
+Paseo **0.13.0** and is checked against the 0.13.2 SDK and host pipeline source.
+DeepSeek Harness **0.1.0-beta.14** requires Paseo **0.11.0** and is checked against
+the **0.11.4** SDK. Both pass their checks with the 0.13.2 SDK and ran on a 0.13.2
+daemon in the 0.13.2 web client, with DeepSeek Harness on DSH **0.2.1-rc.3**.
+Math Renderer **0.1.0-beta.6** declares `>=0.9.0-beta.1`, is checked against the
+**0.9.2** SDK and was last checked live on Paseo 0.13.0. All requirements are minimums. A minimum is not
 a promise about later releases; each plugin's verification record lists what was
 tested. MaKa **0.1.0-beta.4** (final, unmaintained) stays limited to Paseo 0.9.
 Pet remains on its existing 0.8 support range (0.1.1, paused; not migrated to 0.9).
@@ -41,8 +43,9 @@ paseo plugin add geoqiao/math-renderer --host <host:port>
 
 This error means the daemon's npm uses a registry mirror, such as
 `registry.npmmirror.com`. A registry record pins the `registry.npmjs.org` tarball URL.
-npm replaces that host with the mirror, and Paseo 0.12.0 and 0.13.0 reject the install
-because the URL differs, even though the package integrity is the same.
+npm replaces that host with the mirror, and Paseo 0.12.0 to 0.13.2 reject the install
+because the URL differs, even though the package integrity is the same. This is
+reported upstream as [getpaseo/paseo#7951](https://github.com/getpaseo/paseo/issues/7951).
 
 Run this command as the user that runs the daemon, then install again:
 
@@ -70,8 +73,8 @@ paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-render
 ```
 
 The `:plugins/<directory>` suffix selects one plugin, not the whole repository.
-Paseo 0.11 reads a bare `owner/name` source as a registry ID, so the `git:` prefix is
-required there. Paseo CLIs before 0.11 take the same Git source without the prefix.
+Paseo 0.11 and later read a bare `owner/name` source as a registry ID, so the `git:`
+prefix is required there. Paseo CLIs before 0.11 take the same Git source without the prefix.
 Do not enable two installations of the same timeline renderer or provider.
 
 This is the new development and release home for Readable Agent Activity and
@@ -142,7 +145,7 @@ only after a new submission or a PR against that record. Readable Agent Activity
 and Math Renderer moved to npm records in
 [getpaseo/plugins#666](https://github.com/getpaseo/plugins/pull/666), starting at
 0.1.0-beta.11 and 0.1.0-beta.6. Each maintained plugin keeps an
-`OVERVIEW.md` beside its manifest; the registry shows it on the listing page once a
+`OVERVIEW.md` and a Simplified Chinese `OVERVIEW.zh-CN.md` beside its manifest; the registry shows it on the listing page once a
 record pins a commit or package that contains it, replacing the overview the
 registry wrote during the import.
 

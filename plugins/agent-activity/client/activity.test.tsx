@@ -11,7 +11,7 @@ import { presentValue } from "../shared/details";
 vi.mock("react-native", () => ({ Pressable: "Pressable", Text: "Text", View: "View", ActivityIndicator: "ActivityIndicator",
   useWindowDimensions: vi.fn(), Platform: { OS: "web" },
 }));
-vi.mock("@getpaseo/plugin/client/react-native", () => ({ Icon: "Icon", ScrollView: "ScrollView" }));
+vi.mock("@getpaseo/plugin/client/ui", () => ({ Icon: "Icon", ScrollView: "ScrollView" }));
 vi.mock("./highlight", () => ({ useSyntaxTokens: vi.fn(() => null) }));
 const mounted = new Set<ReactTestRenderer>();
 beforeAll(() => vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true));

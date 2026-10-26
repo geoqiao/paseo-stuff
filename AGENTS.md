@@ -21,19 +21,22 @@
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 
 ## Paseo contracts
-- Current verification target is Paseo app/daemon 0.11.2, 0.10.0-beta.1 and stable 0.9.2, with SDK devDependencies pinned to 0.9.2 and the 0.11.2 SDK installed without saving for the extra check; Paseo Pet remains on 0.8.0. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
-- Declare `requirements.paseo` as a minimum (`>=`), following the Paseo requirements reference. Raise it only when adopting a newer API; add an upper bound only for a release known to be incompatible. Record the actually tested versions in each plugin's docs, not in the range.
+- Current verification target is stable Paseo app/daemon 0.13.2. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity, 0.11.4 for DeepSeek Harness, 0.9.2 for Math Renderer until its 0.13 release) and install the 0.13.2 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
+- DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.3). Test a new DSH release before listing it as tested.
+- Paseo 0.8 to 0.10 reject unknown `paseo-plugin.json` fields. Add `translations`, `name`, `icon` or `media` only to plugins whose minimum is 0.11.0 or later. Keep a Simplified Chinese `OVERVIEW.zh-CN.md` beside each maintained plugin's `OVERVIEW.md`, list it in the npm `files`, and update both together.
+- Readable Agent Activity and Math Renderer support only current Paseo (user decision, 2026-10-26): Paseo 0.8 to 0.12 are dropped. Do not add compatibility code, fixtures or tests for releases below their minimum; pin host fixtures to the target release.
+- Declare `requirements.paseo` as a minimum (`>=`), following the Paseo requirements reference. Raise it only when adopting a newer API or when the user drops older releases; add an upper bound only for a release known to be incompatible. Record the actually tested versions in each plugin's docs, not in the range.
 - Fetch https://paseo.sh/llms.txt, then the version-matching plugin reference before adopting unfamiliar APIs.
 - Client entries: `index.client.tsx`, client UI under `client/`.
 - Optional daemon entry: `index.server.ts`, daemon-only modules under `server/`.
 - Pure data/contracts under `shared/`; no other root code modules.
 - Use public SDK modules only. Never import host internals in a production plugin, inspect host React state/DOM, or read private app storage to infer settings.
 - Use React Native primitives and host UI. Derive colors from theme.colors and layout from layout.compact/platform.
-- Host Icon exposes name/size/color, not stroke width in 0.8/0.9. Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
+- Host Icon exposes name/size/color, not stroke width (through 0.13.2). Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
 - Keep transforms synchronous, deterministic and JSON-safe. Preserve source information and stable item identity.
 - Host Tool call display preferences take precedence. Never silently force Full detail or replace grouped Summary rows with a single call.
 - A compatibility gap must be documented and tested, not hidden behind a guessed configuration value.
-- In 0.9, timeline transforms run before native Markdown splitting, Summary grouping and plan suppression. Pass native plan tools through. Math retains native streaming and offers native-reply mode for the host's unresolved chat Find identity gap.
+- Since 0.9, timeline transforms run before Summary grouping and plan suppression (0.9 to 0.12 also split native Markdown afterwards; 0.13 does not). Pass native plan tools through. Math retains native streaming and offers native-reply mode for the host's unresolved chat Find identity gap.
 - Preserve per-card manual-only expansion through streaming and status updates.
 
 ## Safety and lifecycle

@@ -2,7 +2,7 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.11** · [Release notes](CHANGELOG.md) · Paseo 0.8 or later, checked through SDK 0.11.4. Tool cards need Full detail;
+**Version 0.1.0-beta.12** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.13.2. Tool cards need Full detail;
 a Command Center action switches to native tool rows for Summary.
 
 ## What it does
@@ -77,21 +77,17 @@ Virtual-list remounts reset local disclosure state.
 
 ## Compatibility
 
-**Paseo 0.8.0 or later · tool cards need Full detail · experimental beta.**
-Beta.9 passes its checks with SDK 0.9.2, 0.10.1 and 0.11.2 and pinned 0.8.0/0.9.2 host
-fixtures; beta.11 also passes with SDK 0.13.0. Beta.11, installed from the registry,
-rendered tool cards live on a 0.13.0 daemon in the 0.13.0 web client. Beta.8 rendered live on a 0.10.0-beta.1 daemon in the hosted web client with
-Full detail. The manifest sets
-only a minimum, `>=0.8.0`, as Paseo recommends; later releases are not tested.
+**Paseo 0.13.0 or later · tool cards need Full detail · experimental beta.**
+Beta.12 supports only current Paseo: it requires 0.13.0, pins the 0.13.2 SDK and runs
+its host tests on unmodified 0.13.2 sources. The packed package rendered tool cards
+live on a 0.13.2 daemon in the 0.13.2 web client. The manifest sets only a minimum,
+`>=0.13.0`, as Paseo recommends; later releases are not tested. For Paseo 0.8 to
+0.12, keep beta.11.
 
-Paseo 0.8 groups Summary calls before running plugin transformers. Its public API
-exposes neither the display mode nor group members. An enabled replacement can
-hide the native group's entry point; this plugin cannot automatically fall back.
-
-Paseo 0.9 and 0.10.0-beta.1 transform each original call **before** Summary grouping.
-All calls now remain visible, but plugin cards bypass grouping. Native plan/approval
-tools pass through, preserving host suppression and expandable plan cards. No
-display-mode API is available in any tested version, so the plugin cannot switch by itself.
+Paseo transforms each original call **before** Summary grouping. All calls remain
+visible, but plugin cards bypass grouping. Native plan/approval tools pass through,
+preserving host suppression and expandable plan cards. Paseo 0.13.2 still has no
+display-mode API for plugins, so the plugin cannot switch by itself.
 
 ### Switching between cards and native rows
 
@@ -104,16 +100,12 @@ Open the Command Center on the client you are using and choose:
 The choice applies only to that client and is not saved: tool cards return whenever
 the plugin loads again, for example after an app reload. Switch each client separately.
 The plugin does not detect or change the host display preference and does not inspect
-private app state. With cards active, Summary shows every call ungrouped on 0.9+ and
-can hide the group entry on 0.8. Do not enable two plugins replacing the same
-tool-call timeline items.
+private app state. With cards active, Summary shows every call ungrouped. Do not
+enable two plugins replacing the same tool-call timeline items.
 
-Pinned 0.9.2 host-pipeline tests show that native rows regroup existing history and
-that cards come back ungrouped. On a live 0.10.1 daemon in the hosted web client, the
-commands regrouped an existing conversation in Summary and restored the cards.
-0.8 re-rendering after a switch is untested; reload the conversation if rows do not
-change. Hermes engine tests and compact browser previews are not on-device mobile
-UI tests. [Compatibility evidence](docs/compatibility.md).
+Pinned 0.13.2 host-pipeline tests show that native rows regroup existing history and
+that cards come back ungrouped. Hermes engine tests and compact browser previews are
+not on-device mobile UI tests. [Compatibility evidence](docs/compatibility.md).
 
 ## Install and local development
 
@@ -121,8 +113,7 @@ Plugins are **trusted, unsandboxed code**. This plugin is client-only and uses p
 SDK modules, React Native primitives and host theme colors. It has no runtime network,
 filesystem, process or daemon-side behavior. Contributions unregister on cleanup.
 
-On Paseo 0.11 or later, install the reviewed [registry](https://paseo.sh/plugins) entry on
-the intended daemon. Its registry ID is `geoqiao/agent-activity`; the installed plugin ID
+Install the reviewed [registry](https://paseo.sh/plugins) entry on the intended daemon. Its registry ID is `geoqiao/agent-activity`; the installed plugin ID
 stays `readable-agent-activity`:
 
 ```sh
@@ -132,7 +123,7 @@ paseo plugin add geoqiao/agent-activity --host <your-host>
 To install the published npm package directly:
 
 ```sh
-paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.11 --host <your-host>
+paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.12 --host <your-host>
 ```
 
 Paseo installs the package's two runtime dependencies, `prism-react-renderer` and
@@ -143,12 +134,11 @@ the Git source keeps them: they install the development dependencies and run the
 To install the pinned prerelease directly from Git instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.11 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.12 --host <your-host>
 ```
 
-Paseo 0.11 reads a bare `owner/name` source as a registry ID, so the `git:` prefix is
-required there. Paseo CLIs before 0.11 take the same Git source without the prefix.
-If the registry install fails with "npm artifact changed since review", the daemon's
+Paseo reads a bare `owner/name` source as a registry ID, so the `git:` prefix is
+required. If the registry install fails with "npm artifact changed since review", the daemon's
 npm uses a registry mirror; see
 [the fix](https://github.com/geoqiao/paseo-stuff#if-a-registry-install-fails-with-npm-artifact-changed-since-review).
 

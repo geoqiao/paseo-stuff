@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createStreamPresentation, transformTimelineItem } from "./host-09";
+import { createStreamPresentation, transformTimelineItem } from "./host";
 import { transformReasoning, transformToolCall } from "../client/transform";
 
 const plugins = [{ id: "activity", timelineTransformers: [
@@ -13,7 +13,7 @@ const call = (id, status = "completed", name = "exec", detail = { type: "shell",
   } },
 });
 const input = (head, level = "detailed") => ({ head, tail: [], level, transform, isTurnActive: true });
-describe("Paseo 0.9.2 actual presentation pipeline", () => {
+describe("Paseo 0.13.2 actual presentation pipeline", () => {
   it.each(["running", "completed", "failed", "canceled"])("retains all %s tool data in Full detail", status => {
     const original = [call("one"), call("two", status)];
     const before = JSON.stringify(original);
@@ -65,6 +65,26 @@ describe("Paseo 0.9.2 actual presentation pipeline", () => {
     const final = present({ ...input([]), tail: [finalCall], isTurnActive: false });
     expect(final.tail[0].id).toBe(first.head[0].id);
     expect(final.tail[0].data.status).toBe("completed");
+  });
+  it("keeps one source identity for streaming/final conversion snapshots and preserves sibling tools", () => {
+    const code = call("code", "running", "exec", { type: "unknown", input: { code: "compose tools" }, output: {
+      content: [], details: { cellId: "cell", status: "running", traces: [{
+        id: "trace", name: "exec_command", input: { cmd: "npm test" }, status: "running",
+      }] },
+    } });
+    const present = createStreamPresentation();
+    const before = present(input([code, call("plain")])).head;
+    expect(before).toHaveLength(2);
+    expect(before[0].data.detail.input.code).toBe("compose tools");
+    expect(before[0].data).not.toHaveProperty("activity");
+    const final = structuredClone(code);
+    final.payload.data.status = "completed";
+    Object.assign(final.payload.data.detail.output.details, { codeMode: true, status: "result" });
+    final.payload.data.detail.output.details.traces[0].status = "done";
+    const after = present(input([final, call("plain")])).head;
+    expect(after.map(item => item.id)).toEqual(before.map(item => item.id));
+    expect(after[0].data.detail).toEqual(final.payload.data.detail);
+    expect(after[1].data.detail.command).toBe("plain");
   });
   it("keeps native speech and full accumulated reasoning", () => {
     const speech = call("speech", "completed", "speak", { type: "unknown", input: "Hello" });

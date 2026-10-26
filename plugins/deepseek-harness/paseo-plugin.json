@@ -3,6 +3,11 @@
   "requirements": {
     "paseo": ">=0.11.0"
   },
+  "translations": {
+    "zh-CN": {
+      "description": "通过官方 ACP 配置在 Paseo 0.11 及以上版本中使用 DeepSeek Harness。"
+    }
+  },
   "build": [
     [
       "npm",
