@@ -1,5 +1,23 @@
 # Verification and remaining gaps
 
+## Beta.12 — Paseo 0.13.2 support target (2026-10-26)
+
+- `npm run check` on Node 24.18.0 with the pinned packages and, in a copy, with the
+  **0.13.2** client, plugin and protocol packages installed without saving: typecheck,
+  lint with zero warnings/errors and **8 files / 275 tests** each time. The 0.13.0 and 0.13.2 SDK
+  packages differ only in `package.json`.
+- The packed tarball contains `OVERVIEW.zh-CN.md`. The manifest has no `translations`,
+  because Paseo 0.8 to 0.10 parse it with `.strict()` and would reject the field.
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6815, relay off): the packed
+  package, unpacked and installed as a directory with its shrinkwrapped runtime
+  dependencies, reached status `running`.
+- In the 0.13.2 web client (the desktop app's `app-dist` served locally), a DeepSeek
+  Harness turn ran `ls -la` and read `notes.txt`. The collapsed cards showed
+  `bash ls -la` and `read /tmp/live-0132/work/notes.txt`; the expanded bash card showed
+  the Input JSON and the real Output. The console showed no plugin errors.
+- **Not verified:** the desktop app, native mobile, Summary mode and the light/dark
+  switch.
+
 ## Beta.11 — Paseo 0.13.0 registry install (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the **0.13.0** client, plugin and protocol

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.7 — 2026-10-26
+
+- Add a Simplified Chinese listing overview, `OVERVIEW.zh-CN.md`. The manifest gets no `translations` field, because Paseo 0.9 and 0.10 reject unknown manifest fields and this plugin still supports them.
+- Paseo 0.13.2 is the current support target. Rendering is unchanged from beta.6.
+- `npm run check` passes with the 0.9.2 and 0.13.2 packages. The packed package rendered inline and block formulas on a Paseo 0.13.2 daemon in the 0.13.2 web client.
+
 ## 0.1.0-beta.6 — 2026-10-18
 
 - Publish on npm as `paseo-math-renderer`, so the Paseo registry can track new versions without a manual pull request. Rendering is unchanged from beta.5.

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-beta.12 — 2026-10-26
+
+- Add a Simplified Chinese listing overview, `OVERVIEW.zh-CN.md`. The manifest gets no `translations` field, because Paseo 0.8 to 0.10 reject unknown manifest fields and this plugin still supports them.
+- Paseo 0.13.2 is the current support target. Behavior is unchanged from beta.11.
+- Typecheck, lint and 275 tests pass with SDK 0.9.2 and 0.13.2. The packed package showed tool cards for real DeepSeek Harness tool calls on a Paseo 0.13.2 daemon in the 0.13.2 web client; the desktop app and native mobile were not checked.
+
 ## 0.1.0-beta.11 — 2026-10-18
 
 - Publish on npm as `paseo-readable-agent-activity`, so the Paseo registry can track new versions without a manual pull request. The plugin ID stays `readable-agent-activity`; behavior is unchanged from beta.10.

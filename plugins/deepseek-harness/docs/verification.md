@@ -1,5 +1,37 @@
 # Verification and limits
 
+## Beta.14 — Paseo 0.13.2 target and DSH 0.2.1-rc.3 (2026-10-26)
+
+- `npm run check` on Node 24.18.0 with the pinned packages and, in a copy, with the
+  **0.13.2** client, plugin and protocol packages installed without saving: typecheck,
+  lint with zero warnings/errors and **82 tests / 4 files** each time. The 0.13.0 and 0.13.2 SDK
+  packages differ only in `package.json`.
+- The packed tarball contains `OVERVIEW.zh-CN.md`; its manifest keeps `translations`
+  and drops `build`. Paseo 0.11 and later parse the manifest without `.strict()`, so
+  the daemon ignores `translations`.
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6815, relay off): the packed
+  package, unpacked and installed as a directory with its shrinkwrapped runtime
+  dependencies, reached status `running`.
+  - DSH **0.2.1-rc.3** at `/opt/homebrew/bin/dsh`: provider `available`. A real turn ran
+    `ls -la` and read `notes.txt` with tools and answered 4821 × 3 = 14463. After
+    `paseo agent reload` the timeline held 0 items, and the agent still answered 4821
+    from its DSH context.
+  - `paseo usage` listed the DeepSeek API account as available.
+  - In the 0.13.2 web client (the desktop app's `app-dist` served locally), the tool
+    rows and reply rendered; the console showed no plugin errors.
+  - The daemon keeps the `dsh` path it resolved at startup. When that copy was removed
+    during the test, reload failed with the "could not start executable" error until
+    the daemon restarted and found the remaining copy. Restart the daemon after moving
+    DSH to another path.
+- **npm mirror (issue #35), rechecked on 0.13.2:** an isolated daemon whose npm used
+  `registry.npmmirror.com` still failed `geoqiao/deepseek-harness` and
+  `geoqiao/math-renderer` with `npm artifact changed since review`. The installed
+  lockfile had the mirror `resolved` URL and the same `integrity` as the registry
+  record. `npm:paseo-math-renderer@0.1.0-beta.6` installed and ran. The comparison in
+  `managed-source/npm.ts` is the same in 0.13.2 and on upstream `main`.
+- **Not verified:** Windows, the desktop app, native mobile and a registry install of
+  beta.14, which is not published yet.
+
 ## Beta.13 — Paseo 0.13.0 and DSH 0.2.1-rc.3 (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the **0.13.0** client, plugin and protocol

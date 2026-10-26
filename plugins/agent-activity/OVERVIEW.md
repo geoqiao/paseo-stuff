@@ -4,4 +4,4 @@ Use the cards with Full detail. They bypass Summary grouping, so before switchin
 
 The plugin runs entirely on the client and reformats data Paseo already received, without summarizing or rebuilding diffs. It has no network, filesystem, process or daemon-side behavior. Show all on a very large payload can be slow.
 
-Do not enable it next to another plugin that replaces tool-call or Thinking timeline items. It requires Paseo 0.8.0 or later. Its automated checks pass with the Paseo 0.11.2 SDK, and it was last exercised live on a 0.10.1 daemon in the hosted web client. The Paseo desktop app and native iOS and Android are untested. It is a fork of Matt Cowger's Colorful Agent Activity.
+Do not enable it next to another plugin that replaces tool-call or Thinking timeline items. It requires Paseo 0.8.0 or later. Its automated checks pass with the Paseo 0.13.2 SDK, and it was last exercised live on a Paseo 0.13.2 daemon in the 0.13.2 web client. The Paseo desktop app and native iOS and Android are untested. It is a fork of Matt Cowger's Colorful Agent Activity.

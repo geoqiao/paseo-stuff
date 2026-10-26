@@ -1,6 +1,6 @@
 {
   "name": "paseo-readable-agent-activity",
-  "version": "0.1.0-beta.11",
+  "version": "0.1.0-beta.12",
   "description": "Formatted and highlighted tool-call JSON, twenty-line previews, tool icons and the main argument on collapsed cards, for Paseo 0.8 or later. Tool cards need Full detail.",
   "repository": {
     "type": "git",
@@ -21,6 +21,7 @@
   "files": [
     "paseo-plugin.json",
     "OVERVIEW.md",
+    "OVERVIEW.zh-CN.md",
     "index.client.tsx",
     "client/activity.tsx",
     "client/highlight.ts",

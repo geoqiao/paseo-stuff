@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-beta.14 — 2026-10-26
+
+- Add a Simplified Chinese listing: `OVERVIEW.zh-CN.md` and a `zh-CN` description
+  under `translations` in `paseo-plugin.json`. The registry reads `translations`;
+  Paseo ignores it.
+- Add the upgrade note for `DSH_PASEO_COMMAND` and `DSH_PASEO_PROFILE` to
+  `OVERVIEW.md`, as the registry review of beta.13 suggested (getpaseo/plugins#670).
+- Paseo 0.13.2 is the current support target, and the README installs DSH
+  0.2.1-rc.3. Runtime code is unchanged from beta.13.
+- `npm run check` passes with the 0.11.4 and 0.13.2 SDKs. The packed package ran real
+  tool turns with DSH 0.2.1-rc.3 on a Paseo 0.13.2 daemon on macOS.
+
 ## 0.1.0-beta.13 — 2026-10-18
 
 - **Requires Paseo 0.11.0 or later.** On Paseo 0.8 to 0.10, stay on beta.12.
