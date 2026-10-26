@@ -11,15 +11,14 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const hermesPlatform = { darwin: "osx-bin", linux: "linux64-bin", win32: "win64-bin" }[process.platform];
 const hermes = process.env.HERMES_BIN || join(root, "node_modules/react-native/sdks/hermesc", hermesPlatform || "unsupported", process.platform === "win32" ? "hermes.exe" : "hermes");
 
-// Paseo v0.9.0-beta.1 compiler options and eager CommonJS interop (compiler.ts and the app
-// plugin loader are unchanged through v0.10.0-beta.1), followed by string
+// Paseo v0.13.2 compiler options and eager CommonJS interop, followed by string
 // evaluation without Metro/Babel. Pinned source:
-// https://github.com/getpaseo/paseo/blob/7c1958f5b0a4ae9f2cb12f77b0a754a644cd0081/packages/server/src/server/plugins/compiler.ts
+// https://github.com/getpaseo/paseo/blob/d2941157a8f91512daf54fc688241d416e8f5ebd/packages/server/src/server/plugins/compiler.ts
 async function bundle(entry) {
   const result = await build({
     absWorkingDir: root, entryPoints: [entry], bundle: true, format: "cjs", jsx: "automatic",
-    platform: "neutral", target: "es2020", supported: { "async-await": false },
-    external: ["@getpaseo/plugin", "@getpaseo/plugin/client", "@getpaseo/plugin/client/ui", "@getpaseo/plugin/client/react-native", "react", "react/jsx-runtime", "react-native", "zod", "@tanstack/react-query"],
+    platform: "neutral", target: "es2020", mainFields: ["module", "main"], supported: { "async-await": false },
+    external: ["@getpaseo/plugin", "@getpaseo/plugin/client", "@getpaseo/plugin/client/ui", "react", "react/jsx-runtime", "react-native", "zod", "@tanstack/react-query"],
     write: false, treeShaking: true,
   });
   const code = result.outputFiles[0].text.replaceAll("get: () => from[key]", "value: from[key]");
@@ -41,7 +40,7 @@ var z = {};
 function runtimeRequire(name) {
   if (name === "zod") return { z: z };
   if (name === "@getpaseo/plugin") return { defineRpc: function(contract) { return contract; } };
-  if (["react", "react/jsx-runtime", "react-native", "@getpaseo/plugin/client", "@getpaseo/plugin/client/react-native", "@tanstack/react-query"].indexOf(name) !== -1) return {};
+  if (["react", "react/jsx-runtime", "react-native", "@getpaseo/plugin/client", "@getpaseo/plugin/client/ui", "@tanstack/react-query"].indexOf(name) !== -1) return {};
   throw new Error("Unexpected external module: " + name);
 }
 var evaluate = globalThis.eval;
@@ -85,12 +84,13 @@ samples.forEach(function(text, index) {
     }
   }
 });
-var text = "Entity &amp; &#x1F408; &copy; 中文\\n\\n$$x^2$$";
-check(parse(text).blocks[0].inline[0].text === "Entity & 🐈 © 中文", "Entity decoding failed");
+var text = "Entity &amp; &#x1F408; &copy; 中文 $x$";
+check(parse(text).blocks[0].inline[0].text === "Entity & 🐈 © 中文 ", "Entity decoding failed");
+check(parse("Prose\\n\\n$$x^2$$").blocks[0].text === "Prose", "Formula-free block is not a host Markdown segment");
 ["$$x^2$$", "\\\\[\\nx^2\\n\\\\]", "~~~math\\nx^2\\n~~~", "> $$x^2$$", "- item\\n\\n  $$x^2$$"].forEach(function(text) {
   check(parse(text).formulas === 1, "Display delimiter/container failed: " + text);
 });
-["No formula", "$$\\nx^2", "~~~math\\nx^2", "~~~js\\n$$x$$\\n~~~", "![image](https://example.com/x)\\n\\n$$x$$"].forEach(function(text) {
+["No formula", "$$\\nx^2", "~~~math\\nx^2", "~~~js\\n$$x$$\\n~~~", "Inline $x$ and ![image](https://example.com/x)"].forEach(function(text) {
   check(transformer.transform({ item: { type: "assistant_message", text: text }, phase: "complete" }) === undefined, "Native fallback failed");
 });
 check(parse("") === null && parse("x".repeat(96001)) === null, "Input limits failed");

@@ -15,11 +15,11 @@ export default function contribute(client: PluginClientContext) {
   const remove = [
     client.addTimelineRenderer({ kind: MATH_KIND, version: 1, schema: messageData, Component: MathMessage }),
     client.addCommandCenterItem({
-      id: "native-replies", title: "Math: use native replies for chat Find", icon: "Search", context: "global",
+      id: "native-replies", title: "Math: use native replies to search formula source", icon: "Search", context: "global",
       keywords: ["math", "formula", "search"], onSelect: nativeReplies,
     }),
     client.addCommandCenterItem({
-      id: "render-formulas", title: "Math: render block formulas", icon: "Sigma", context: "global",
+      id: "render-formulas", title: "Math: render formulas", icon: "Sigma", context: "global",
       keywords: ["math", "formula"], onSelect: renderFormulas,
     }),
   ];

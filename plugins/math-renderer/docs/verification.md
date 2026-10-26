@@ -1,5 +1,42 @@
 # Verification scope
 
+## Beta.7 — Paseo 0.13 only, host Markdown for formula-free blocks (2026-10-26)
+
+- `npm run check` on Node 24.18.0 with the pinned **0.13.2** client, plugin and protocol
+  packages: typecheck, lint with zero warnings/errors and **5 files / 90 tests**,
+  including the client bundle evaluated in the RN 0.81.5 Hermes executable.
+- The client bundle, built with the 0.13.2 compiler options, compiles with `hermesc`
+  from RN 0.86.3 (`hermes-compiler@250829098.0.17`), the React Native line of the
+  0.13.2 app. This compiles the bundle only; it does not run it.
+- Host tests use seven unmodified v0.13.2 sources: presentation, plugin projection, tool
+  grouping and the chat Find model. A rendered reply is one plugin row whose
+  `getStreamItemMessageId` equals the source message ID, so Find can target it.
+  Unsupported or oversized replies stay one native row. Tool rows are unchanged in
+  Summary and Full detail.
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6816, relay off), with the
+  packed beta.7 tarball unpacked, installed with `npm ci --omit=dev` and added as a
+  directory, beside Readable Agent Activity beta.12 and DeepSeek Harness beta.14. All
+  three reached status `running`.
+- DeepSeek Harness (DSH 0.2.1-rc.3, `deepseek-v4-flash`) ran `ls -la` and then replied
+  with a heading, a table, a paragraph with inline `$E = mc^2$` and a reference link, a
+  display integral, an ordered list starting at 3 with an inline formula, a Python code
+  block, a relative file link and a reference definition.
+- In the 0.13.2 web client (the desktop app's `app-dist` served locally) at 1400 × 1000:
+  - The heading, table, code block and the paragraph with `./notes.txt` used the host
+    renderer, with code highlighting and a Copy code button. The reference link in that
+    paragraph resolved to the definition at the end of the reply.
+  - The formula paragraph, display integral and list used the plugin renderer. The list
+    kept the numbers 3 and 4, and the reference link in the formula paragraph resolved.
+  - Show LaTeX showed the integral source and changed to Show formula.
+  - Chat Find for `find-me-token` (host segment) and `in 1905` (plugin paragraph)
+    each found 2 of 2 and highlighted the match inside the rendered reply. `mc^2` found
+    only the prompt: formula source is not searchable in rendered replies.
+  - Dark mode and a 390 × 844 layout rendered the table, formulas and code block
+    without overflow. After each page reload, the reply rendered again.
+- **Not verified:** the desktop app, native iOS/Android, live streaming (the reply had
+  finished before viewing), the native-reply Command Center actions on 0.13.2 (covered
+  by the bundle test only) and registry installs of beta.7.
+
 ## Beta.6 — Paseo 0.13.0 registry install (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the **0.13.0** client, plugin and protocol
