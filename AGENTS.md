@@ -22,7 +22,7 @@
 
 ## Paseo contracts
 - Current verification target is stable Paseo app/daemon 0.13.2. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity and Math Renderer, 0.11.4 for DeepSeek Harness) and install the 0.13.2 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
-- DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.3). Test a new DSH release before listing it as tested.
+- DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.4). Test a new DSH release before listing it as tested.
 - Paseo 0.8 to 0.10 reject unknown `paseo-plugin.json` fields. Add `translations`, `name`, `icon` or `media` only to plugins whose minimum is 0.11.0 or later. Keep a Simplified Chinese `OVERVIEW.zh-CN.md` beside each maintained plugin's `OVERVIEW.md`, list it in the npm `files`, and update both together.
 - Readable Agent Activity and Math Renderer support only current Paseo (user decision, 2026-10-26): Paseo 0.8 to 0.12 are dropped. Do not add compatibility code, fixtures or tests for releases below their minimum; pin host fixtures to the target release.
 - Declare `requirements.paseo` as a minimum (`>=`), following the Paseo requirements reference. Raise it only when adopting a newer API or when the user drops older releases; add an upper bound only for a release known to be incompatible. Record the actually tested versions in each plugin's docs, not in the range.
