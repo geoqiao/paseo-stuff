@@ -1,5 +1,14 @@
 # Verification and remaining gaps
 
+## Beta.13 — zod 4.6.7 (2026-10-28)
+
+- `npm run check`: typecheck, lint and 266 tests pass. `npm audit --omit=dev` reports no
+  vulnerabilities; the shipped shrinkwrap pins `zod` 4.6.7.
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2, temporary home, port 6798, relay off): the
+  packed tarballs were extracted, production dependencies installed from the shipped
+  `npm-shrinkwrap.json`, and all three plugins added from those directories. Status `running` for each.
+- **Not verified:** the web client and other clients. The client code is unchanged from beta.12.
+
 ## Beta.12 — Paseo 0.13.2 registry install (2026-10-27)
 
 - Isolated Paseo **0.13.2** daemon (temporary home, port 6812, relay off):

@@ -14,10 +14,10 @@ shared runtime or root-hoisted dependency tree.
 | MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | **Paused (unmaintained) since 2026-09-28.** Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
-The current support target is Paseo **0.13.2**. Activity **0.1.0-beta.12** and Math
-Renderer **0.1.0-beta.7** require Paseo **0.13.0** and are checked against the 0.13.2
+The current support target is Paseo **0.13.2**. Activity **0.1.0-beta.13** and Math
+Renderer **0.1.0-beta.8** require Paseo **0.13.0** and are checked against the 0.13.2
 SDK and host pipeline source. On Paseo 0.9 to 0.12, keep Activity beta.11 and Math
-beta.6. DeepSeek Harness **0.1.0-beta.14** requires Paseo **0.11.0**, is checked against
+beta.6. DeepSeek Harness **0.1.0-beta.15** requires Paseo **0.11.0**, is checked against
 the **0.11.4** SDK and also passes with the 0.13.2 SDK. All three ran on a 0.13.2
 daemon in the 0.13.2 web client, with DeepSeek Harness on DSH **0.2.1-rc.3**; registry installs of all three
 also ran on 0.13.2, with DSH **0.2.1-rc.4**. All requirements are minimums. A minimum is not
@@ -63,13 +63,13 @@ as `paseo-math-renderer`, `paseo-readable-agent-activity` and
 `paseo-deepseek-harness`. To install a package directly:
 
 ```sh
-paseo plugin add npm:paseo-math-renderer@0.1.0-beta.7 --host <host:port>
+paseo plugin add npm:paseo-math-renderer@0.1.0-beta.8 --host <host:port>
 ```
 
 To install a pinned tag directly from this repository instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.7 --host <host:port>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.8 --host <host:port>
 ```
 
 The `:plugins/<directory>` suffix selects one plugin, not the whole repository.

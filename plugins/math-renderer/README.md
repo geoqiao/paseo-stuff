@@ -4,7 +4,7 @@ Render **block and inline LaTeX inside assistant reply bodies**. Block formulas 
 muted English action row: **Show LaTeX** and **Copy LaTeX**. Inline formulas sit in the
 text; tap one to see its source. No extra panel or duplicate message toolbar.
 
-> **Experimental beta, 0.1.0-beta.7.** Requires Paseo app and daemon **0.13.0 or newer**
+> **Experimental beta, 0.1.0-beta.8.** Requires Paseo app and daemon **0.13.0 or newer**
 > and is checked against Paseo 0.13.2. Older Paseo releases are not supported; on Paseo
 > 0.9 to 0.12, keep [0.1.0-beta.6](https://www.npmjs.com/package/paseo-math-renderer/v/0.1.0-beta.6).
 > Replies stay native while streaming; supported formulas render after completion, and
@@ -30,7 +30,7 @@ paseo --host <host:port> plugin ls
 To install the published npm package directly:
 
 ```sh
-paseo plugin add npm:paseo-math-renderer@0.1.0-beta.7 --host <host:port>
+paseo plugin add npm:paseo-math-renderer@0.1.0-beta.8 --host <host:port>
 ```
 
 Paseo installs the package's runtime dependencies (MathJax and resvg) from its
@@ -42,7 +42,7 @@ typecheck.
 To install the pinned prerelease directly from Git instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.7 --host <host:port>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-renderer-v0.1.0-beta.8 --host <host:port>
 ```
 
 Paseo reads a bare `owner/name` source as a registry ID, so the `git:` prefix is

@@ -1,5 +1,17 @@
 # Verification and limits
 
+## Beta.15 — zod 4.6.7 (2026-10-28)
+
+- `npm run check`: typecheck, lint and 82 tests pass. `npm audit --omit=dev` reports no
+  vulnerabilities; the shipped shrinkwrap pins `zod` 4.6.7.
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2, temporary home, port 6798, relay off): the
+  packed tarballs were extracted, production dependencies installed from the shipped
+  `npm-shrinkwrap.json`, and all three plugins added from those directories. Status `running` for each.
+- Provider diagnostic: available, status Ready. A real turn with the global DSH 0.2.1-rc.3
+  ran `cat notes.txt` through the Bash tool and replied with the file's marker. The daemon
+  log showed no errors.
+- **Not verified:** Windows (CI only), the desktop app and native mobile.
+
 ## Beta.14 — registry install and DSH 0.2.1-rc.4 (2026-10-27)
 
 - `@deepseek-ai/dsh-acp`, `dsh-acp-app`, `dsh-agent`, `dsh-sdk-app` and `dsh-base`

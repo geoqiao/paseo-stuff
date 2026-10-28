@@ -1,6 +1,6 @@
 {
   "name": "paseo-readable-agent-activity",
-  "version": "0.1.0-beta.12",
+  "version": "0.1.0-beta.13",
   "description": "Formatted and highlighted tool-call JSON, twenty-line previews, tool icons and the main argument on collapsed cards, for Paseo 0.13 or later. Tool cards need Full detail.",
   "repository": {
     "type": "git",
@@ -66,6 +66,6 @@
     "react-test-renderer": "19.1.0",
     "typescript": "^5.9.3",
     "vitest": "^4.1.6",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   }
 }

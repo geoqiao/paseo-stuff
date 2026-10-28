@@ -6,7 +6,7 @@ hashes and exact resolved transitive versions are in package-lock.json.
 | Dependency | Version / npm gitHead | License |
 | --- | --- | --- |
 | mathjax-full | 3.2.2 / ad8f5c21cb810236551da8c6512ba733e67357ee | Apache-2.0; third-party/MATHJAX-LICENSE |
-| markdown-it | 14.3.2 / efb9993124c3eb229eea24dd659c91dcee7f6d60 | MIT; third-party/MARKDOWN-IT-LICENSE |
+| markdown-it | 14.3.3 / d372f0d8a68bef0b0acaa68868ce8ae8ba85b384 | MIT; third-party/MARKDOWN-IT-LICENSE |
 | @resvg/resvg-wasm | 2.6.2 / 9ca058462ac529120c8cc84ddcd6fef644cc5406 | MPL-2.0; third-party/RESVG-LICENSE |
 
 `prepare:markdown` transpiles the pinned markdown-it UMD distribution to ES5
