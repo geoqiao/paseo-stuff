@@ -10,4 +10,4 @@ Each agent session runs `dsh --profile acp` as a child process under your operat
 
 Resuming a session asks `dsh` to restore its own context. If that fails, the plugin reports the error and does not start a new session. `dsh` does not replay old messages, so after an agent reload or a daemon restart the agent remembers the conversation but its timeline is empty. Provider slash commands, steering and plans are not supported, and Paseo's extra system prompt is not passed to `dsh`. Listing models can leave empty sessions in the `dsh` session list.
 
-Its automated checks pass with the Paseo 0.11.4 and 0.13.2 SDKs. Real turns ran on Paseo 0.11.4, 0.12.0-beta.2, 0.13.0 and 0.13.2 daemons on macOS, most recently with DSH 0.2.1-rc.3. Windows and native iOS and Android clients are untested.
+Its automated checks pass with the Paseo 0.11.4 and 0.13.2 SDKs. Real turns ran on Paseo 0.11.4, 0.12.0-beta.2, 0.13.0 and 0.13.2 daemons on macOS, most recently with DSH 0.2.1-rc.4. Windows and native iOS and Android clients are untested.

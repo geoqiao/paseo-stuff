@@ -1,5 +1,16 @@
 # Verification and remaining gaps
 
+## Beta.12 — Paseo 0.13.2 registry install (2026-10-27)
+
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6812, relay off):
+  `paseo plugin add geoqiao/agent-activity` resolved the registry record to npm
+  `paseo-readable-agent-activity@0.1.0-beta.12`, status `running`.
+- In the 0.13.2 web client (`app-dist` served locally), a DeepSeek Harness turn (DSH
+  0.2.1-rc.4) ran `ls -la` and read `notes.txt`. The collapsed cards showed
+  `bash ls -la` and `read notes.txt`; the expanded bash card showed the Input JSON and
+  the real Output. The console showed no plugin errors.
+- **Not verified:** the desktop app, native mobile, Summary mode and live streaming.
+
 ## Beta.12 — Paseo 0.13 only (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the pinned **0.13.2** client, plugin and protocol

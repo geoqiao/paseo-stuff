@@ -1,5 +1,16 @@
 # Verification scope
 
+## Beta.7 — Paseo 0.13.2 registry install (2026-10-27)
+
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6812, relay off):
+  `paseo plugin add geoqiao/math-renderer` resolved the registry record to npm
+  `paseo-math-renderer@0.1.0-beta.7`, status `running`.
+- In the 0.13.2 web client (`app-dist` served locally) at 1400 × 1000, a DeepSeek
+  Harness reply (DSH 0.2.1-rc.4) rendered the inline `$a^2 + b^2 = c^2 and the display
+  sum as formula images with Show LaTeX and Copy LaTeX. The console showed no plugin
+  errors.
+- **Not verified:** the desktop app, native iOS/Android and live streaming.
+
 ## Beta.7 — Paseo 0.13 only, host Markdown for formula-free blocks (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the pinned **0.13.2** client, plugin and protocol

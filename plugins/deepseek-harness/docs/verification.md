@@ -1,5 +1,22 @@
 # Verification and limits
 
+## Beta.14 — registry install and DSH 0.2.1-rc.4 (2026-10-27)
+
+- `@deepseek-ai/dsh-acp`, `dsh-acp-app`, `dsh-agent`, `dsh-sdk-app` and `dsh-base`
+  0.2.1-rc.4 differ from rc.3 only in `package.json`; the ACP SDK is still 1.4.0. The
+  minimum-version check accepts rc.4 without a code change.
+- Isolated Paseo **0.13.2** daemon (temporary home, port 6812, relay off):
+  `paseo plugin add geoqiao/deepseek-harness` resolved the registry record to npm
+  `paseo-deepseek-harness@0.1.0-beta.14`, status `running`.
+  - DSH **0.2.1-rc.4** (npm `next`), installed under `/tmp` with its own `DSH_HOME` and
+    selected with the provider command override: provider `available`. A real turn ran
+    `ls -la` and read `notes.txt` with tools and answered 4817 × 3 = 14451. After
+    `paseo agent reload` the timeline held 0 items, and the agent still answered 4817
+    from its DSH context, as documented above.
+  - In the 0.13.2 web client (`app-dist` served locally), a second tool turn rendered
+    its bash and read rows and the reply; the console showed no plugin errors.
+- **Not verified:** Windows, the desktop app and native mobile.
+
 ## Beta.14 — Paseo 0.13.2 target and DSH 0.2.1-rc.3 (2026-10-26)
 
 - `npm run check` on Node 24.18.0 with the pinned packages and, in a copy, with the

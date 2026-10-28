@@ -20,7 +20,7 @@ patched Paseo app is required.
 > **DSH 0.1.5-rc.1 or newer**. Newer DSH releases are accepted without an
 > exact-version check. Tested: **0.1.5-rc.1**, **0.1.5-rc.2**, **0.1.6-alpha.2**,
 > **0.1.7-alpha.2**, **0.1.7-rc.1**, **0.1.7-rc.2**, **0.2.0-rc.1**,
-> **0.2.0-rc.2**, **0.2.1-rc.2** and **0.2.1-rc.3**. The executable must be able to run
+> **0.2.0-rc.2**, **0.2.1-rc.2**, **0.2.1-rc.3** and **0.2.1-rc.4**. The executable must be able to run
 > `dsh --profile acp --version` and `dsh --profile acp`.
 > On Paseo 0.8 to 0.10, install beta.12 instead:
 > `paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.12`.
@@ -47,11 +47,11 @@ patched Paseo app is required.
 
 Install a verified official DSH version **on the daemon machine**, then check
 that the daemon can find the executable on its PATH. The npm `latest` dist-tag
-currently resolves to `0.2.1-rc.2` and `next` to `0.2.1-rc.3`; both are tested, and
-the plugin is maintained against the newest, `0.2.1-rc.3`:
+currently resolves to `0.2.1-rc.2` and `next` to `0.2.1-rc.4`; both are tested, and
+the plugin is maintained against the newest, `0.2.1-rc.4`:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.3
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.4
 dsh --version
 ~~~
 
@@ -100,7 +100,7 @@ The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, the isolated published CLI/ACP
 closures `0.1.7-alpha.2`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`,
-`0.2.1-rc.2` and `0.2.1-rc.3`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
+`0.2.1-rc.2`, `0.2.1-rc.3` and `0.2.1-rc.4`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
 ACP SDK `1.4.0`. The plugin probes the CLI version and rejects only releases
 older than `0.1.5-rc.1` or output it cannot parse. Newer releases are accepted
 but untested until listed here; ACP behaviour follows the capabilities DSH

@@ -19,7 +19,8 @@ Renderer **0.1.0-beta.7** require Paseo **0.13.0** and are checked against the 0
 SDK and host pipeline source. On Paseo 0.9 to 0.12, keep Activity beta.11 and Math
 beta.6. DeepSeek Harness **0.1.0-beta.14** requires Paseo **0.11.0**, is checked against
 the **0.11.4** SDK and also passes with the 0.13.2 SDK. All three ran on a 0.13.2
-daemon in the 0.13.2 web client, with DeepSeek Harness on DSH **0.2.1-rc.3**. All requirements are minimums. A minimum is not
+daemon in the 0.13.2 web client, with DeepSeek Harness on DSH **0.2.1-rc.3**; registry installs of all three
+also ran on 0.13.2, with DSH **0.2.1-rc.4**. All requirements are minimums. A minimum is not
 a promise about later releases; each plugin's verification record lists what was
 tested. MaKa **0.1.0-beta.4** (final, unmaintained) stays limited to Paseo 0.9.
 Pet remains on its existing 0.8 support range (0.1.1, paused; not migrated to 0.9).

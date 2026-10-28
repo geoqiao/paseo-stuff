@@ -10,4 +10,4 @@ Usage 面板显示你的 DeepSeek API 余额。为了查询余额，插件按 `d
 
 恢复会话时，插件请求 `dsh` 恢复它自己的上下文。如果恢复失败，插件会报告错误，不会新开一个会话。`dsh` 不会重放旧消息，所以在 agent reload 或 daemon 重启之后，agent 仍然记得对话，但时间线是空的。插件不支持 provider 斜杠命令、steering 和计划，Paseo 额外的系统提示词也不会传给 `dsh`。列出模型时，可能会在 `dsh` 的会话列表里留下空会话。
 
-自动化检查在 Paseo 0.11.4 和 0.13.2 SDK 下通过。真实对话在 macOS 上的 Paseo 0.11.4、0.12.0-beta.2、0.13.0 和 0.13.2 daemon 上运行过，最近一次使用 DSH 0.2.1-rc.3。Windows 以及原生 iOS 和 Android 客户端未经测试。
+自动化检查在 Paseo 0.11.4 和 0.13.2 SDK 下通过。真实对话在 macOS 上的 Paseo 0.11.4、0.12.0-beta.2、0.13.0 和 0.13.2 daemon 上运行过，最近一次使用 DSH 0.2.1-rc.4。Windows 以及原生 iOS 和 Android 客户端未经测试。
