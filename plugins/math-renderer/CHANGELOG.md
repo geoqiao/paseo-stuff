@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.0-beta.8 — 2026-10-28
+
+- Bundle markdown-it 14.3.3 instead of 14.3.2. It fixes two quadratic-time parsing problems: inline HTML with `html` enabled, which the plugin enables, and a long multi-line link reference definition. A crafted reply could otherwise stall the client while it parsed. Rendering is unchanged from beta.7.
+- Update the development copy of `zod` to 4.6.7.
+
 ## 0.1.0-beta.7 — 2026-10-26
 
 - Require Paseo 0.13.0 or newer (`>=0.13.0`) and drop Paseo 0.9 to 0.12. Those releases should keep beta.6.

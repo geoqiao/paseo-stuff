@@ -2,7 +2,7 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.12** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.13.2. Tool cards need Full detail;
+**Version 0.1.0-beta.13** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.13.2. Tool cards need Full detail;
 a Command Center action switches to native tool rows for Summary.
 
 ## What it does
@@ -123,7 +123,7 @@ paseo plugin add geoqiao/agent-activity --host <your-host>
 To install the published npm package directly:
 
 ```sh
-paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.12 --host <your-host>
+paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.13 --host <your-host>
 ```
 
 Paseo installs the package's two runtime dependencies, `prism-react-renderer` and
@@ -134,7 +134,7 @@ the Git source keeps them: they install the development dependencies and run the
 To install the pinned prerelease directly from Git instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.12 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.13 --host <your-host>
 ```
 
 Paseo reads a bare `owner/name` source as a registry ID, so the `git:` prefix is

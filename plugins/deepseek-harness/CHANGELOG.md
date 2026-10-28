@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-beta.15 — 2026-10-28
+
+- Update the runtime dependency `zod` from 4.4.3 to 4.6.7, which fixes
+  [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), a memory
+  exhaustion when validating oversized collections. `zod` validates the ACP messages
+  from `dsh`. Behavior is unchanged from beta.14.
+
 ## 0.1.0-beta.14 — 2026-10-26
 
 - Add a Simplified Chinese listing: `OVERVIEW.zh-CN.md` and a `zh-CN` description

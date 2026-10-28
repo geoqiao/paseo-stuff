@@ -1,5 +1,16 @@
 # Verification scope
 
+## Beta.8 — markdown-it 14.3.3 (2026-10-28)
+
+- `npm run check`: typecheck, lint and 90 tests pass, including the parser tests and
+  the Hermes evaluation of the client bundle. The packed `shared/generated/markdown.js`
+  bundles markdown-it 14.3.3. `npm audit` no longer reports markdown-it.
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2, temporary home, port 6798, relay off): the
+  packed tarballs were extracted, production dependencies installed from the shipped
+  `npm-shrinkwrap.json`, and all three plugins added from those directories. Status `running` for each.
+- **Not verified:** rendering in a client. Only the bundled parser changed; beta.7's
+  rendering checks in the 0.13.2 web client are the latest UI evidence.
+
 ## Beta.7 — Paseo 0.13.2 registry install (2026-10-27)
 
 - Isolated Paseo **0.13.2** daemon (temporary home, port 6812, relay off):

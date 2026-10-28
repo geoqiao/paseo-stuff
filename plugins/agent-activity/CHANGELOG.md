@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.0-beta.13 — 2026-10-28
+
+- Update `zod` to 4.6.7 in the shipped `npm-shrinkwrap.json`. The 4.6.1 copy that `@getpaseo/protocol` pulled in is affected by [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), a memory exhaustion when validating oversized collections. Rendering is unchanged from beta.12.
+
 ## 0.1.0-beta.12 — 2026-10-26
 
 - Require Paseo 0.13.0 or later. Paseo 0.8 to 0.12 are no longer supported; beta.11 stays on npm for them. Rendering and the Command Center actions are unchanged from beta.11.
