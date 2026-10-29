@@ -28,6 +28,8 @@
     "index.server.ts",
     "server/provider.ts",
     "server/dsh-compatibility.ts",
+    "server/dsh-home.ts",
+    "server/session-replay.ts",
     "server/usage.ts",
     "README.md",
     "LICENSE",

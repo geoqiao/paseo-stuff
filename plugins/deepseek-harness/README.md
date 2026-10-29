@@ -109,7 +109,7 @@ advertises; resuming against a peer without `session/resume` fails with a clear 
 ## ACP compatibility and limitations
 
 DSH advertises session/resume but not ACP's older top-level loadSession
-capability. Paseo's public ACP shim (0.8 through 0.12.0-beta.3) uses session/load when
+capability. Paseo's public ACP shim (through the tested 0.13.2) uses session/load when
 it sees persistence. A small typed stdio adapter therefore does the following:
 
 1. After initialize, if the peer has session/resume and does not have
@@ -117,8 +117,9 @@ it sees persistence. A small typed stdio adapter therefore does the following:
    stream.
 2. It translates that stream's session/load request to session/resume,
    keeping the same session ID, cwd, MCP servers, request ID and other fields.
-3. It does not synthesize transcript replay. DSH resumes context without
-   replaying old updates.
+3. After a successful translated resume, it reads the recognised v4 session log
+   and sends user text, assistant text/reasoning and tool calls/results before
+   resolving the load. A peer advertising native `loadSession` bypasses this replay.
 4. It never retries with a new session after a resume error.
 
 All other ACP frames pass through unchanged except for the narrow tool-output
@@ -148,13 +149,22 @@ The native Paseo timeline works without another plugin. Optional
 [Readable Agent Activity](https://github.com/geoqiao/paseo-stuff/tree/main/plugins/agent-activity)
 adds bounded readable previews; **that separate renderer** requires Full detail.
 
-**Displayed history after a reload:** when Paseo reopens a session, after
-`paseo agent reload` or a daemon restart, it rebuilds the timeline from the
-provider's replay and deletes the timeline it stored. DSH does not replay, so
-on Paseo 0.12.0-beta.2, 0.13.0 and 0.13.2 the agent keeps its DSH context but shows an
-empty timeline. Paseo 0.13.0 restores history that an ACP agent replays during
-`session/load` (getpaseo/paseo#7717); DSH resumes with `session/resume`, which
-replays nothing, so that fix does not apply. Reloading the plugin keeps the timeline.
+**Displayed history after a reload:** on Paseo 0.13+, the plugin can rebuild
+text history from DSH's `session.v4.jsonl.zstd` when reopening a session. It reads
+from the launched session's `DSH_HOME` (session environment overrides launch
+environment), with the same path expansion as the Usage source. It does not
+modify the log or create a second copy of it.
+
+Replay recognises version 4 and the mapped event/content shapes only. Missing,
+corrupt or changed files, newer generations, unknown events, unsupported content
+(such as attachments) or surface replacements leave the timeline empty while
+DSH still restores context. Reads are capped at 16 MiB compressed, 64 MiB decoded,
+50,000 records/updates and one second; exceeding a cap discards the entire replay.
+Successful text/tool replay preserves full content within those bounds. Paseo
+0.11/0.12 may drop pre-response history; 0.13.2 is the integration test target.
+This is a compatibility fallback for an unpublished DSH file format, to be removed
+when DSH supplies native `session/load`. See [verification](docs/verification.md)
+for the distinction between automated checks and daemon/UI testing.
 
 **Known side effects and boundaries:** catalog discovery uses ACP `session/new`
 and can leave empty sessions in DSH's native session list. DSH profile settings
@@ -325,7 +335,7 @@ tracked in [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugi
 The [post-release review](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/code-review.md) adds diagnostic-redaction, timeout,
 missing-workspace and defensive-input regressions without changing the ACP mappings.
 These are backend tests, not a desktop UI matrix or mobile-device test. Official DSH does not provide raw token deltas,
-provider-specific commands, steering, transcript replay, or its own plan/
+provider-specific commands, steering, or its own plan/
 terminal UI surfaces; those are not claimed by this plugin. Credentials and
 private session contents are not stored in the repository.
 

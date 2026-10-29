@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- Replay recognised DSH v4 text transcripts before completing translated
+  `session/load` requests, including user messages, reasoning, answers and tool
+  calls/results. Native `session/load` remains unchanged. Fixes #43.
+- Share `DSH_HOME` resolution with the Usage source and apply the session's
+  environment over the daemon-resolved launch environment.
+- Bound replay by time, compressed/decoded size and record count. Missing,
+  corrupt, unsupported or changing logs safely keep context-only resume.
+- Add synthetic multi-frame Zstandard, compatibility-stream and provider tests.
+
 ## 0.1.0-beta.15 — 2026-10-28
 
 - Update the runtime dependency `zod` from 4.4.3 to 4.6.7, which fixes

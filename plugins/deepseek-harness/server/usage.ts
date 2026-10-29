@@ -1,6 +1,5 @@
 import { readFile } from "node:fs/promises";
-import { homedir } from "node:os";
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { parseEnv } from "node:util";
 import {
   hashAccountKey,
@@ -11,6 +10,7 @@ import {
 } from "@getpaseo/plugin/server/usage";
 import { parse } from "yaml";
 import { z } from "zod";
+import { resolveDshHome } from "./dsh-home";
 
 const PROVIDER_ID = "deepseek-harness";
 const KEY_NAME = "DEEPSEEK_API_KEY";
@@ -133,14 +133,6 @@ function formatAmount(currency: string, amount: string): string {
 
 function scopeHome(scope: UsageScope): string | undefined {
   return scope.kind === "session" ? scope.env.DSH_HOME : undefined;
-}
-
-function resolveDshHome(value: string | undefined): string {
-  const trimmed = value?.trim();
-  if (!trimmed) return join(homedir(), ".dsh");
-  if (trimmed === "~") return homedir();
-  if (trimmed.startsWith("~/")) return join(homedir(), trimmed.slice(2));
-  return resolve(trimmed);
 }
 
 async function resolveApiKey(

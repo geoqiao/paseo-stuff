@@ -1,0 +1,8 @@
+{"type":"session","version":4,"id":"synthetic-session","createdAt":1793232000000,"cwd":"/synthetic/workspace","isSeeded":false,"delegationDepth":0}
+{"type":"turn/start","seq":0,"time":1793232000000,"data":{"turn":0}}
+{"type":"user/message","seq":1,"time":1793232000001,"surfaceOp":"append","data":{"id":"user-1","role":"user","source":{"kind":"user"},"content":[{"type":"text","text":"Read the synthetic note."}]}}
+{"type":"assistant/message","seq":2,"time":1793232000002,"surfaceOp":"append","data":{"turn":0,"step":0,"stream":[],"message":{"id":"assistant-1","role":"assistant","source":{"kind":"model"},"content":[{"type":"reasoning","text":"I will read the note."},{"type":"text","text":"Checking the note."},{"type":"tool-call","id":"tool-1","name":"read","arguments":"{\"path\":\"note.txt\"}"}]}}}
+{"type":"tool/call","seq":3,"time":1793232000003,"data":{"turn":0,"step":0,"callId":"tool-1","name":"read","arguments":"{\"path\":\"note.txt\"}"}}
+{"type":"tool/result","seq":4,"time":1793232000004,"surfaceOp":"append","data":{"turn":0,"step":0,"message":{"id":"tool-message-1","role":"tool","source":{"kind":"tool","callId":"tool-1","name":"read"},"toolCallId":"tool-1","content":[{"type":"text","text":"Synthetic note: violet-4817."}]}}}
+{"type":"assistant/message","seq":5,"time":1793232000005,"surfaceOp":"append","data":{"turn":0,"step":1,"stream":[],"message":{"id":"assistant-2","role":"assistant","source":{"kind":"model"},"content":[{"type":"text","text":"The note says violet-4817."}]}}}
+{"type":"turn/end","seq":6,"time":1793232000006,"data":{"turn":0,"reason":"completed"}}

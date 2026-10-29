@@ -13,6 +13,7 @@ import {
   type ProviderLaunch,
 } from "@getpaseo/plugin/server/provider";
 import serverEntry from "../index.server";
+import { writeReplayFixture } from "../tests/replay-fixture";
 import {
   createDeepSeekHarnessProvider,
   type ManagedDeepSeekHarnessProvider,
@@ -72,6 +73,47 @@ afterAll(async () => {
 });
 
 describe.sequential("DeepSeek Harness provider", () => {
+  it("ships the replay modules in the npm package", async () => {
+    const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+    expect(pkg.files).toEqual(expect.arrayContaining(["server/session-replay.ts", "server/dsh-home.ts"]));
+  });
+
+  it("reads the per-session DSH_HOME through the production provider", async () => {
+    const connection = await connect();
+    const collector = collect(connection);
+    try {
+      const initial = openInput("replay-host-session", cwdA, "replay-test", "skip");
+      await connection.send(initial);
+      const opened = await collector.waitFor((event) => event.type === "session.opened" && event.sessionId === initial.sessionId);
+      if (opened.type !== "session.opened" || !opened.persistence) throw new Error("Missing persistence");
+      const nativeId = (opened.persistence.data as { sessionId: string }).sessionId;
+      await writeReplayFixture(initial.config.env!.DSH_HOME, nativeId, cwdA);
+      await connection.send({ type: "session.close", requestId: "close-before-replay", sessionId: initial.sessionId });
+      await collector.waitFor((event) => event.type === "session.closed" && event.sessionId === initial.sessionId);
+      const start = collector.events.length;
+      await connection.send(openInput(initial.sessionId, cwdA, "replay-test", "replay", opened.persistence));
+      await collector.waitFor((event) => event.type === "session.opened" && event.sessionId === initial.sessionId, 3_000, start);
+      await waitForReady(collector, initial.sessionId, 0, start);
+      const history = collector.events.slice(start).filter((event) => event.type === "timeline.item");
+      // Paseo admitted pre-response replay starting in 0.13. The minimum 0.11
+      // SDK still drops it; keep that boundary explicit instead of claiming UI support.
+      const sdk = JSON.parse(await readFile(new URL("../node_modules/@getpaseo/plugin/package.json", import.meta.url), "utf8"));
+      if (Number(sdk.version.split(".")[1]) >= 13) {
+        expect(history).toEqual(expect.arrayContaining([
+          expect.objectContaining({ item: expect.objectContaining({ type: "user_message", text: "Read the synthetic note." }) }),
+          expect.objectContaining({ item: expect.objectContaining({ type: "reasoning", text: "I will read the note." }) }),
+          expect.objectContaining({ item: expect.objectContaining({ type: "assistant_message", text: "The note says violet-4817." }) }),
+          expect.objectContaining({ item: expect.objectContaining({ type: "tool_call", status: "completed" }) }),
+        ]));
+      } else {
+        expect(history).toEqual([]);
+      }
+    } finally {
+      collector.unsubscribe();
+      await connection.close();
+    }
+  });
+
   it.each([0, -1, NaN, Infinity])("rejects invalid startup timeout %s before connecting", (startupTimeoutMs) => {
     expect(() => createDeepSeekHarnessProvider({ startupTimeoutMs })).toThrow("must be positive");
   });
