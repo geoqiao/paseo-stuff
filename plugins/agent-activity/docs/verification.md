@@ -1,5 +1,18 @@
 # Verification and remaining gaps
 
+## Beta.13 — Paseo 0.13.2 registry install (2026-10-29)
+
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay
+  off, `pluginsEnabled` on): `paseo plugin add geoqiao/<slug>` installed all three plugins
+  from the registry, status `running` for each. The first add of `geoqiao/agent-activity` still
+  resolved beta.12 a few minutes after the registry merge; `paseo plugin update
+  readable-agent-activity --yes` then installed npm `0.1.0-beta.13`, status `running`.
+- In the 0.13.2 web client (the server package's `web-ui` served locally), a DeepSeek
+  Harness turn (DSH 0.2.1-rc.4) ran `ls -la` and read `notes.txt`. The collapsed cards
+  showed `bash ls -la` and `read notes.txt`; the expanded bash card showed the Input
+  JSON and the real Output. The console showed no plugin errors.
+- **Not verified:** the desktop app, native mobile, Summary mode and live streaming.
+
 ## Beta.13 — zod 4.6.7 (2026-10-28)
 
 - `npm run check`: typecheck, lint and 266 tests pass. `npm audit --omit=dev` reports no
