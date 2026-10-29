@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { writeReplayFixture } from "../tests/replay-fixture";
 import type {
   AcpStream,
   AcpStreamMessage,
@@ -68,6 +72,7 @@ async function readMessage(
 async function handshake(
   transport: MemoryTransport,
   capabilities: Record<string, unknown>,
+  replayEnv?: Readonly<Record<string, string>>,
 ): Promise<{
   managed: ReturnType<typeof createAcpCompatibilityStream>;
   writer: WritableStreamDefaultWriter<AcpStreamMessage>;
@@ -76,6 +81,8 @@ async function handshake(
   const managed = createAcpCompatibilityStream(
     transport.source,
     transport.owner,
+    undefined,
+    replayEnv,
   );
   const writer = managed.writable.getWriter();
   const reader = managed.readable.getReader();
@@ -102,6 +109,42 @@ async function handshake(
 }
 
 describe("DeepSeek ACP compatibility stream", () => {
+  it.each(["resume", "native", "error", "missing", "direct-resume"])("keeps load/replay response ordering for %s", async (mode) => {
+    const home = await mkdtemp(join(tmpdir(), "dsh-bridge-replay-"));
+    const transport = memoryTransport();
+    const { managed, writer, reader } = await handshake(transport,
+      mode === "native" ? { loadSession: true } : { sessionCapabilities: { resume: {} } },
+      { DSH_HOME: home });
+    try {
+      if (mode !== "missing") await writeReplayFixture(home);
+      await writer.write(frame({ jsonrpc: "2.0", id: "load-1", method: mode === "direct-resume" ? "session/resume" : "session/load", params: {
+        sessionId: "synthetic-session", cwd: "/synthetic/workspace", mcpServers: [],
+      } }));
+      expect(transport.writes.at(-1)).toMatchObject({ method: mode === "native" ? "session/load" : "session/resume" });
+      // Unrelated responses must not consume a pending load.
+      transport.input.enqueue(frame({ jsonrpc: "2.0", id: 99, result: {} }));
+      expect(await readMessage(reader)).toMatchObject({ id: 99 });
+      const response = frame(mode === "error"
+        ? { jsonrpc: "2.0", id: "load-1", error: { code: -32000, message: "resume failed" } }
+        : { jsonrpc: "2.0", id: "load-1", result: { configOptions: [] } });
+      transport.input.enqueue(response);
+      if (mode === "resume") {
+        const history = [];
+        for (let i = 0; i < 6; i++) history.push(await readMessage(reader));
+        expect(history[0]).toMatchObject({ method: "session/update", params: { update: { sessionUpdate: "user_message_chunk" } } });
+        expect(history[5]).toMatchObject({ method: "session/update", params: { update: { content: { text: "The note says violet-4817." } } } });
+      }
+      expect(await readMessage(reader)).toEqual(response);
+      // A repeated response cannot replay the same pending request twice.
+      transport.input.enqueue(response);
+      expect(await readMessage(reader)).toEqual(response);
+      expect(transport.writes).toHaveLength(2);
+    } finally {
+      await managed.close();
+      await rm(home, { recursive: true, force: true });
+    }
+  });
+
   it("maps resume-only persistence and typed tool content without losing frames", async () => {
     const transport = memoryTransport();
     const sessionCapabilities = { resume: {}, list: {} };

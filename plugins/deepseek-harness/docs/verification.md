@@ -1,5 +1,38 @@
 # Verification and limits
 
+## Unreleased — bounded v4 history replay (2026-10-29)
+
+- Node **24.14.0**, macOS, a separate checkout; the installed plugins and running
+  Paseo daemon were not changed, reloaded or restarted.
+- With the **0.13.2** client/plugin/protocol SDKs installed without saving,
+  `npm run check` passes: typecheck, lint (0 warnings/errors), **108 tests** in
+  five files. With the pinned **0.11.4** SDKs, typecheck and lint pass, and all
+  108 tests pass with `vitest run --maxWorkers=1 --testTimeout=15000`. The normal
+  two-worker run hit intermittent 5-second timeouts in existing process tests
+  on this host; their timeouts and the package scripts were not changed.
+- The production provider with the synthetic ACP peer reads a per-session
+  `DSH_HOME`. On 0.13.2 it emits user text, separate reasoning and answers, and
+  the completed tool card during load. On 0.11.4 the SDK still drops pre-response
+  history, an explicitly checked compatibility limit. Bridge tests require replay
+  before the matching load response, and unchanged native load, direct resume,
+  missing-log and resume-error behavior.
+- The fixture is authored synthetic JSONL, compressed into several independent
+  Zstandard frames by the tests. Tests cover unknown versions/events/content,
+  a newer generation beside v4, malformed JSON, truncated frames, missing files,
+  workspace mismatch, path traversal, full tool-output tails and failure status,
+  compressed/decoded size limits, record limits and the replay deadline.
+- The reader was also exercised read-only on local **DSH 0.2.1-rc.2** v4 logs.
+  In a 42-file check, 41 matched the expected text/thought/tool update counts
+  (including 10 empty transcripts); one returned empty, with the slowest replay
+  around the one-second deadline. This is a bounded fallback, not a guarantee
+  that every large or slow log will display. No real conversation fixture,
+  credentials or local configuration are included in this repository.
+- `npm pack` includes `server/session-replay.ts` and `server/dsh-home.ts`, omits
+  tests, and restores the Git manifest afterward. No version bump or release.
+- **Not verified in this change:** a live DSH resume, daemon restart, desktop UI,
+  Windows or native mobile. The maintainer's isolated Paseo 0.13.2 restart check
+  remains the end-to-end acceptance step; the SDK test is not that check.
+
 ## Beta.15 — Paseo 0.13.2 registry install and DSH 0.2.1-rc.4 (2026-10-29)
 
 - Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay
@@ -405,10 +438,12 @@ host shutdown or external detached-process scenario.
 
 - DSH's ACP profile emits committed messages/thoughts and generic tool events,
   not raw token deltas, slash commands, steering, plans or terminal UI surfaces.
-- Resume restores DSH context, not a replay of its transcript. Paseo owns its
-  existing displayed history. Failed resume is never retried as a fresh session.
+- A translated resume can replay recognised v4 text history on Paseo 0.13+.
+  Unsupported, missing, corrupt or over-limit logs retain context-only resume.
+  Failed resume is never retried as a fresh session.
 - Catalog discovery uses `session/new`; official DSH can retain those empty
-  sessions. The plugin does not delete native records or read private transcripts.
+  sessions. The plugin does not delete native records; replay reads only the requested
+  session transcript under its resolved `DSH_HOME`.
 - DSH profile settings stay authoritative. The generic ACP shim does not inject
   Paseo's extra system prompt. Custom profiles must still provide ACP over stdio.
 - The CLI version guard is minimum-only (`0.1.5-rc.1`). Newer releases load

@@ -10,6 +10,7 @@ import type {
   ProviderLaunch,
   ProviderStatus,
 } from "@getpaseo/plugin/server/provider";
+import { buildSessionReplay, type ReplayTarget } from "./session-replay";
 
 // Minimum only, like the Paseo requirements range: newer DSH releases are
 // accepted, and ACP behaviour is chosen from the capabilities DSH advertises.
@@ -190,7 +191,7 @@ export async function createDshAcpStream(
     if (resource) {
       context.resources.delete(resource);
     }
-  });
+  }, env);
   resource = {
     close: (reason) => managed.close(reason),
   };
@@ -221,6 +222,7 @@ export function createAcpCompatibilityStream(
   source: AcpStream,
   owner: AcpStreamOwner,
   onClosed: () => void = () => undefined,
+  replayEnv?: Readonly<Record<string, string | undefined>>,
 ): ManagedAcpStream {
   const reader = source.readable.getReader();
   const writer = source.writable.getWriter();
@@ -233,6 +235,7 @@ export function createAcpCompatibilityStream(
     | undefined;
   let failed = false;
   let closePromise: Promise<void> | undefined;
+  const pendingLoads = new Map<string | number | null, ReplayTarget>();
 
   const unsubscribeFailure = owner.onFailure((error) => {
     fail(error);
@@ -243,6 +246,7 @@ export function createAcpCompatibilityStream(
       return closePromise;
     }
     state = "closed";
+    pendingLoads.clear();
     closePromise = (async () => {
       const results = await Promise.allSettled([
         reader.cancel(reason),
@@ -291,6 +295,16 @@ export function createAcpCompatibilityStream(
         }
 
         const message = assertAcpStreamMessage(next.value as AnyMessage);
+        if (isResponseFrame(message)) {
+          const load = pendingLoads.get(message.id);
+          pendingLoads.delete(message.id);
+          if (load && replayEnv && !hasOwn(message, "error")) {
+            // Paseo must receive history before the translated load resolves.
+            const replay = await buildSessionReplay(load, replayEnv);
+            if (state === "closed") return;
+            for (const frame of replay) controller.enqueue(transformInbound(frame));
+          }
+        }
         controller.enqueue(transformInbound(message));
       } catch (error) {
         fail(error);
@@ -376,6 +390,10 @@ export function createAcpCompatibilityStream(
       );
     }
 
+    pendingLoads.set(message.id, {
+      sessionId: messageRecord.params.sessionId,
+      cwd: messageRecord.params.cwd,
+    });
     return {
       ...message,
       method: "session/resume",
@@ -640,7 +658,7 @@ function isResponseFrame(
   );
 }
 
-function isLoadSessionParams(value: unknown): value is RecordValue {
+function isLoadSessionParams(value: unknown): value is RecordValue & ReplayTarget {
   return (
     isRecord(value) &&
     typeof value.sessionId === "string" &&

@@ -33,8 +33,8 @@ Verified 2026-09-29 with synthetic ACP peers and the real `runAcpProvider()`:
   thought/text interleaving with stable IDs, unchanged answer `messageId`,
   no-ID fallback grouping, native load, and the load-to-resume translation.
   History updates before load acknowledgment are checked at the bridge
-  boundary; SDK integration checks turns after restore. DSH currently resumes
-  without replay, and the SDK may drop pre-acknowledgment replay because it
+  boundary; SDK integration checks turns after restore. At that verification date DSH resumed
+  without replay, and the 0.10.1 SDK could drop pre-acknowledgment replay because it
   assigns its native session ID after the load response. This shim does not
   change that separate limitation or the SDK's grouping of interleaved blocks.
 
@@ -44,3 +44,12 @@ macOS Paseo 0.10.1 daemon, and one DSH turn ran with `deepseek-v4-flash`
 collapsed Thinking block and the answer contained only the reply text. Mobile
 was not checked. The shim does not repair host timeline items stored before
 the fix. The plugin's minimum Paseo requirement is unchanged.
+
+## v4 session history replay (unreleased)
+
+The compatibility stream now replays recognised v4 logs before a successful
+translated load response; native load and resume errors bypass it. The historical
+0.10.1 observation above is not the current 0.13.2 contract: Paseo 0.13 admits
+updates in its load replay window. The provider regression checks that window on
+0.13.2 and explicitly records the empty-history behavior of the minimum 0.11.4
+SDK. See [verification.md](verification.md) for the executed checks and limits.
