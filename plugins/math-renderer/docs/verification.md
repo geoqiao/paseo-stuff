@@ -1,5 +1,17 @@
 # Verification scope
 
+## Beta.8 — Paseo 0.13.2 registry install (2026-10-29)
+
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay
+  off, `pluginsEnabled` on): `paseo plugin add geoqiao/<slug>` installed all three plugins
+  from the registry, status `running` for each. The registry record resolved npm
+  `0.1.0-beta.8`.
+- In the 0.13.2 web client (the server package's `web-ui` served locally), a completed
+  DeepSeek Harness reply rendered the inline `a^2+b^2=c^2` and the display
+  `\sum_{k=1}^{n} k = \frac{n(n+1)}{2}` as formula images, with Show LaTeX and
+  Copy LaTeX on the display formula. This covers the markdown-it 14.3.3 bundle in a client.
+- **Not verified:** the desktop app, native mobile, light/dark switching and Find.
+
 ## Beta.8 — markdown-it 14.3.3 (2026-10-28)
 
 - `npm run check`: typecheck, lint and 90 tests pass, including the parser tests and

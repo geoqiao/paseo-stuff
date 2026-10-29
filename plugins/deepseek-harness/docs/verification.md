@@ -1,5 +1,17 @@
 # Verification and limits
 
+## Beta.15 — Paseo 0.13.2 registry install and DSH 0.2.1-rc.4 (2026-10-29)
+
+- Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay
+  off, `pluginsEnabled` on): `paseo plugin add geoqiao/<slug>` installed all three plugins
+  from the registry, status `running` for each. The registry record resolved npm
+  `0.1.0-beta.15`.
+- DSH 0.2.1-rc.4 installed under /tmp, set through the provider command override with
+  its own `DSH_HOME`: provider diagnostic available, status Ready. A real turn ran
+  `ls -la` through Bash and read `notes.txt` through Read, and multiplied the marker
+  correctly (7193 × 3 = 21579). The web client showed the same tool rows.
+- **Not verified:** reload in this run, Windows (CI only), the desktop app and native mobile.
+
 ## Beta.15 — zod 4.6.7 (2026-10-28)
 
 - `npm run check`: typecheck, lint and 82 tests pass. `npm audit --omit=dev` reports no
