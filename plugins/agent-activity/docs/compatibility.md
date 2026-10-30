@@ -1,11 +1,12 @@
-# Paseo 0.13 compatibility
+# Paseo 0.13 and 0.14 compatibility
 
 ## Supported scope
 
-Beta.12 requires **Paseo 0.13.0** and is checked against **0.13.2**, using **Full detail**.
-It pins the 0.13.2 SDK and protocol packages. Host-pipeline tests run unmodified
-0.13.2 sources (see [fixture provenance](../tests/fixtures/paseo-0.13/README.md)), and
-the packed package ran on a live 0.13.2 daemon in the 0.13.2 web client (see
+Beta.14 requires **Paseo 0.13.0** and is checked against **0.14.0**, using the **Full**
+chat display (0.13: **Full detail**). It pins the 0.13.2 SDK and protocol packages, and
+its checks also pass with the 0.14.0 SDK installed without saving. Host-pipeline tests
+run unmodified 0.14.0 sources (see [fixture provenance](../tests/fixtures/paseo-0.14/README.md)),
+and the packed package ran on a live 0.14.0 daemon in the 0.14.0 web client (see
 [verification](verification.md)). Paseo 0.8 to 0.12 are no longer supported; beta.11
 remains on npm for them.
 
@@ -15,12 +16,13 @@ this matches later releases and prereleases, including future breaking releases.
 It is not a claim that those releases were tested. Add an upper bound only when a
 specific later release is shown to be incompatible.
 
-macOS is the tested installed host. Paseo 0.13.2's app uses React 19.2.3 and
+macOS is the tested installed host. Paseo 0.13.2 and 0.14.0 apps use React 19.2.3 and
 React Native 0.86.3. Native iOS/Android UI remains unverified.
 
-**Tool cards do not support Summary.** A client using Summary chooses
-**Activity: use native tool rows (for Summary)** in the Command Center; **Activity: use
-tool cards (Full detail)** restores the cards. The choice is per client, not saved, and
+**Tool cards support only the Full display.** A client using Collapse tool calls,
+Collapse turns (0.14) or Summary (0.13) chooses **Activity: use native rows (Collapse or
+Summary)** in the Command Center; **Activity: use tool cards (Full display)** restores
+the cards. The choice is per client, not saved, and
 resets to cards whenever the plugin loads. It is a manual switch, not an automatic
 runtime guard: the plugin never reads or changes the display preference. See
 [Manual native-row switch](#manual-native-row-switch).
@@ -40,46 +42,66 @@ package resolution and premature export snapshots from Paseo's CommonJS interop.
 No global polyfill, DOM access, host patch or native highlighter disable switch is used.
 Shell uses a small local grammar; this is not identical token classification to Shiki.
 
-`tests/client-bundle.compat.test.js` builds the complete entry with the 0.13.2
-compiler options, evaluates it from a string, registers/cleans up contributions and
-exercises all supported grammars in Hermes. React Native 0.86.3 ships only the
+`tests/client-bundle.compat.test.js` builds the complete entry with the 0.14.0
+compiler options (unchanged from 0.13.2), evaluates it from a string, registers/cleans
+up contributions and exercises all supported grammars in Hermes. React Native 0.86.3 ships only the
 `hermesc` compiler, not the Hermes VM, so the test runs the VM from React Native
 0.81.5, an older and stricter engine. The beta.12 bundle also compiled with the
 0.86.3 `hermesc`. Host UI/hooks and schema construction are stubbed in this test:
 it does not prove on-device rendering. The other Node tests exercise real Zod validation.
 
-## Why Summary cannot safely fall back
+## Why collapsed displays cannot safely fall back
 
-In [0.13.2](https://github.com/getpaseo/paseo/tree/d2941157a8f91512daf54fc688241d416e8f5ebd),
-`agent-stream/presentation.ts` applies plugin transformation before tool-call
-grouping, and the native Markdown block splitting of 0.9 to 0.12 is gone.
-`tests/paseo-host.compat.test.js` proves that every call is retained, but plugin rows
-do not form Summary groups. The public transform input, unchanged since 0.9, still
-has only the item and phase, no display mode. This is not Summary support.
+In [0.14.0](https://github.com/getpaseo/paseo/tree/8c6de842a3157530c26a7a94c78a3d647fb96ce9),
+as in 0.13.2, `agent-stream/presentation.ts` applies plugin transformation before
+tool-call grouping and turn folding. 0.14 replaces Summary with **Collapse tool calls**
+and **Collapse turns** (the default for new installations):
+
+- **Collapse tool calls** groups runs of two or more native tool calls and, unless
+  reasoning auto-expands, the Thinking rows between them. Plugin rows are not
+  groupable, so cards stay ungrouped and a plugin Thinking row would split a native group.
+- **Collapse turns** folds a finished turn behind its starting user row, agent message
+  or heartbeat, up to the turn's last native reply, and needs at least one native tool
+  call or Thinking row as its work. Cards are not counted, so a turn whose only work is
+  cards stays open; a turn with an earlier native reply still folds, and the cards before
+  that reply fold with it.
+
+`tests/paseo-host.compat.test.js` runs the unmodified pipeline in every display mode.
+It proves that every call is retained and documents both limits. The public transform
+input, unchanged since 0.9, still has only the item and phase, no display mode, and a
+transformer may return only plugin rows. This is not collapsed-display support.
 
 The same pipeline applies native plan suppression after transformation. The plugin
 passes `ExitPlanMode`, `plan_approval` and structured plan details through so that
-native pending/rejected/completed plan handling remains intact in both modes.
+native pending/rejected/completed plan handling remains intact in all modes.
 
-The plugin therefore cannot recognize a Summary group and preserve all its members.
-It does not read private storage, inspect host DOM/React state, force Full detail or
-patch the app.
+Messages from other agents and heartbeats are tool calls that start turns. 0.14 shows
+an agent message as a user-style "Sent by" row and folds the following turn behind it.
+The transformer input omits the `agentMessage` field, so the plugin recognises the
+host envelope (name `agent_message` with a `paseo-agent-message:` call ID, or name
+`heartbeat`) and leaves those rows native in every mode. Beta.13 turned them into
+`agent_message` cards and kept those turns open.
+
+The plugin therefore cannot recognise a host group or fold and preserve all its members.
+It does not read private storage, inspect host DOM/React state, force the Full display
+or patch the app.
 
 ## Manual native-row switch
 
 The switch uses only public contributions: `addCommandCenterItem` and the cleanup
-returned by `addTimelineTransformer`. Native tool rows unregister only the
-`tool-calls` transformer; renderers, commands and the Thinking adapter stay
-registered. Reasoning rows are never groupable (`isGroupableToolCall` accepts only
-`tool_call`), so keeping the Thinking adapter does not change Summary. Selecting a
-command repeatedly never registers a duplicate transformer.
+returned by `addTimelineTransformer`. Native rows unregister the `tool-calls` and
+`reasoning` transformers; renderers and commands stay registered. Beta.9 to beta.13
+kept the Thinking adapter, because 0.13 Summary never grouped reasoning. 0.14 groups
+Thinking with tool calls, so a plugin Thinking row would split the native group into
+lone calls. Selecting a command repeatedly never registers a duplicate transformer.
 
 `presentation.ts` recomputes history when the transform function changes.
 `tests/paseo-host.compat.test.js` runs that unmodified code: after switching one
-presentation to native rows, existing history forms one Summary group of both calls;
-switching back yields ungrouped cards again. See [verification](verification.md) for
-the live checks. A future public host API that preserves groups or adds a
-detail-renderer slot is needed for real Summary support.
+presentation to native rows, existing history forms one group of the Thinking row and
+both calls and turns fold again; switching back yields ungrouped cards. See
+[verification](verification.md) for the live checks. A future public host API that
+preserves groups or adds a detail-renderer slot is needed for real collapsed-display
+support.
 
 ## Spacing and icons
 

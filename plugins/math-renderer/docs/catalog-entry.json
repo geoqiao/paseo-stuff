@@ -5,10 +5,10 @@
     "productivity"
   ],
   "caveats": [
-    "Experimental beta for Paseo 0.13.0+, tested live on 0.13.2. Block and inline math in completed replies; blocks without a formula keep the host Markdown renderer.",
+    "Experimental beta for Paseo 0.13.0+, tested live on 0.14.0. Block and inline math in completed replies; blocks without a formula keep the host Markdown renderer.",
     "macOS host and web client checked; the desktop app, native mobile UI and sustained multi-client load are untested.",
     "Blocks that contain a formula use the plugin's own renderer, without code highlighting or native file links.",
-    "Chat Find cannot search formula source; use the Math native-reply Command Center action first.",
+    "Chat Find cannot search formula source, and Collapse turns does not fold a turn whose reply has a formula; use the Math native-reply Command Center action for both.",
     "Unsupported TeX falls back to source. Local MathJax/resvg input bounds are not a hard CPU or memory sandbox.",
     "Avoid enabling another assistant-message replacement plugin for the same content."
   ],

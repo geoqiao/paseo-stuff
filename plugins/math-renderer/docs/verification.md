@@ -1,5 +1,22 @@
 # Verification scope
 
+## Beta.8 — Paseo 0.14.0 (2026-10-30)
+
+- `npm run check` with the pinned **0.13.2** SDK and with the **0.14.0** client, plugin and
+  protocol packages installed without saving: typecheck, lint and **97 tests** each. Host
+  tests run nine unmodified v0.14.0 sources plus a reduced `types/stream.ts` in Full,
+  Collapse tool calls and Collapse turns, including chat Find.
+- Isolated Paseo **0.14.0** daemon (CLI 0.14.0 from npm, temporary home, `127.0.0.1:6840`,
+  relay off): the packed beta.8 tarball, unpacked, installed with `npm ci --omit=dev` and
+  added beside Readable Agent Activity beta.14 and DeepSeek Harness beta.15, status `running`.
+- In the 0.14.0 web client (port 6851), a DeepSeek Harness 0.2.1-rc.5 reply with inline and
+  display LaTeX rendered as formula images. Under **Collapse turns**, with Activity's native
+  rows, that turn stayed unfolded with its tools in a "Used 2 other tools" group, as
+  documented; turns with formula-free replies folded. After **Math: use native replies to
+  search formula source**, the same turn folded and the reply showed LaTeX source.
+- The console showed no plugin errors.
+- **Not verified:** the desktop app, native mobile, chat Find on 0.14.0 and Windows outside CI.
+
 ## Beta.8 — Paseo 0.13.2 registry install (2026-10-29)
 
 - Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay

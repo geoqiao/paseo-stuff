@@ -1,5 +1,32 @@
 # Verification and remaining gaps
 
+## Beta.14 — Paseo 0.14.0 (2026-10-30)
+
+- `npm run check` with the pinned **0.13.2** SDK and with the **0.14.0** client, plugin and
+  protocol packages installed without saving: typecheck, lint with zero warnings/errors and
+  **7 files / 279 tests** each. Host tests run eight unmodified v0.14.0 sources plus a
+  reduced `types/stream.ts` in Full, Collapse tool calls and Collapse turns.
+- Isolated Paseo **0.14.0** daemon (CLI 0.14.0 from npm, temporary home, `127.0.0.1:6840`,
+  relay off): the packed beta.14 tarball, unpacked, installed with `npm ci --omit=dev` and
+  added as a directory beside DeepSeek Harness beta.15 and Math Renderer beta.8, reached
+  status `running`.
+- In the 0.14.0 web client (the server package's `web-ui` served on port 6851), a DeepSeek
+  Harness 0.2.1-rc.5 turn ran `ls -la` and read `notes.txt`:
+  - **Collapse turns** (the new-install default), cards: the cards and the plugin Thinking
+    row rendered, and that turn stayed open, as documented.
+  - **Activity: use native rows**: the tool calls and Thinking returned to native rows, and
+    turns with native tool calls folded behind "Used 1 other tool".
+  - **Collapse tool calls**: native rows grouped the Thinking row with the calls; cards
+    stayed ungrouped.
+  - **Full**: cards rendered, and a manually expanded card stayed open across display mode
+    switches. Full was also checked in dark mode, with cards and with native rows.
+- A follow-up sent by another agent (`paseo send` with an agent ID in the environment)
+  appeared as the host's "Sent by" user row, and its turn folded under Collapse turns. A
+  one-run heartbeat appeared as the native "Heartbeat" row, and its turn also folded.
+- The console showed no plugin errors.
+- **Not verified:** the desktop app, native mobile, the 0.13 web client with beta.14 and
+  Windows outside CI.
+
 ## Beta.13 — Paseo 0.13.2 registry install (2026-10-29)
 
 - Isolated Paseo **0.13.2** daemon (CLI 0.13.2 from npm, temporary home, port 6820, relay

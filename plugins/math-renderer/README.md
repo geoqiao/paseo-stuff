@@ -5,7 +5,7 @@ muted English action row: **Show LaTeX** and **Copy LaTeX**. Inline formulas sit
 text; tap one to see its source. No extra panel or duplicate message toolbar.
 
 > **Experimental beta, 0.1.0-beta.8.** Requires Paseo app and daemon **0.13.0 or newer**
-> and is checked against Paseo 0.13.2. Older Paseo releases are not supported; on Paseo
+> and is checked against Paseo 0.14.0. Older Paseo releases are not supported; on Paseo
 > 0.9 to 0.12, keep [0.1.0-beta.6](https://www.npmjs.com/package/paseo-math-renderer/v/0.1.0-beta.6).
 > Replies stay native while streaming; supported formulas render after completion, and
 > every block without a formula keeps the host's own Markdown rendering. Native iOS/Android
@@ -114,12 +114,18 @@ or wrap the entire reply in a code fence.
 - An image, table, file link, HTML or non-HTTP(S) link inside a block that also contains a
   formula, more than 64 formulas (block and inline) or more than 96,000 characters keep
   the entire completed reply native.
-- **Chat Find:** in the 0.13.2 web client, Find matches and highlights text in rendered
+- **Chat Find:** in the 0.13.2 and 0.14.0 web clients, Find matches and highlights text in rendered
   replies, but not formula source such as `mc^2`. To search formula source, choose
   **Math: use native replies to search formula source** in the Command Center before
   Cmd/Ctrl+F. Choose **Math: render formulas** afterwards. These actions affect this
   client's selected host, restore native rows without changing history, and reset
   to formula rendering when the plugin/client reloads. Other clients are unaffected.
+- **Collapse turns (Paseo 0.14):** the host folds a finished turn up to its last native
+  reply. A rendered reply is a plugin row, so a turn whose only reply contains a formula
+  stays unfolded; a turn with an earlier formula-free reply folds up to that reply and
+  leaves the rest visible. Replies without a formula fold as usual. Choose **Math: use
+  native replies to search formula source** to fold those turns, at the cost of showing
+  formula source. The public SDK cannot mark a plugin row as the turn's reply.
 - Local formula viewing state does not survive every virtualization unmount.
 - MathJax base + AMS + boldsymbol only. `\boldsymbol{\mu}` and other bold math
   symbols are supported. Missing glyphs (including many non-Latin text glyphs),
@@ -131,8 +137,8 @@ or wrap the entire reply in a code fence.
 - Native iOS/Android, the desktop app, full reconnect/disable cycles and sustained
   multi-client performance are **not** accepted as tested.
 - The transformer only selects assistant messages and does not change tool display settings.
-  Summary/Full detail behavior has pinned 0.13.2 source integration tests, not a complete
-  live-App matrix of both modes and other plugins.
+  Full, Collapse tool calls and Collapse turns have pinned 0.14.0 source integration tests
+  and a live 0.14.0 web check, not a complete live-App matrix of every mode and other plugins.
 
 ## Rendering and trust
 
@@ -182,11 +188,13 @@ the daemon or auto-enable a disabled installation.
 PNG output, malformed and oversized input, how replies split into host Markdown and
 plugin blocks, and the complete client bundle evaluated in the RN 0.81.5 Hermes
 executable. Host presentation, plugin projection, tool grouping and the chat Find
-model come from unmodified Paseo v0.13.2 sources. The beta.7 bundle also compiles with
-the RN 0.86.3 `hermesc` used by Paseo 0.13.2.
+model come from unmodified Paseo v0.14.0 sources, and they run in all three 0.14 chat
+display modes. The checks pass with the pinned 0.13.2 SDK and with the 0.14.0 SDK. The
+beta.7 bundle also compiles with the RN 0.86.3 `hermesc` used by Paseo 0.13.2 and 0.14.0.
 
 Beta.7 was checked live on a Paseo 0.13.2 daemon in the 0.13.2 web client, including
-chat Find, dark mode and a 390-pixel layout. See
+chat Find, dark mode and a 390-pixel layout. Beta.8 was checked live on a Paseo 0.14.0
+daemon in the 0.14.0 web client under Collapse turns, including native-reply mode. See
 [verification details](docs/verification.md) for the exact scope and limits.
 
 ## License

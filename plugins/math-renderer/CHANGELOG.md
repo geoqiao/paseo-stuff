@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Replace the pinned 0.13.2 host fixtures with unmodified 0.14.0 sources and run the host tests in Full, Collapse tool calls and Collapse turns. Rendering is unchanged from beta.8.
+- Document a Paseo 0.14 limitation: Collapse turns folds a turn only around a native reply, and a transformer can return only plugin rows, so a turn whose reply contains a formula stays unfolded. Native-reply mode folds it. Tests pin this behavior.
+- Typecheck, lint and 97 tests pass with SDK 0.13.2 and with SDK 0.14.0.
+
 ## 0.1.0-beta.8 — 2026-10-28
 
 - Bundle markdown-it 14.3.3 instead of 14.3.2. It fixes two quadratic-time parsing problems: inline HTML with `html` enabled, which the plugin enables, and a long multi-line link reference definition. A crafted reply could otherwise stall the client while it parsed. Rendering is unchanged from beta.7.

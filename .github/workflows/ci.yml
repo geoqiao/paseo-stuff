@@ -75,7 +75,7 @@ jobs:
         env:
           PLUGIN_ID: ${{ matrix.id }}
         run: |
-          npm install -g --no-audit --no-fund @getpaseo/cli@0.13.2
+          npm install -g --no-audit --no-fund @getpaseo/cli@0.14.0
           home="$RUNNER_TEMP/paseo-home"
           mkdir -p "$home"
           echo '{"version":1,"daemon":{"listen":"127.0.0.1:6798","relay":{"enabled":false}},"pluginsEnabled":true}' > "$home/config.json"
@@ -113,7 +113,7 @@ jobs:
       - run: npm run check
       - name: Install Paseo and DSH
         run: |
-          npm install -g --no-audit --no-fund @getpaseo/cli@0.13.2
+          npm install -g --no-audit --no-fund @getpaseo/cli@0.14.0
           npm install -g --ignore-scripts --no-audit --no-fund @deepseek-ai/dsh@latest
           where dsh
           dsh --profile acp --version

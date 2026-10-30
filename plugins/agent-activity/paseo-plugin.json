@@ -3,7 +3,7 @@
   "requirements": { "paseo": ">=0.13.0" },
   "translations": {
     "zh-CN": {
-      "description": "把工具调用 JSON 格式化并高亮，预览前二十行，折叠卡片显示工具图标和主要参数，适用于 Paseo 0.13 及以上版本。工具卡片需要 Full detail。"
+      "description": "把工具调用 JSON 格式化并高亮，预览前二十行，折叠卡片显示工具图标和主要参数，适用于 Paseo 0.13 及以上版本。工具卡片需要“完整”聊天显示。"
     }
   },
   "build": [

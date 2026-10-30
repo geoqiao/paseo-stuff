@@ -132,10 +132,14 @@ for (const mode of ["new", "load", "resume"] as const) {
     assert.deepEqual(items.map((item) => [item.type, item.text]), [
       ["reasoning", "Thinking."], ["assistant_message", "Answer."],
     ]);
+    // Paseo 0.11 to 0.13 use the native ID as the reply's timeline ID; 0.14
+    // namespaces every chunk ID by kind (getpaseo/paseo#7272). Either way the
+    // reasoning row must not share the reply's ID, and only the reply keeps
+    // the native messageId.
     assert.notEqual(items[0].id, items[1].id);
-    assert.equal(items[1].id, messageId);
     assert(items[1].type === "assistant_message");
     assert.equal(items[1].messageId, messageId);
+    assert(!("messageId" in items[0]));
     assert(requests.includes(mode === "new" ? "session/new" : `session/${mode}`));
   });
 }
@@ -153,8 +157,9 @@ for (const interleaved of [false, true]) {
     assert.deepEqual(reasoning.map((item) => item.text), ["Think", "Thinking."]);
     assert.deepEqual(messages.map((item) => item.text), ["An", "Answer."]);
     assert.equal(reasoning[0].id, reasoning[1].id);
-    assert.notEqual(reasoning[0].id, messageId);
-    assert(messages.every((item) => item.id === messageId && item.messageId === messageId));
+    assert.equal(messages[0].id, messages[1].id);
+    assert.notEqual(reasoning[0].id, messages[0].id);
+    assert(messages.every((item) => item.messageId === messageId));
     assert.deepEqual(items.map((item) => item.type), interleaved
       ? ["reasoning", "assistant_message", "reasoning", "assistant_message"]
       : ["reasoning", "reasoning", "assistant_message", "assistant_message"]);
