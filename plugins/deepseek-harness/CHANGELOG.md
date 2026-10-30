@@ -10,6 +10,12 @@
 - Bound replay by time, compressed/decoded size and record count. Missing,
   corrupt, unsupported or changing logs safely keep context-only resume.
 - Add synthetic multi-frame Zstandard, compatibility-stream and provider tests.
+- Support Paseo 0.14.0 as the verification target. 0.14 already keys ACP chunk IDs
+  by kind, so the reasoning tests now check distinct reasoning and answer IDs instead
+  of exact IDs. The `:thought` shim stays for Paseo 0.11 to 0.13; behavior there is unchanged.
+- Test DSH 0.2.1-rc.5, now both npm `latest` and `next`, and install it in the README.
+- `npm run check` passes with the 0.11.4 and 0.14.0 SDKs. On a Paseo 0.14.0 daemon,
+  a released idle runtime resumed with its context and without duplicate timeline rows.
 
 ## 0.1.0-beta.15 — 2026-10-28
 

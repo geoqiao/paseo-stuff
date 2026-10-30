@@ -8,19 +8,21 @@ shared runtime or root-hoisted dependency tree.
 
 | Plugin | Directory | Status / important limits |
 | --- | --- | --- |
-| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.13 or later; block and inline LaTeX after reply completion, with formula-free blocks in the host Markdown renderer. Use native-reply mode to search formula source with chat Find. Native mobile acceptance is not complete. |
-| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Paseo 0.13 or later. Tool cards need Full detail; before using Summary, choose "Activity: use native tool rows" in each client's Command Center. |
+| Math Renderer | [plugins/math-renderer](plugins/math-renderer) | Paseo 0.13 or later; block and inline LaTeX after reply completion, with formula-free blocks in the host Markdown renderer. Use native-reply mode to search formula source with chat Find or to fold formula replies under Collapse turns. Native mobile acceptance is not complete. |
+| Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Paseo 0.13 or later. Tool cards need the Full chat display; before using Collapse tool calls, Collapse turns or Summary, choose "Activity: use native rows" in each client's Command Center. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Paseo 0.11 or later. Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 | MaKa | [plugins/maka](plugins/maka) | **Unmaintained since 2026-09-24.** Experimental provider for the official MaKa ACP CLI, last tested with MaKa dev39; newer MaKa releases are not tracked. Its `<0.10.0` range makes Paseo 0.10 reject it. |
 | Paseo Pet | [plugins/paseo-pet](plugins/paseo-pet) | **Paused (unmaintained) since 2026-09-28.** Experimental sidebar companion for user-supplied Codex pet packs; native mobile acceptance is not complete. No character assets included. |
 
-The current support target is Paseo **0.13.2**. Activity **0.1.0-beta.13** and Math
-Renderer **0.1.0-beta.8** require Paseo **0.13.0** and are checked against the 0.13.2
-SDK and host pipeline source. On Paseo 0.9 to 0.12, keep Activity beta.11 and Math
-beta.6. DeepSeek Harness **0.1.0-beta.15** requires Paseo **0.11.0**, is checked against
-the **0.11.4** SDK and also passes with the 0.13.2 SDK. All three ran on a 0.13.2
-daemon in the 0.13.2 web client, with DeepSeek Harness on DSH **0.2.1-rc.3**; registry installs of all three
-also ran on 0.13.2, with DSH **0.2.1-rc.4**. All requirements are minimums. A minimum is not
+The current support target is Paseo **0.14.0**. Activity **0.1.0-beta.14** and Math
+Renderer **0.1.0-beta.8** require Paseo **0.13.0**; their checks pass with the pinned
+0.13.2 SDK and the 0.14.0 SDK, and their host-pipeline tests run on 0.14.0 source. On
+Paseo 0.9 to 0.12, keep Activity beta.11 and Math beta.6. DeepSeek Harness
+**0.1.0-beta.15** requires Paseo **0.11.0**, is checked against the **0.11.4** SDK and
+also passes with the 0.14.0 SDK. Packed builds of all three ran on a 0.14.0 daemon in
+the 0.14.0 web client, with DeepSeek Harness on DSH **0.2.1-rc.5**. Registry installs
+of the released versions (Activity beta.13, Math beta.8, DeepSeek Harness beta.15)
+also ran on 0.14.0. All requirements are minimums. A minimum is not
 a promise about later releases; each plugin's verification record lists what was
 tested. MaKa **0.1.0-beta.4** (final, unmaintained) stays limited to Paseo 0.9.
 Pet remains on its existing 0.8 support range (0.1.1, paused; not migrated to 0.9).
@@ -43,7 +45,7 @@ paseo plugin add geoqiao/math-renderer --host <host:port>
 
 This error means the daemon's npm uses a registry mirror, such as
 `registry.npmmirror.com`. A registry record pins the `registry.npmjs.org` tarball URL.
-npm replaces that host with the mirror, and Paseo 0.12.0 to 0.13.2 reject the install
+npm replaces that host with the mirror, and Paseo 0.12.0 to 0.14.0 reject the install
 because the URL differs, even though the package integrity is the same. This is
 reported upstream as [getpaseo/paseo#7951](https://github.com/getpaseo/paseo/issues/7951).
 

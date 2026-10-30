@@ -49,7 +49,23 @@ the fix. The plugin's minimum Paseo requirement is unchanged.
 
 The compatibility stream now replays recognised v4 logs before a successful
 translated load response; native load and resume errors bypass it. The historical
-0.10.1 observation above is not the current 0.13.2 contract: Paseo 0.13 admits
-updates in its load replay window. The provider regression checks that window on
-0.13.2 and explicitly records the empty-history behavior of the minimum 0.11.4
+0.10.1 observation above is not the current 0.13.2 and 0.14.0 contract: Paseo 0.13
+and 0.14 admit updates in its load replay window. The provider regression checks that
+window on 0.13.2 and 0.14.0 and explicitly records the empty-history behavior of the minimum 0.11.4
 SDK. See [verification.md](verification.md) for the executed checks and limits.
+
+## Paseo 0.14.0
+
+Paseo 0.14 keys each ACP chunk ID by its kind (getpaseo/paseo#7272), so a reasoning
+chunk and an answer chunk with the same native message ID no longer share a timeline
+ID. The `:thought` suffix from the 0.1.0-beta.13 fix is then redundant but harmless:
+it renames only the reasoning row. It stays, because 0.11 to 0.13 still need it. The
+reasoning tests now assert distinct IDs and that only the answer keeps `messageId`,
+so they pass under both SDK lines.
+
+0.14 also releases an idle agent's runtime after 60 minutes. The ACP shim does not
+advertise `session.can_stop_runtime`, so the host releases DSH sessions too, then
+resumes them through `session/load` with history replay on the next prompt. The
+agent manager treats an existing durable timeline as already primed and does not
+append the provider replay. A live 0.14.0 check confirmed that the resumed agent kept
+its context and that the timeline gained only the new turn.

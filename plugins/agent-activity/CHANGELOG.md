@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0-beta.14 — unreleased
+
+- Leave messages from other agents and heartbeats native. Paseo 0.14 shows an agent message as a user-style "Sent by" row and folds the turn that follows it; beta.13 turned it into an `agent_message` card, so the turn stayed open under Collapse turns. The transformer input omits `agentMessage`, so the plugin recognises the host envelope: the name `agent_message` with a `paseo-agent-message:` call ID, or the name `heartbeat`. A provider tool that only shares the name still becomes a card.
+- **Activity: use native rows (Collapse or Summary)** now also removes the Thinking adapter. Paseo 0.14 groups Thinking with tool calls, so a plugin Thinking row split the native group into lone calls. **Activity: use tool cards (Full display)** restores both. The commands keep their IDs; only the titles and search keywords changed.
+- Replace the pinned 0.13.2 host fixtures with unmodified 0.14.0 sources and run the host tests in Full, Collapse tool calls and Collapse turns. The tests document that cards bypass grouping and keep a turn open when cards are its only work.
+- Typecheck, lint and 279 tests pass with SDK 0.13.2 and with SDK 0.14.0. See the [verification record](docs/verification.md) for the live 0.14.0 checks.
+
 ## 0.1.0-beta.13 — 2026-10-28
 
 - Update `zod` to 4.6.7 in the shipped `npm-shrinkwrap.json`. The 4.6.1 copy that `@getpaseo/protocol` pulled in is affected by [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5), a memory exhaustion when validating oversized collections. Rendering is unchanged from beta.12.

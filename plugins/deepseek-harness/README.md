@@ -20,7 +20,7 @@ patched Paseo app is required.
 > **DSH 0.1.5-rc.1 or newer**. Newer DSH releases are accepted without an
 > exact-version check. Tested: **0.1.5-rc.1**, **0.1.5-rc.2**, **0.1.6-alpha.2**,
 > **0.1.7-alpha.2**, **0.1.7-rc.1**, **0.1.7-rc.2**, **0.2.0-rc.1**,
-> **0.2.0-rc.2**, **0.2.1-rc.2**, **0.2.1-rc.3** and **0.2.1-rc.4**. The executable must be able to run
+> **0.2.0-rc.2**, **0.2.1-rc.2**, **0.2.1-rc.3**, **0.2.1-rc.4** and **0.2.1-rc.5**. The executable must be able to run
 > `dsh --profile acp --version` and `dsh --profile acp`.
 > On Paseo 0.8 to 0.10, install beta.12 instead:
 > `paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.12`.
@@ -47,11 +47,11 @@ patched Paseo app is required.
 
 Install a verified official DSH version **on the daemon machine**, then check
 that the daemon can find the executable on its PATH. The npm `latest` dist-tag
-currently resolves to `0.2.1-rc.2` and `next` to `0.2.1-rc.4`; both are tested, and
-the plugin is maintained against the newest, `0.2.1-rc.4`:
+and `next` both currently resolve to `0.2.1-rc.5`, which is tested, and the plugin is
+maintained against it:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.4
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.1-rc.5
 dsh --version
 ~~~
 
@@ -100,7 +100,7 @@ The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, the isolated published CLI/ACP
 closures `0.1.7-alpha.2`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`,
-`0.2.1-rc.2`, `0.2.1-rc.3` and `0.2.1-rc.4`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
+`0.2.1-rc.2`, `0.2.1-rc.3`, `0.2.1-rc.4` and `0.2.1-rc.5`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
 ACP SDK `1.4.0`. The plugin probes the CLI version and rejects only releases
 older than `0.1.5-rc.1` or output it cannot parse. Newer releases are accepted
 but untested until listed here; ACP behaviour follows the capabilities DSH
@@ -109,7 +109,7 @@ advertises; resuming against a peer without `session/resume` fails with a clear 
 ## ACP compatibility and limitations
 
 DSH advertises session/resume but not ACP's older top-level loadSession
-capability. Paseo's public ACP shim (through the tested 0.13.2) uses session/load when
+capability. Paseo's public ACP shim (through the tested 0.14.0) uses session/load when
 it sees persistence. A small typed stdio adapter therefore does the following:
 
 1. After initialize, if the peer has session/resume and does not have
@@ -147,7 +147,7 @@ result; this provider does not truncate it.
 
 The native Paseo timeline works without another plugin. Optional
 [Readable Agent Activity](https://github.com/geoqiao/paseo-stuff/tree/main/plugins/agent-activity)
-adds bounded readable previews; **that separate renderer** requires Full detail.
+adds bounded readable previews; **that separate renderer** requires the Full chat display.
 
 **Displayed history after a reload:** on Paseo 0.13+, the plugin can rebuild
 text history from DSH's `session.v4.jsonl.zstd` when reopening a session. It reads
@@ -161,7 +161,7 @@ corrupt or changed files, newer generations, unknown events, unsupported content
 DSH still restores context. Reads are capped at 16 MiB compressed, 64 MiB decoded,
 50,000 records/updates and one second; exceeding a cap discards the entire replay.
 Successful text/tool replay preserves full content within those bounds. Paseo
-0.11/0.12 may drop pre-response history; 0.13.2 is the integration test target.
+0.11/0.12 may drop pre-response history; 0.14.0 is the integration test target.
 This is a compatibility fallback for an unpublished DSH file format, to be removed
 when DSH supplies native `session/load`. See [verification](docs/verification.md)
 for the distinction between automated checks and daemon/UI testing.
@@ -218,7 +218,8 @@ sources. Under Paseo's requirements contract, a minimum-only range admits
 0.11.0 and every later release, including prereleases and future breaking
 releases; it is not a promise that untested versions work. Beta.14 is tested
 with the 0.11.4 SDK and on live 0.11.4, 0.12.0-beta.2, 0.13.0 and 0.13.2 daemons
-on macOS; its checks also pass with the 0.13.2 SDK, the current support target. Do not restart the daemon for this plugin. Follow Paseo's
+on macOS; its checks also pass with the 0.14.0 SDK, the current support target, and
+beta.15 with the unreleased changes ran on a live 0.14.0 daemon. Do not restart the daemon for this plugin. Follow Paseo's
 global plugin-enable and per-installation
 enable/disable rules; an existing disabled installation should remain
 disabled unless the user explicitly enables it.

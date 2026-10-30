@@ -1,7 +1,7 @@
 {
   "name": "paseo-readable-agent-activity",
   "version": "0.1.0-beta.14",
-  "description": "Formatted and highlighted tool-call JSON, twenty-line previews, tool icons and the main argument on collapsed cards, for Paseo 0.13 or later. Tool cards need Full detail.",
+  "description": "Formatted and highlighted tool-call JSON, twenty-line previews, tool icons and the main argument on collapsed cards, for Paseo 0.13 or later. Tool cards need the Full chat display.",
   "repository": {
     "type": "git",
     "url": "https://github.com/geoqiao/paseo-stuff.git",

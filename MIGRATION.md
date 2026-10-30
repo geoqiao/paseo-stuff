@@ -52,7 +52,7 @@ Therefore migration is opt-in, not an automatic background action:
    downtime and can require restoring user settings; it is not transactional.
    Keep the old source/ref for recovery if the new install fails.
 5. Verify the resulting source, ID and runtime status. Do not create an enabled
-   duplicate. Activity still requires Full detail on **all** connected clients.
+   duplicate. Activity cards still require the Full chat display on **all** connected clients.
 
 No daemon restart or manual edit to Paseo's private source records is required.
 Publishing this repository does not itself change anyone's installed plugins.

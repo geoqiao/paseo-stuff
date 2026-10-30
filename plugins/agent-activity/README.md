@@ -2,8 +2,8 @@
 
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
-**Version 0.1.0-beta.13** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.13.2. Tool cards need Full detail;
-a Command Center action switches to native tool rows for Summary.
+**Version 0.1.0-beta.14** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.14.0. Tool cards need the Full
+chat display; a Command Center action switches to native rows for Collapse tool calls, Collapse turns or Summary.
 
 ## What it does
 
@@ -22,7 +22,8 @@ a Command Center action switches to native tool rows for Summary.
 Thinking uses a minimal matching foldable header to keep alternating tool/Thinking
 rows compact. Its body is selectable original text, with twenty-line preview and
 Show all, **without Markdown interpretation**. Messages, approvals and the composer
-stay native. The plugin does not generate summaries, infer nested calls, rebuild
+stay native. Messages from other agents and heartbeats keep the host's own rows, so
+they start and fold turns as usual. The plugin does not generate summaries, infer nested calls, rebuild
 diffs or add settings screens.
 
 ## Before and after
@@ -77,34 +78,41 @@ Virtual-list remounts reset local disclosure state.
 
 ## Compatibility
 
-**Paseo 0.13.0 or later · tool cards need Full detail · experimental beta.**
-Beta.12 supports only current Paseo: it requires 0.13.0, pins the 0.13.2 SDK and runs
-its host tests on unmodified 0.13.2 sources. The packed package rendered tool cards
-live on a 0.13.2 daemon in the 0.13.2 web client. The manifest sets only a minimum,
-`>=0.13.0`, as Paseo recommends; later releases are not tested. For Paseo 0.8 to
-0.12, keep beta.11.
+**Paseo 0.13.0 or later · tool cards need the Full chat display · experimental beta.**
+It requires 0.13.0 and pins the 0.13.2 SDK; its checks also pass with the 0.14.0 SDK,
+and its host tests run on unmodified 0.14.0 sources. The packed beta.14 rendered tool
+cards live on a 0.14.0 daemon in the 0.14.0 web client under all three chat display
+modes. The manifest sets only a minimum, `>=0.13.0`, as Paseo recommends; later
+releases are not tested. For Paseo 0.8 to 0.12, keep beta.11.
 
-Paseo transforms each original call **before** Summary grouping. All calls remain
-visible, but plugin cards bypass grouping. Native plan/approval tools pass through,
-preserving host suppression and expandable plan cards. Paseo 0.13.2 still has no
-display-mode API for plugins, so the plugin cannot switch by itself.
+Paseo transforms each original call **before** grouping and turn folding. All calls
+remain visible, but plugin cards bypass grouping, and Paseo 0.14's **Collapse turns**
+(the default for new installations) counts only native tool calls as a turn's work. A
+turn whose only output is cards and one reply therefore stays open. A turn with an
+earlier reply still folds, and its cards fold with it. Native plan/approval tools,
+messages from other agents and heartbeats pass through, preserving host suppression,
+expandable plan cards, user-style agent-message rows and turn boundaries. Paseo
+0.14.0 still has no display-mode API for plugins, so the plugin cannot switch by itself.
 
 ### Switching between cards and native rows
 
 Open the Command Center on the client you are using and choose:
 
-- **Activity: use native tool rows (for Summary)** before selecting Summary. Tool calls
-  return to native rows, so Summary groups them again; Thinking keeps its compact row.
-- **Activity: use tool cards (Full detail)** to restore the cards.
+- **Activity: use native rows (Collapse or Summary)** before selecting Collapse tool
+  calls, Collapse turns (Paseo 0.14) or Summary (Paseo 0.13). Tool calls and Thinking
+  return to native rows, so the host groups them and folds turns again. Since 0.14 the
+  host groups Thinking with tool calls, so a plugin Thinking row would split the group.
+- **Activity: use tool cards (Full display)** to restore the cards and Thinking rows.
 
 The choice applies only to that client and is not saved: tool cards return whenever
 the plugin loads again, for example after an app reload. Switch each client separately.
 The plugin does not detect or change the host display preference and does not inspect
-private app state. With cards active, Summary shows every call ungrouped. Do not
+private app state. With cards active, collapsed displays show every call ungrouped. Do not
 enable two plugins replacing the same tool-call timeline items.
 
-Pinned 0.13.2 host-pipeline tests show that native rows regroup existing history and
-that cards come back ungrouped. Hermes engine tests and compact browser previews are
+Pinned 0.14.0 host-pipeline tests cover Full, Collapse tool calls and Collapse turns:
+native rows regroup existing history and fold turns, cards come back ungrouped, and
+agent-message and heartbeat rows match the host's own presentation. Hermes engine tests and compact browser previews are
 not on-device mobile UI tests. [Compatibility evidence](docs/compatibility.md).
 
 ## Install and local development
@@ -123,7 +131,7 @@ paseo plugin add geoqiao/agent-activity --host <your-host>
 To install the published npm package directly:
 
 ```sh
-paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.13 --host <your-host>
+paseo plugin add npm:paseo-readable-agent-activity@0.1.0-beta.14 --host <your-host>
 ```
 
 Paseo installs the package's two runtime dependencies, `prism-react-renderer` and
@@ -134,7 +142,7 @@ the Git source keeps them: they install the development dependencies and run the
 To install the pinned prerelease directly from Git instead:
 
 ```sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.13 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/agent-activity --ref readable-agent-activity-v0.1.0-beta.14 --host <your-host>
 ```
 
 Paseo reads a bare `owner/name` source as a registry ID, so the `git:` prefix is
@@ -143,7 +151,7 @@ npm uses a registry mirror; see
 [the fix](https://github.com/geoqiao/paseo-stuff#if-a-registry-install-fails-with-npm-artifact-changed-since-review).
 
 Installation enables the plugin with tool cards active. Review its source/trust
-requirements, then use Full detail or switch to native tool rows first. Do not create a duplicate installation. Existing installations
+requirements, then use the Full chat display or switch to native rows first. Do not create a duplicate installation. Existing installations
 may use a runtime alias such as `colorful-agent-activity`; manage that existing ID.
 [Repository migration notes](https://github.com/geoqiao/paseo-stuff/blob/main/MIGRATION.md).
 

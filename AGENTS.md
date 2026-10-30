@@ -21,8 +21,8 @@
 - Distinguish submitted PRs from accepted/deployed catalog entries. Fix genuine upstream admission problems in separate Cafe PRs; do not work around them by duplicating plugins or weakening checks.
 
 ## Paseo contracts
-- Current verification target is stable Paseo app/daemon 0.13.2. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity and Math Renderer, 0.11.4 for DeepSeek Harness) and install the 0.13.2 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
-- DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.4). Test a new DSH release before listing it as tested.
+- Current verification target is stable Paseo app/daemon 0.14.0. Keep SDK devDependencies pinned to each plugin's minimum supported line (0.13.2 for Readable Agent Activity and Math Renderer, 0.11.4 for DeepSeek Harness) and install the 0.14.0 SDK without saving for the target check. Paseo Pet remains on 0.8.0. Move the target to each new stable Paseo release after checking it. Verify versions before introducing APIs; do not label beta verification as stable-release acceptance.
+- DeepSeek Harness follows the newest published official DSH release (the newer of npm `latest` and `next`; currently 0.2.1-rc.5). Test a new DSH release before listing it as tested.
 - Paseo 0.8 to 0.10 reject unknown `paseo-plugin.json` fields. Add `translations`, `name`, `icon` or `media` only to plugins whose minimum is 0.11.0 or later. Keep a Simplified Chinese `OVERVIEW.zh-CN.md` beside each maintained plugin's `OVERVIEW.md`, list it in the npm `files`, and update both together.
 - Readable Agent Activity and Math Renderer support only current Paseo (user decision, 2026-10-26): Paseo 0.8 to 0.12 are dropped. Do not add compatibility code, fixtures or tests for releases below their minimum; pin host fixtures to the target release.
 - Declare `requirements.paseo` as a minimum (`>=`), following the Paseo requirements reference. Raise it only when adopting a newer API or when the user drops older releases; add an upper bound only for a release known to be incompatible. Record the actually tested versions in each plugin's docs, not in the range.
@@ -32,11 +32,11 @@
 - Pure data/contracts under `shared/`; no other root code modules.
 - Use public SDK modules only. Never import host internals in a production plugin, inspect host React state/DOM, or read private app storage to infer settings.
 - Use React Native primitives and host UI. Derive colors from theme.colors and layout from layout.compact/platform.
-- Host Icon exposes name/size/color, not stroke width (through 0.13.2). Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
+- Host Icon exposes name/size/color, not stroke width (through 0.14.0). Choose simple supported Lucide shapes; do not claim an unsupported strokeWidth parameter.
 - Keep transforms synchronous, deterministic and JSON-safe. Preserve source information and stable item identity.
-- Host Tool call display preferences take precedence. Never silently force Full detail or replace grouped Summary rows with a single call.
+- Host chat display preferences take precedence (0.14: Full, Collapse tool calls, Collapse turns; 0.13: Full detail, Summary). Never silently force Full display or replace grouped tool-call rows with single calls. Leave turn-starting rows (agent messages, heartbeats) native.
 - A compatibility gap must be documented and tested, not hidden behind a guessed configuration value.
-- Since 0.9, timeline transforms run before Summary grouping and plan suppression (0.9 to 0.12 also split native Markdown afterwards; 0.13 does not). Pass native plan tools through. Math retains native streaming, renders formula-free blocks with the SDK `Markdown` component and offers native-reply mode because chat Find cannot match formula source.
+- Since 0.9, timeline transforms run before Summary grouping and plan suppression (0.9 to 0.12 also split native Markdown afterwards; 0.13 does not). Since 0.14, Collapse tool calls groups reasoning with tool calls, and Collapse turns folds a turn only around a native `assistant_message` reply; transformers can return only plugin rows. Pass native plan tools through. Math retains native streaming, renders formula-free blocks with the SDK `Markdown` component and offers native-reply mode because chat Find cannot match formula source.
 - Preserve per-card manual-only expansion through streaming and status updates.
 
 ## Safety and lifecycle
@@ -49,6 +49,6 @@
 ## Verification
 - For changed plugins: npm run typecheck, npm run lint, npm test.
 - Cover malformed/empty/large data, copying, streaming, user-controlled folding, narrow layouts and light/dark colors.
-- Test Summary and Full detail against the supported host pipeline; distinguish host integration tests from mocked renderer tests.
+- Test every chat display mode against the supported host pipeline; distinguish host integration tests from mocked renderer tests.
 - Record actual desktop/mobile checks and limitations accurately. Do not call mocked compact props an on-device mobile test.
 - Keep docs, runtime manifest and install instructions consistent with tested support.

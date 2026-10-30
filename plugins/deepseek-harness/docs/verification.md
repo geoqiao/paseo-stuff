@@ -1,5 +1,33 @@
 # Verification and limits
 
+## Unreleased — Paseo 0.14.0 and DSH 0.2.1-rc.5 (2026-10-30)
+
+- `npm run check` passes with the pinned **0.11.4** SDKs and with the **0.14.0**
+  client/plugin/protocol SDKs installed without saving: typecheck, lint and
+  **108 tests** each. The reasoning tests assert distinct reasoning and answer IDs
+  and that only the answer keeps `messageId`; on 0.11.4 the IDs are unchanged.
+- Isolated Paseo **0.14.0** daemon (CLI 0.14.0 from npm, temporary home,
+  `127.0.0.1:6840`, relay off). The packed package (version still beta.15, with the
+  unreleased changes), unpacked and installed with `npm ci --omit=dev`, ran beside
+  Readable Agent Activity beta.14 and Math Renderer beta.8. Status `running`; the
+  provider diagnostic reported it available and ready.
+- **DSH 0.2.1-rc.5** (CLI and `@deepseek-ai/dsh-acp` 0.2.1-rc.5, ACP SDK 1.4.0)
+  installed in a temporary prefix, with a temporary `DSH_HOME` holding a copy of
+  the credentials file that was deleted afterwards. It was set through the
+  provider command override.
+- A real turn ran a Bash `ls -la`, read `notes.txt` and answered with inline and
+  display LaTeX. The reasoning and the answer were separate timeline rows in the
+  0.14.0 web client.
+- **Daemon restart:** after the daemon restarted, the next prompt added only the
+  new turn to the timeline (21 to 24 rows, no duplicates), and the agent still
+  recalled a value from `notes.txt`.
+- **Idle release:** a preload that moved `Date.now` two hours ahead made the 0.14
+  idle sweep log "Collected idle agent runtime" for the DSH agent. The next prompt
+  logged "Agent resumed from persistence", added only the new turn (24 to 26 rows),
+  and the agent recalled the earlier tool result. A real 60-minute idle period was
+  not waited out.
+- **Not verified:** Windows outside CI, the desktop app and native mobile.
+
 ## Unreleased — bounded v4 history replay (2026-10-29)
 
 - Node **24.14.0**, macOS, a separate checkout; the installed plugins and running

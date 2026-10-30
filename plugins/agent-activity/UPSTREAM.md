@@ -18,7 +18,7 @@ This fork publishes under the distinct manifest ID **readable-agent-activity**. 
 - Thin source/text transport adaptation retains metadata, traces, attachments and native detail fields. Malformed and oversized text falls back without silent truncation.
 - Earlier betas included summaries, reconstructed diffs, UI-label compaction and Raw/Copy controls. Those helpers and their obsolete tests are removed in beta.6, not retained behind hidden UI.
 - No server entry; presentation uses public SDK modules and does not need daemon-side privileges.
-- Additional pure/renderer tests and pinned host compatibility fixtures. Full detail only; Summary remains unsupported.
+- Additional pure/renderer tests and pinned host compatibility fixtures. Full display only; collapsed displays remain unsupported for cards.
 
 Public screenshots are captured from synthetic data, not personal conversations. Their
 left columns use a source-adapted Paseo native reference, not the upstream Activity
