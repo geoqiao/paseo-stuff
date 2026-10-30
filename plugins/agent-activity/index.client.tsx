@@ -5,29 +5,32 @@ import { TOOL_CALL_RENDERER_KIND, TOOL_CALL_RENDERER_VERSION, toolCallItemDataSc
   REASONING_RENDERER_KIND, REASONING_RENDERER_VERSION, reasoningItemDataSchema } from "./shared/timeline";
 
 export default function contribute(client: PluginClientContext) {
-  // Paseo (checked through 0.13.2) exposes no public display-mode/group context, so cards bypass Summary
-  // grouping. Never change the host preference or guess it from private app state; the user
-  // switches this client to native tool rows instead. Reasoning rows never join tool groups,
-  // so the Thinking adapter stays. The choice is client-local and resets on reload.
-  let removeToolCards: (() => void) | undefined;
+  // Paseo (checked through 0.14.0) exposes no public display-mode/group context, so cards bypass
+  // tool-call grouping and turn folding. Never change the host preference or guess it from private
+  // app state; the user switches this client to native rows instead. Since 0.14 grouping also
+  // absorbs reasoning, so native rows restore native Thinking too. The choice is client-local and
+  // resets on reload.
+  let removeAdapters: (() => void) | undefined;
   function useCards() {
-    removeToolCards ??= client.addTimelineTransformer({ id: "tool-calls", query: { itemType: "tool_call" }, transform: transformToolCall });
+    if (removeAdapters) return;
+    const removeTools = client.addTimelineTransformer({ id: "tool-calls", query: { itemType: "tool_call" }, transform: transformToolCall });
+    const removeThinking = client.addTimelineTransformer({ id: "reasoning", query: { itemType: "reasoning" }, transform: transformReasoning });
+    removeAdapters = () => { removeThinking(); removeTools(); };
   }
   function useNativeRows() {
-    removeToolCards?.();
-    removeToolCards = undefined;
+    removeAdapters?.();
+    removeAdapters = undefined;
   }
   const remove = [
     client.addTimelineRenderer({ kind: TOOL_CALL_RENDERER_KIND, version: TOOL_CALL_RENDERER_VERSION, schema: toolCallItemDataSchema, Component: ToolActivity }),
-    client.addTimelineTransformer({ id: "reasoning", query: { itemType: "reasoning" }, transform: transformReasoning }),
     client.addTimelineRenderer({ kind: REASONING_RENDERER_KIND, version: REASONING_RENDERER_VERSION, schema: reasoningItemDataSchema, Component: ReasoningActivity }),
     client.addCommandCenterItem({
-      id: "native-tool-rows", title: "Activity: use native tool rows (for Summary)", icon: "List", context: "global",
-      keywords: ["activity", "summary", "tool", "native"], onSelect: useNativeRows,
+      id: "native-tool-rows", title: "Activity: use native rows (Collapse or Summary)", icon: "List", context: "global",
+      keywords: ["activity", "summary", "collapse", "turns", "tool", "thinking", "native"], onSelect: useNativeRows,
     }),
     client.addCommandCenterItem({
-      id: "tool-cards", title: "Activity: use tool cards (Full detail)", icon: "LayoutList", context: "global",
-      keywords: ["activity", "full detail", "tool", "cards"], onSelect: useCards,
+      id: "tool-cards", title: "Activity: use tool cards (Full display)", icon: "LayoutList", context: "global",
+      keywords: ["activity", "full", "full detail", "tool", "cards"], onSelect: useCards,
     }),
   ];
   useCards();

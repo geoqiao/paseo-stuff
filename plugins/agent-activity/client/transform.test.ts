@@ -27,6 +27,21 @@ describe("tool-only source-preserving transform", () => {
     expect(transformToolCall({ item, phase: "complete" })).toBeUndefined();
     expect(transformToolCall({ item: { ...item, name: "other" }, phase: "complete" })?.items).toHaveLength(1);
   });
+  it("leaves turn-starting agent messages and heartbeats native", () => {
+    const base = { type: "tool_call" as const, status: "completed" as const, error: null,
+      detail: { type: "plain_text" as const, text: "Hi", icon: "bot" as const } };
+    const sender = { id: "agent" };
+    const native = [
+      // Paseo 0.14 removes agentMessage before transformers run; the envelope remains.
+      { ...base, callId: "paseo-agent-message:m1", name: "agent_message" },
+      { ...base, callId: "other", name: "anything", agentMessage: { event: "message" as const, sender, text: "Hi" } },
+      { ...base, callId: "paseo-system:abc", name: "heartbeat" },
+    ];
+    for (const item of native) expect(transformToolCall({ item, phase: "complete" })).toBeUndefined();
+    // A provider's own tool with the same name, without the envelope, stays a card.
+    expect(transformToolCall({ item: { ...base, callId: "call-1", name: "agent_message" }, phase: "complete" })?.items)
+      .toHaveLength(1);
+  });
   it("retains host status and avoids derived trace annotations or diff statistics", () => {
     const data = createToolCallData({ type: "tool_call", callId: "id", name: "exec", status: "running", error: null,
       detail: { type: "unknown", input: { code: "text(1)" }, output: {

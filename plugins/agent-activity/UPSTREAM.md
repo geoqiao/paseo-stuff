@@ -26,6 +26,6 @@ plugin. See [screenshot provenance](docs/screenshots.md) for exact source and li
 
 ## Host test fixtures
 
-Six unmodified Paseo v0.13.2 source files from commit `d2941157a8f91512daf54fc688241d416e8f5ebd`, under Apache-2.0, are used only in tests. Their license is not replaced by the plugin's MIT license.
+Eight unmodified Paseo v0.14.0 source files and one reduced file from commit `8c6de842a3157530c26a7a94c78a3d647fb96ce9`, under Apache-2.0, are used only in tests. Their license is not replaced by the plugin's MIT license.
 
-See [fixture provenance](tests/fixtures/paseo-0.13/README.md) and [fixture LICENSE](tests/fixtures/paseo-0.13/LICENSE).
+See [fixture provenance](tests/fixtures/paseo-0.14/README.md) and [fixture LICENSE](tests/fixtures/paseo-0.14/LICENSE).

@@ -523,6 +523,8 @@ function projectThoughtMessageId(message: AcpStreamMessage): AcpStreamMessage {
   // once DSH sends distinct IDs:
   // https://github.com/deepseek-ai/deepseek-harness/discussions/8235
   // ACP IDs are strings, not UUID-only. Keep the answer's native ID untouched.
+  // Paseo 0.14 already keys chunk IDs by kind (getpaseo/paseo#7272); there the
+  // suffix only renames the reasoning row and stays harmless, so keep it for 0.11-0.13.
   return {
     ...message,
     params: {
