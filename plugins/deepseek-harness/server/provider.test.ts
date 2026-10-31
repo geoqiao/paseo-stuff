@@ -1,4 +1,4 @@
-import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, open, readFile, rm, stat, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -75,7 +75,84 @@ afterAll(async () => {
 describe.sequential("DeepSeek Harness provider", () => {
   it("ships the replay modules in the npm package", async () => {
     const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-    expect(pkg.files).toEqual(expect.arrayContaining(["server/session-replay.ts", "server/dsh-home.ts"]));
+    expect(pkg.files).toEqual(expect.arrayContaining(["server/session-replay.ts", "server/dsh-home.ts", "server/image-startup.ts"]));
+  });
+
+  it("opens the real ACP image gate for stale defaults and cleans every startup overlay", async () => {
+    const spawnLog = join(testRoot, "image-startup.jsonl");
+    await withEnvironment({
+      DSH_FAKE_VERSION: "0.2.1-rc.5", DSH_FAKE_IMAGE_STARTUP: "1", DSH_FAKE_SPAWN_LOG: spawnLog,
+    }, async () => {
+      const connection = await connect();
+      const collector = collect(connection);
+      try {
+        expect(connection.capabilities).toContain("prompt.image");
+        const input = openInput("image-default", cwdA, "image-default", "skip");
+        delete input.config.model;
+        await connection.send(input);
+        await waitForReady(collector, input.sessionId);
+        await connection.send(messagePrompt(input.sessionId, "image-default-turn", "read image", [
+          { type: "image", data: "aGVsbG8=", mimeType: "image/png" },
+        ]));
+        await collector.waitFor((event) => event.type === "session.turn" && event.state === "completed");
+        expect(collector.events.some((event) => event.type === "request.failed" || event.type === "session.runtime_failed")).toBe(false);
+      } finally {
+        collector.unsubscribe();
+        await connection.close();
+      }
+      const patches = (await readFakeSpawnLog(spawnLog)).filter((entry) => entry.event === "startup-patch") as (FakeLogRecord & { path: string; config: unknown })[];
+      expect(patches.length).toBeGreaterThanOrEqual(2);
+      for (const patch of patches) {
+        expect(patch.config).toEqual({ provider: "deepseek-official", model: "deepseek-flash", sessionListPageSize: 7 });
+        await expect(stat(patch.path)).rejects.toMatchObject({ code: "ENOENT" });
+      }
+    });
+  });
+
+  it("preserves a model explicitly selected in Paseo after repairing the startup default", async () => {
+    await withEnvironment({ DSH_FAKE_VERSION: "0.2.1-rc.5", DSH_FAKE_IMAGE_STARTUP: "1" }, async () => {
+      const connection = await connect();
+      const collector = collect(connection);
+      try {
+        const input = openInput("explicit-pro", cwdA, "explicit-pro", "skip");
+        input.config.model = modelPro;
+        await connection.send(input);
+        await waitForReady(collector, input.sessionId);
+        expect(collector.events.some((event) =>
+          event.type === "session.config" && event.config.model === modelPro)).toBe(true);
+        await connection.send(messagePrompt(input.sessionId, "pro-text", "text only"));
+        await collector.waitFor((event) => event.type === "session.turn" && event.state === "completed");
+        expect(collector.events.some((event) => event.type === "request.failed")).toBe(false);
+      } finally { collector.unsubscribe(); await connection.close(); }
+    });
+  });
+
+  it("closes a pending config inspection without starting ACP", async () => {
+    const logPath = join(testRoot, "dispose-config.log");
+    await withEnvironment({
+      DSH_FAKE_VERSION: "0.2.1-rc.5", DSH_FAKE_CONFIG_DUMP: "hang", DSH_FAKE_SPAWN_LOG: logPath,
+    }, async () => {
+      const provider = createDeepSeekHarnessProvider();
+      const connecting = provider.connect(connectRequest());
+      await waitForFakeSpawnLog(logPath, (records) =>
+        records.some((record) => record.event === "start" && record.args.includes("--dump-config")));
+      const closing = provider.dispose();
+      await expect(connecting).rejects.toThrow();
+      await closing;
+      const records = await waitForFakeSpawnLog(logPath, allStartedExited);
+      expect(records.filter((record) => record.event === "start"
+        && !record.args.includes("--version") && !record.args.includes("--dump-config"))).toEqual([]);
+    });
+  });
+
+  it.each(["custom", "broken", "oversized"])("does not invent image support when the config is %s", async (mode) => {
+    await withEnvironment({
+      DSH_FAKE_VERSION: "0.2.1-rc.5", DSH_FAKE_IMAGE_STARTUP: "1", DSH_FAKE_CONFIG_DUMP: mode,
+    }, async () => {
+      const connection = await connect();
+      try { expect(connection.capabilities).not.toContain("prompt.image"); }
+      finally { await connection.close(); }
+    });
   });
 
   it("reads the per-session DSH_HOME through the production provider", async () => {

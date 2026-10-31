@@ -11,6 +11,7 @@ import type {
   ProviderStatus,
 } from "@getpaseo/plugin/server/provider";
 import { buildSessionReplay, type ReplayFailureReason, type ReplayTarget } from "./session-replay";
+import { createImageStartupPatch, imageStartupRepair } from "./image-startup";
 
 // Minimum only, like the Paseo requirements range: newer DSH releases are
 // accepted, and ACP behaviour is chosen from the capabilities DSH advertises.
@@ -162,16 +163,45 @@ export async function createDshAcpStream(
   const cwd = context.cwd || process.cwd();
   const { command, args } = context.launch;
 
-  await probeDshVersion(context.launch, cwd, env, context);
+  const version = await probeDshVersion(context.launch, cwd, env, context);
   assertConnectorOpen(context, "after version probe");
+  const startupArgs = [...args];
+  let startupPatch: Awaited<ReturnType<typeof createImageStartupPatch>> | undefined;
+  const repair = compareSemver(parseSemver(version)!, parseSemver("0.2.1-rc.5")!) >= 0
+    ? await inspectImageStartup(context, cwd, env) : undefined;
+  if (repair) {
+    assertConnectorOpen(context, "after config inspection");
+    const patch = await createImageStartupPatch(repair);
+    await registerConnectorResource(context, patch, "image startup patch");
+    startupPatch = patch;
+    startupArgs.push("--patch", patch.path);
+  }
+  assertConnectorOpen(context, "before ACP startup");
 
-  const child = spawnProcess(command, [...args], {
-    cwd,
-    env,
-    stdio: "pipe",
-  });
+  let child: ChildProcess;
+  try {
+    child = spawnProcess(command, startupArgs, { cwd, env, stdio: "pipe" });
+  } catch (error) {
+    if (startupPatch) {
+      await startupPatch.close();
+      context.resources.delete(startupPatch);
+    }
+    throw error;
+  }
   const stderr = new BoundedCapture(STDERR_CAPTURE_LIMIT);
-  const owner = new ChildProcessOwner(child, command, () => stderr.value);
+  const childOwner = new ChildProcessOwner(child, command, () => stderr.value);
+  const owner: AcpStreamOwner = {
+    onFailure: (listener) => childOwner.onFailure(listener),
+    async close(reason) {
+      try { await childOwner.close(reason); }
+      finally {
+        if (startupPatch) {
+          await startupPatch.close();
+          context.resources.delete(startupPatch);
+        }
+      }
+    },
+  };
   if (!child.stdin || !child.stdout || !child.stderr) {
     const startupError = new Error(
       "DeepSeek Harness ACP could not acquire piped stdio for executable " +
@@ -200,7 +230,7 @@ export async function createDshAcpStream(
   try {
     await registerConnectorResource(context, resource, "ACP startup");
     await waitForChildSpawn(child);
-    if (owner.hasExited) {
+    if (childOwner.hasExited) {
       throw new Error(
         "DeepSeek Harness ACP exited during startup." +
           diagnosticSuffix(stderr.value),
@@ -882,7 +912,7 @@ async function probeDshVersion(
   cwd: string,
   env: Record<string, string>,
   context: DshConnectorContext,
-): Promise<void> {
+): Promise<string> {
   assertConnectorOpen(context, "before version probe");
   const { command } = launch;
   let child: ChildProcess;
@@ -950,10 +980,37 @@ async function probeDshVersion(
           diagnosticSuffix(stdout.value + "\n" + stderr.value),
       );
     }
+    return version!;
   } finally {
     await owner.close(new Error("DeepSeek Harness version probe finished")).catch(
       () => undefined,
     );
+    context.resources.delete(owner);
+  }
+}
+
+/** Inspect only a bounded public config dump; never expose its possibly secret values. */
+async function inspectImageStartup(
+  context: DshConnectorContext,
+  cwd: string,
+  env: Record<string, string>,
+): Promise<string | undefined> {
+  const { command, args } = context.launch;
+  const child = spawnProcess(command, [...args, "--dump-config"], {
+    cwd, env, stdio: ["ignore", "pipe", "pipe"],
+  });
+  const capture = new BoundedCapture(256 * 1024 + 1);
+  child.stdout?.on("data", (chunk: unknown) => capture.append(chunk));
+  child.stderr?.resume();
+  const owner = new ChildProcessOwner(child, command, () => "");
+  try {
+    await registerConnectorResource(context, owner, "config inspection");
+    const result = await waitForProbe(child);
+    assertConnectorOpen(context, "during config inspection");
+    if (result.error || result.timedOut || result.code !== 0 || result.signal !== null) return;
+    return imageStartupRepair(capture.value);
+  } finally {
+    await owner.close().catch(() => undefined);
     context.resources.delete(owner);
   }
 }

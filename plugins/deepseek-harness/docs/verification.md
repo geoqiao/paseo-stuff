@@ -1,5 +1,47 @@
 # Verification and limits
 
+## Unreleased — default ACP image startup (2026-10-31)
+
+- Root cause confirmed in published **DSH 0.2.1-rc.5**: the base
+  `agent-default-model` selects `deepseek-flash`, whose official model catalog
+  declares text and image inputs. The ACP app still selects `deepseek-v4-flash`.
+  ACP's `supportsAcpImagePrompts` checks that startup route during initialization,
+  and `admitAcpPrompt` later rejects images if that connection did not advertise
+  them, even after a session model change. The plugin already passed image
+  bytes/MIME correctly; it did not suppress an affirmative ACP capability.
+- The fix uses the public `dsh --dump-config` and `--patch` launcher options.
+  A literal, recognized mismatch generates a private temporary overlay with the
+  full original ACP config and the corrected model. This is necessary because
+  DSH replaces the whole config map, rather than merging individual keys.
+  No user configuration or installed DSH files are rewritten.
+- Configuration dumps are bounded to five seconds and 256 KiB. Unreadable,
+  oversized, malformed, disabled, expression-valued or ambiguous entries do not
+  trigger a guessed correction. Different custom/default routes are unchanged.
+  DSH still decides whether to advertise images and validates the actual model
+  again at prompt admission. Custom profiles whose startup route disables images
+  are not automatically rewritten into a different route.
+- Typecheck, lint and **152 tests in six files** pass with both the pinned
+  **0.11.4** SDK and the **0.14.0** SDK installed without saving.
+- Automated checks cover config preservation, malformed/large data, explicit
+  model selection, real synthetic-ACP initialization gates, image pass-through,
+  private file permissions, overlay cleanup and disposal during config inspection.
+- Live A/B used an isolated **Paseo 0.14.0** daemon at **127.0.0.1:6846**,
+  relay disabled, a fresh DSH_HOME and **DSH 0.2.1-rc.5**. The published beta.17
+  tarball, installed with production dependencies, rejected a PNG with
+  `Provider does not support prompt.image`.
+- The fixed production-only tarball accepted the same PNG through `paseo run`
+  with only `--provider deepseek-harness`: no `--model`, no profile edits, no
+  extra user launch flags. The actual answer read `DYUKTFJ` and correctly
+  identified a red circle, blue square and green triangle, without tools.
+  SHA-256 hashes of the DSH YAML configuration files were unchanged.
+- The **0.14.0 web client** Add image flow then accepted a JPEG with a different
+  random code, `ZPT8LRK`, and the same three shapes. No profile or model change
+  was made in between. Browser bootstrap's failed probe of the main daemon
+  was unrelated; the test connected explicitly to the isolated daemon.
+- This checks real model interpretation and the normal default input path.
+  It does not add image-history replay or vision support to text-only models.
+  Native desktop/iOS/Android and real model calls on Windows are not verified.
+
 ## Beta.17 — replay recovery notices (2026-10-31)
 
 - Node **24.18.0**, macOS, separate implementation worktree. Live checks used an

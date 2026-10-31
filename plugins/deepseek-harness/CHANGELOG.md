@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Repair DSH rc.5's stale official ACP startup default using a private process-only
+  overlay. Default-config image prompts no longer require editing the DSH profile.
+- Inspect the public configuration dump within bounded time/size; retain other ACP
+  settings, explicit Paseo model choices and different custom routes. Keep DSH's
+  actual capability negotiation and per-model validation.
+- Remove the overlay with its process, never modify DSH configuration or package
+  files, and cover startup inspection/cleanup with synthetic provider tests.
+
 ## 0.1.0-beta.17 — 2026-10-31
 
 - After a successful context resume with history recovery requested, emit one

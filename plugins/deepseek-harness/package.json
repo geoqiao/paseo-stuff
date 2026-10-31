@@ -29,6 +29,7 @@
     "server/provider.ts",
     "server/dsh-compatibility.ts",
     "server/dsh-home.ts",
+    "server/image-startup.ts",
     "server/session-replay.ts",
     "server/usage.ts",
     "README.md",
