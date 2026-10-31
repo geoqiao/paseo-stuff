@@ -59,10 +59,29 @@ correctly read a new random code, `PAFE9JJ`, and all three shapes without tools.
 Both PNG CLI input and JPEG web upload were verified; the default ACP model was
 not changed to claim image support.
 
-**Not verified by this implementation work:** live notice delivery or rendering,
-desktop/mobile layouts, Windows or a live model call. Live image evidence above
-was reported from separate release validation, not rerun in this worktree. The
-separate live notice/daemon/UI acceptance check remains pending.
+### Separately verified live recovery notice
+
+Release validation packed commit `8cdcff9`, installed the tarball with
+production-only dependencies and tested it on an isolated **Paseo 0.14.0**
+daemon with **DSH 0.2.1-rc.5**.
+
+- After an actual daemon restart, the image-containing session displayed one
+  warning titled **Chat history unavailable**, with the exact description:
+  "Context restored, but chat history could not be displayed because it contains
+  a format or content that cannot be restored yet."
+- Web-client screenshots confirmed readable notice text at a **1280 px light**
+  viewport and **390 px light and dark** viewports. These are browser viewport
+  checks, not native mobile-device or desktop-app tests.
+- A follow-up asking for the most recent image code, without tools, correctly
+  returned `PAFE9JJ`. No duplicate notice appeared.
+- A text/tool session restored its original history and its later legitimate
+  follow-up containing `lighthouse-6284`, with no observed replay regression.
+
+The live image and notice checks above were reported from separate release
+validation, not rerun in this implementation worktree. **Not verified:** the
+desktop app, native iOS/Android clients or Windows. The automated suite and live
+checks cover different boundaries; synthetic ACP tests alone do not establish
+daemon or UI behavior.
 
 ## Beta.16 — release check (2026-10-31)
 
