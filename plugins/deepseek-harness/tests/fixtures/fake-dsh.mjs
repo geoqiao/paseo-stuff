@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
-import { appendFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
+import { parse } from "yaml";
 import { createInterface } from "node:readline";
 
 const args = process.argv.slice(2);
@@ -50,8 +51,25 @@ if (args[0] !== "--profile" || args[1] !== expectedProfile) {
   process.exit(2);
 }
 
+if (args.includes("--dump-config")) {
+  if (process.env.DSH_FAKE_CONFIG_DUMP === "hang") await new Promise(() => setInterval(() => {}, 1_000));
+  if (process.env.DSH_FAKE_CONFIG_DUMP === "broken") { process.stdout.write("- ["); process.exit(0); }
+  if (process.env.DSH_FAKE_CONFIG_DUMP === "oversized") { process.stdout.write("x".repeat(256 * 1024 + 2)); process.exit(0); }
+  process.stdout.write(JSON.stringify([
+    { id: "agent-default-model", name: "@deepseek-ai/dsh-agent-default-model",
+      config: { provider: "deepseek-official", model: "deepseek-flash" } },
+    { id: "acp", name: "@deepseek-ai/dsh-acp",
+      config: { provider: "deepseek-official", model: process.env.DSH_FAKE_CONFIG_DUMP === "custom" ? "deepseek-v4-pro" : "deepseek-v4-flash", sessionListPageSize: 7 } },
+  ]));
+  process.exit(0);
+}
+const patchIndex = args.indexOf("--patch");
+const patchedConfig = patchIndex === -1 ? undefined : parse(readFileSync(args[patchIndex + 1], "utf8"))[0].config;
+const imageStartup = process.env.DSH_FAKE_IMAGE_STARTUP === "1";
+const imageEnabled = !imageStartup || patchedConfig?.model === "deepseek-flash" && patchedConfig?.provider === "deepseek-official";
+if (patchedConfig) log("startup-patch", { path: args[patchIndex + 1], config: patchedConfig });
 const capabilityMode = process.env.DSH_FAKE_CAPABILITIES ?? "resume";
-const modelFlash = '["deepseek-official","deepseek-v4-flash"]';
+const modelFlash = imageStartup ? '["deepseek-official","deepseek-flash"]' : '["deepseek-official","deepseek-v4-flash"]';
 const modelPro = '["deepseek-official","deepseek-v4-pro"]';
 const sessions = new Map();
 const pendingPrompts = new Map();
@@ -94,7 +112,7 @@ function capabilities() {
     sessionCapabilities.resume = {};
   }
   const result = {
-    promptCapabilities: { image: true },
+    promptCapabilities: { image: imageEnabled },
     sessionCapabilities,
   };
   if (capabilityMode === "load") {
@@ -434,6 +452,11 @@ input.on("line", (line) => {
     return;
   }
   if (message.method === "session/prompt") {
+    if (imageStartup && message.params.prompt.some((block) => block.type === "image")
+      && (!imageEnabled || sessionFor(message.params.sessionId).model === modelPro)) {
+      errorResponse(message.id, -32602, "image rejected by startup gate or current model");
+      return;
+    }
     log("prompt", { prompt: message.params.prompt });
     prompt(message.id, message.params);
     return;

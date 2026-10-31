@@ -1,6 +1,6 @@
 {
   "name": "paseo-deepseek-harness",
-  "version": "0.1.0-beta.17",
+  "version": "0.1.0-beta.18",
   "description": "DeepSeek Harness through its official ACP profile for Paseo 0.11 and later.",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
     "server/provider.ts",
     "server/dsh-compatibility.ts",
     "server/dsh-home.ts",
+    "server/image-startup.ts",
     "server/session-replay.ts",
     "server/usage.ts",
     "README.md",

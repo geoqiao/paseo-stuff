@@ -180,30 +180,31 @@ have not been exercised. See [verification](https://github.com/geoqiao/paseo-stu
 
 ### Image input and ACP profiles
 
-Image input depends on the capabilities the ACP profile advertises. With
-DSH **0.2.1-rc.5**, the default `acp.config.model=deepseek-v4-flash` does not
-advertise `prompt.image`. An isolated Paseo **0.14.0** check passed real image
-input after setting `$DSH_HOME/profiles/acp/cordis.patch.yml` to:
+DSH's ACP implementation supports images. DSH **0.2.1-rc.5** has a startup
+mismatch: its base profile selects `deepseek-flash` (DeepSeek-V4.1-Flash), but
+its ACP profile still selects `deepseek-v4-flash`. ACP checks image support
+at initialization, before Paseo applies a selected model. That stale default
+therefore blocks pictures even when the subsequently selected model supports them.
 
-```yaml
-- id: acp
-  config:
-    provider: deepseek-official
-    model: deepseek-flash
-```
+The plugin repairs this exact mismatch automatically. On DSH 0.2.1-rc.5 or later,
+it reads the public `--dump-config` output without booting plugins or evaluating
+expressions. Only when both literal official defaults match the known mismatch
+does it add a private, temporary `--patch` overlay for that child process.
+The overlay retains the rest of the ACP configuration and is removed when the
+process closes. It never rewrites `DSH_HOME` or installed DSH files. A config
+inspection is bounded to five seconds and 256 KiB; unreadable or unrecognized
+configurations keep their original launch.
 
-The selected model ID was `["deepseek-official","deepseek-flash"]`; the model
-identified itself as DeepSeek-V4.1-Flash. Reload the plugin after changing the
-profile, because the connection caches capabilities. Creating another agent alone
-did not refresh them in that check.
+With the fix, a new default-config session accepted an image without a manual
+profile change or a model argument. The released beta.17 rejected the same input.
+Explicitly configured different routes and already-correct defaults stay unchanged.
+The plugin still uses DSH's real image capability and per-prompt model validation;
+it does not make text-only models accept images. Custom ACP profiles remain
+responsible for advertising the capabilities of their routes.
 
-Both a PNG sent through the CLI and a JPEG uploaded through the 0.14.0 web client's
-Add image flow passed: the model read each random code and three colored shapes
-without tools. After a daemon restart, it still recalled them from DSH context, but the timeline was
-empty because v4 transcript replay does not support image attachments. With the
-recovery-notice change, requested history recovery reports unsupported format or content;
-this warning does not mean the model lost its context. This is one profile/model
-check, not a guarantee that every DSH model accepts images.
+Image-containing history is a separate limitation: v4 transcript replay does not
+restore attachments after restart. A brief warning explains the unavailable
+displayed history; DSH can still retain the image in its conversation context.
 
 ## Paseo installation
 
@@ -231,7 +232,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.17 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.18 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 

@@ -1,6 +1,6 @@
 DeepSeek Harness 为 Paseo 添加一个 provider，让你在 daemon 所在的机器上，通过官方 DeepSeek Harness 命令行工具（`dsh`）运行 agent。对话显示在 Paseo 普通的 agent 视图里，插件没有自己的界面。这是社区插件，不是 DeepSeek 或 Paseo 的官方产品。
 
-daemon 所在的机器上必须已经安装、登录并配置好 DeepSeek Harness，并且 `dsh` 要在 daemon 的 `PATH` 中，或者通过 Paseo 的 provider `command` 覆盖设置指定。如果 `dsh` 报告的版本低于 0.1.5-rc.1，或者无法读取版本，provider 会显示为不可用，并给出原因。插件还要求 Paseo 0.11.0 或更新版本，以及 daemon 上的 Node.js 22.19.0 或更新版本。插件不会安装或配置 `dsh`。模型和推理强度的选项来自 `dsh` 报告的模型，所以会跟随你的 DeepSeek Harness 配置。
+daemon 所在的机器上必须已经安装、登录并配置好 DeepSeek Harness，并且 `dsh` 要在 daemon 的 `PATH` 中，或者通过 Paseo 的 provider `command` 覆盖设置指定。如果 `dsh` 报告的版本低于 0.1.5-rc.1，或者无法读取版本，provider 会显示为不可用，并给出原因。插件还要求 Paseo 0.11.0 或更新版本，以及 daemon 上的 Node.js 22.19.0 或更新版本。插件不会安装 `dsh` 或改写它的配置文件。模型和推理强度的选项来自 `dsh` 报告的模型，所以会跟随你的 DeepSeek Harness 配置。
 
 如果你从 0.1.0-beta.12 或更早的版本升级，请注意插件不再读取 `DSH_PASEO_COMMAND` 和 `DSH_PASEO_PROFILE` 环境变量。请把这些值移到 Paseo 的 provider 命令覆盖设置，也就是 daemon `config.json` 里的 `agents.providers.deepseek-harness.command`，写成一个数组，例如 `["/opt/dsh/bin/dsh", "--profile", "acp"]`。这个数组会替换整条默认命令，所以要保留一个使用 ACP 的 `--profile`。
 
@@ -10,6 +10,6 @@ Usage 面板显示你的 DeepSeek API 余额。为了查询余额，插件按 `d
 
 恢复会话时，插件请求 `dsh` 恢复它自己的上下文。如果恢复失败，插件会报告错误，不会新开一个会话。在 Paseo 0.13 及以上版本中，插件可读取会话 `DSH_HOME` 下的 DSH v4 日志，在 agent reload 或 daemon 重启后恢复文字历史。日志缺失、损坏、格式不支持或过大时，时间线仍为空，但不妨碍恢复上下文。如果本次请求恢复显示历史，插件会给出一次简短警告，说明无法显示的原因。恢复成功或历史本来为空时不提示；警告不含对话内容、路径或凭据。回放上限为 1 秒、16 MiB 压缩数据和 64 MiB 解压数据；暂不回放附件和替换历史的操作。插件不支持 provider 斜杠命令、steering 和计划，Paseo 额外的系统提示词也不会传给 `dsh`。列出模型时，可能会在 `dsh` 的会话列表里留下空会话。
 
-图片输入取决于 ACP profile。在 DSH 0.2.1-rc.5 中，默认的 `deepseek-v4-flash` profile 不声明支持图片输入。使用 provider `deepseek-official`、model `deepseek-flash` 的 ACP profile，已在隔离的 Paseo 0.14.0 环境中通过真实图片检查，分别使用 CLI 发送 PNG 和网页端上传 JPEG。修改 profile 后，需要 reload 插件来刷新能力。图片附件不会从历史日志中回放。
+模型支持图片时，可以通过 DSH 的 ACP 接口接收图片。插件修正了 DSH 0.2.1-rc.5 中一项过时的官方 ACP 启动默认值，让新建的默认配置会话无需修改 profile 就能收图。插件读取 DSH 公开的配置输出，仅在确认存在这项已知错误时，为该子进程临时修正启动参数；其他 ACP 设置保留，进程关闭后移除临时文件。其他自定义模型配置不变，也不会把纯文字模型声明成支持图片。图片附件仍不会从历史日志中回放。
 
 自动化检查在 Paseo 0.11.4 和 0.14.0 SDK 下通过。真实对话在 macOS 上的 Paseo 0.11.4、0.12.0-beta.2、0.13.0、0.13.2 和 0.14.0 daemon 上运行过，最近一次使用 DSH 0.2.1-rc.5。Windows 以及原生 iOS 和 Android 客户端未经测试。
