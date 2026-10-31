@@ -1,5 +1,93 @@
 # Verification and limits
 
+## Beta.17 — replay recovery notices (2026-10-31)
+
+- Node **24.18.0**, macOS, separate implementation worktree. Live checks used an
+  isolated daemon and copied credentials; the user's installed plugin and daemon
+  configuration were not changed.
+- `npm run check` passes with the pinned **0.11.4** SDKs and with the
+  **0.14.0** client/plugin/protocol SDKs installed without saving: typecheck,
+  lint (0 warnings/errors) and **130 tests in five files** each. Dependencies
+  were installed with `npm ci --legacy-peer-deps`: plain `npm ci` reports a
+  pre-existing missing React peer in the lockfile. The lockfile changes only its
+  package version.
+- Production-provider integration uses the authored synthetic ACP peer, not a
+  live daemon or model. It checks successful and header-only empty replay,
+  oversized/image-containing/missing/corrupt logs, native load, failed native
+  load/resume, configuration failure after resume, explicit `history: "skip"`,
+  concurrent host session keys, two listeners, repeated native responses and
+  connection closure both during resume and from an opened-event listener.
+- A failed recovery produces one `session.notice` warning after
+  `session.opened` and before `session.ready`, keyed by the Paseo session ID.
+  It never produces a fake assistant message. Exact fixed wording and privacy
+  assertions exclude transcript text, native session IDs, paths and credentials.
+  A subsequent prompt completes normally after each recoverable log failure.
+- Reader tests distinguish valid empty history from failure and cover classified
+  reasons, malformed/unsupported content, file/decoded/record limits and deadline.
+  Bridge tests retain pre-response replay and ensure a repeated response cannot
+  produce duplicate history or a duplicate failure callback. Existing conservative
+  replay execution and limits are unchanged; only notices are gated by requested
+  history recovery.
+- The image pass-through test checks exact bytes and MIME type at the synthetic
+  ACP peer, alongside the existing `image=yes` turn test. It is not a real image
+  interpretation test.
+
+### Separately verified live image input, before the notice change
+
+Release validation separately tested the beta.16 packed plugin on an isolated
+**Paseo 0.14.0** daemon with **DSH 0.2.1-rc.5**. The default ACP configuration,
+`acp.config.model=deepseek-v4-flash`, did not advertise `prompt.image`.
+The check set `$DSH_HOME/profiles/acp/cordis.patch.yml` to:
+
+```yaml
+- id: acp
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+```
+
+Creating another agent did not refresh the cached capabilities. After plugin
+reload, a new agent using `["deepseek-official","deepseek-flash"]` identified
+its model as **DeepSeek-V4.1-Flash**. With a PNG sent through the CLI, it correctly
+read random code `22SHYYE`
+and a red circle, blue square and green triangle without tools. After a daemon
+restart, the timeline was empty because image content is unsupported by v4
+replay, but the model recalled the code and shapes. This establishes context
+restoration and the image replay limit; it does not verify the new notice UI.
+
+Release validation also used the Paseo **0.14.0 web client** Add image flow to
+upload a JPEG and send a prompt on the same `deepseek-flash` route. The model
+correctly read a new random code, `PAFE9JJ`, and all three shapes without tools.
+Both PNG CLI input and JPEG web upload were verified; the default ACP model was
+not changed to claim image support.
+
+### Separately verified live recovery notice
+
+Release validation installed the implementation tarball with production-only
+dependencies on an isolated **Paseo 0.14.0** daemon with **DSH 0.2.1-rc.5**.
+After integration and the version bump, the final **beta.17** tarball also loaded
+and recovered the unsupported-history notice after a real daemon restart.
+The integrated source passed typecheck, lint and all 130 tests again with SDK 0.14.0.
+
+- After an actual daemon restart, the image-containing session displayed one
+  warning titled **Chat history unavailable**, with the exact description:
+  "Context restored, but chat history could not be displayed because it contains
+  a format or content that cannot be restored yet."
+- Web-client screenshots confirmed readable notice text at a **1280 px light**
+  viewport and **390 px light and dark** viewports. These are browser viewport
+  checks, not native mobile-device or desktop-app tests.
+- The warning remained visible with **Full**, **Collapse tool calls** and
+  **Collapse turns** chat display. Successful text recovery showed no warning.
+- A follow-up asking for the most recent image code, without tools, correctly
+  returned `PAFE9JJ`. No duplicate notice appeared. The final beta.17 tarball
+  repeated the context-recall check successfully.
+- A text/tool session restored its original history and its later legitimate
+  follow-up containing `lighthouse-6284`, with no observed replay regression.
+
+**Not verified:** the desktop app, native iOS/Android clients or live model calls
+on Windows. The automated suite and live checks cover different boundaries;
+synthetic ACP tests alone do not establish daemon or UI behavior.
+
 ## Beta.16 — release check (2026-10-31)
 
 - `npm run check` passes with the pinned 0.11.4 SDK: typecheck, lint and 108 tests.
@@ -11,7 +99,7 @@
 - Runtime code is unchanged from #47. Its 0.14.0 web-client check below remains
   the UI evidence; this release check used the CLI, not desktop or native mobile.
 
-## Unreleased — Paseo 0.14.0 and DSH 0.2.1-rc.5 (2026-10-30)
+## Beta.16 — Paseo 0.14.0 and DSH 0.2.1-rc.5 (2026-10-30)
 
 - `npm run check` passes with the pinned **0.11.4** SDKs and with the **0.14.0**
   client/plugin/protocol SDKs installed without saving: typecheck, lint and
@@ -39,7 +127,7 @@
   not waited out.
 - **Not verified:** Windows outside CI, the desktop app and native mobile.
 
-## Unreleased — bounded v4 history replay (2026-10-29)
+## Beta.16 — bounded v4 history replay (2026-10-29)
 
 - Node **24.14.0**, macOS, a separate checkout; the installed plugins and running
   Paseo daemon were not changed, reloaded or restarted.

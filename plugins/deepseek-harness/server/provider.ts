@@ -5,6 +5,7 @@ import type {
   ProviderEvent,
   ProviderInput,
   ProviderLaunch,
+  ProviderNotice,
   ProviderRegistration,
 } from "@getpaseo/plugin/server/provider";
 import {
@@ -13,6 +14,7 @@ import {
   type ConnectorResource,
   type DshConnectorContext,
 } from "./dsh-compatibility";
+import type { ReplayFailureReason } from "./session-replay";
 
 const PROVIDER_ID = "deepseek-harness";
 const DEFAULT_COMMAND = ["dsh", "--profile", "acp"] as const;
@@ -41,6 +43,7 @@ interface ConnectionScope extends InputContext {
   closeConnection?: () => Promise<void>;
   closePromise?: Promise<void>;
   resourceClosePromise?: Promise<void>;
+  onReplayFailure?: (reason: ReplayFailureReason) => void;
 }
 
 export function createDeepSeekHarnessProvider(
@@ -74,6 +77,7 @@ export function createDeepSeekHarnessProvider(
         env: scope.env,
         resources: scope.resources,
         isClosed: () => scope.closed,
+        onReplayFailure: scope.onReplayFailure,
       };
       return createDshAcpStream(context);
     },
@@ -182,6 +186,39 @@ export function createDeepSeekHarnessProvider(
     const capabilities = withoutUnsupportedCapabilities(
       connection.capabilities,
     );
+    const listeners = new Set<(event: ProviderEvent) => void>();
+    const replayFailures = new Map<string, { sessionId: string; reason: ReplayFailureReason }>();
+    const emit = (event: ProviderEvent): void => {
+      if (scope.closed) return;
+      for (const listener of listeners) {
+        if (scope.closed) break;
+        listener(event);
+      }
+    };
+    // Subscribe once so consuming the pending reason does not depend on how
+    // many callers listen. The connector's input scope supplies the host key,
+    // not the native DSH session ID, and survives deferred ACP operations.
+    const unsubscribe = connection.onEvent((event) => {
+      if (scope.closed) return;
+      let failure: ReplayFailureReason | undefined;
+      if (event.type === "session.opened" && event.requestId !== undefined) {
+        const pending = replayFailures.get(event.requestId);
+        replayFailures.delete(event.requestId);
+        if (pending?.sessionId === event.sessionId) failure = pending.reason;
+      } else if (event.type === "request.failed") {
+        replayFailures.delete(event.requestId);
+      }
+      emit(filterProviderEvent(event));
+      if (event.type === "session.opened" && failure) {
+        emit({ type: "session.notice", sessionId: event.sessionId, notice: replayNotice(failure) });
+      }
+    });
+    scope.closeConnection = () => {
+      replayFailures.clear();
+      listeners.clear();
+      unsubscribe();
+      return closeScope(scope, connection);
+    };
     return {
       version: connection.version,
       capabilities,
@@ -202,15 +239,24 @@ export function createDeepSeekHarnessProvider(
           get closed() {
             return scope.closed;
           },
+          onReplayFailure: input.type === "session.open" && input.history === "replay"
+            ? (reason) => {
+              if (!scope.closed) replayFailures.set(input.requestId, { sessionId: input.sessionId, reason });
+            }
+            : undefined,
         };
-        return storage.run(inputScope, () => connection.send(input));
+        try {
+          return await storage.run(inputScope, () => connection.send(input));
+        } catch (error) {
+          if (input.type === "session.open") replayFailures.delete(input.requestId);
+          throw error;
+        }
       },
       onEvent(listener) {
-        return connection.onEvent((event) =>
-          listener(filterProviderEvent(event)),
-        );
+        if (!scope.closed) listeners.add(listener);
+        return () => { listeners.delete(listener); };
       },
-      close: () => closeScope(scope, connection),
+      close: scope.closeConnection,
     };
   };
 
@@ -325,6 +371,22 @@ export function createDeepSeekHarnessProvider(
 }
 
 export const createProvider = createDeepSeekHarnessProvider;
+
+function replayNotice(reason: ReplayFailureReason): ProviderNotice {
+  const descriptions: Record<ReplayFailureReason, string> = {
+    missing: "Context restored, but chat history could not be displayed because its recovery log is missing.",
+    corrupt: "Context restored, but chat history could not be displayed because its recovery log is damaged or incomplete.",
+    unsupported: "Context restored, but chat history could not be displayed because it contains a format or content that cannot be restored yet.",
+    limit: "Context restored, but chat history could not be displayed because it exceeds the recovery limit.",
+    unavailable: "Context restored, but chat history could not be displayed because its recovery log could not be read.",
+  };
+  return {
+    id: "deepseek-harness:history-unavailable",
+    severity: "warning",
+    title: "Chat history unavailable",
+    description: descriptions[reason],
+  };
+}
 
 function contextForInput(input: ProviderInput): InputContext {
   if (input.type === "session.open") {

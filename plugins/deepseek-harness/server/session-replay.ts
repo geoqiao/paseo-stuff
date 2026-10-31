@@ -27,25 +27,44 @@ export interface ReplayTarget {
   cwd: string;
 }
 
+export type ReplayFailureReason = "missing" | "corrupt" | "unsupported" | "limit" | "unavailable";
+
+export interface SessionReplay {
+  frames: AcpStreamMessage[];
+  failure?: ReplayFailureReason;
+}
+
+class ReplayError extends Error {
+  constructor(readonly reason: ReplayFailureReason) {
+    super("Session replay unavailable");
+  }
+}
+
 type RecordValue = Record<string, unknown>;
 
 /** Best-effort v4 text history only; no writes, new sessions, or model calls. */
 export async function buildSessionReplay(
   target: ReplayTarget,
   env: Readonly<Record<string, string | undefined>>,
-): Promise<AcpStreamMessage[]> {
+): Promise<SessionReplay> {
   const signal = AbortSignal.timeout(MAX_REPLAY_MS);
   try {
-    return await Promise.race([
+    return { frames: await Promise.race([
       readReplay(target, resolveDshHome(env.DSH_HOME), signal),
       new Promise<never>((_, reject) => {
         signal.addEventListener("abort", () => reject(signal.reason), { once: true });
       }),
-    ]);
-  } catch {
-    // An unsupported, missing, corrupt or oversized transcript must not turn a
-    // successful resume into a failed load. Do not log conversation contents.
-    return [];
+    ]) };
+  } catch (error) {
+    // Only classified reasons cross the bridge. Never expose paths, transcript
+    // contents or raw errors, and never turn a successful resume into a failure.
+    const code = (error as NodeJS.ErrnoException)?.code;
+    const failure = signal.aborted || code === "ERR_BUFFER_TOO_LARGE" ? "limit"
+      : error instanceof ReplayError ? error.reason
+      : code === "ENOENT" ? "missing"
+      : error instanceof SyntaxError || code?.startsWith("ZSTD_") ? "corrupt"
+      : "unavailable";
+    return { frames: [], failure };
   }
 }
 
@@ -56,13 +75,14 @@ async function readReplay(
 ): Promise<AcpStreamMessage[]> {
   // DSH currently issues UUIDs. Refuse other path syntax rather than allowing
   // a session/load parameter to escape the sessions directory.
-  if (!/^[A-Za-z0-9_-]+$/.test(target.sessionId)) return [];
+  if (!/^[A-Za-z0-9_-]+$/.test(target.sessionId)) throw new ReplayError("unsupported");
   const root = join(home, "sessions");
   const projects = await opendir(root);
   let count = 0;
+  let unsupported = false;
   for await (const project of projects) {
     signal.throwIfAborted();
-    if (++count > MAX_PROJECTS) return [];
+    if (++count > MAX_PROJECTS) throw new ReplayError("limit");
     if (!project.isDirectory()) continue;
     const directory = join(root, project.name, target.sessionId);
     let names: string[];
@@ -77,14 +97,21 @@ async function readReplay(
     if (names.some((name) => {
       const match = /^session\.v([1-9]\d*)\.jsonl(?:\.zstd)?$/.exec(name);
       return match !== null && Number(match[1]) > 4;
-    })) return [];
-    if (!names.includes(SESSION_FILE)) continue;
+    })) throw new ReplayError("unsupported");
+    if (!names.includes(SESSION_FILE)) {
+      if (names.some((name) => /^session\.v[1-9]\d*\.jsonl(?:\.zstd)?$/.test(name))) {
+        unsupported = true;
+      }
+      continue;
+    }
     const compressed = await readBounded(join(directory, SESSION_FILE), signal);
     const text = await decodeFrames(compressed, signal);
     const lines = text.split("\n");
-    if (lines.pop() !== "" || lines.length > MAX_RECORDS) return [];
+    if (lines.pop() !== "") throw new ReplayError("corrupt");
+    if (lines.length > MAX_RECORDS) throw new ReplayError("limit");
     const header = record(JSON.parse(lines[0]));
-    if (header.type !== "session" || header.version !== 4) return [];
+    if (header.type !== "session") throw new ReplayError("corrupt");
+    if (header.version !== 4) throw new ReplayError("unsupported");
     if (header.id !== target.sessionId || header.cwd !== target.cwd) continue;
     const frames: AcpStreamMessage[] = [];
     for (let index = 1; index < lines.length; index++) {
@@ -92,7 +119,7 @@ async function readReplay(
       signal.throwIfAborted();
       const event = record(JSON.parse(lines[index]));
       if (event.seq !== index - 1 || typeof event.time !== "number") {
-        throw new Error("Unrecognised session event envelope");
+        throw new ReplayError("corrupt");
       }
       for (const update of replayEvent(event)) {
         frames.push({
@@ -100,31 +127,32 @@ async function readReplay(
           method: "session/update",
           params: { sessionId: target.sessionId, update },
         });
-        if (frames.length > MAX_RECORDS) return [];
+        if (frames.length > MAX_RECORDS) throw new ReplayError("limit");
       }
     }
     return frames;
   }
-  return [];
+  throw new ReplayError(unsupported ? "unsupported" : "missing");
 }
 
 async function readBounded(path: string, signal: AbortSignal): Promise<Buffer> {
   const handle = await open(path, "r");
   try {
     const before = await handle.stat();
-    if (!before.isFile() || before.size > MAX_FILE_BYTES) throw new Error("Replay file limit");
+    if (!before.isFile()) throw new ReplayError("unavailable");
+    if (before.size > MAX_FILE_BYTES) throw new ReplayError("limit");
     // A fixed buffer also bounds memory if the file grows after stat().
     const bytes = Buffer.alloc(before.size);
     let offset = 0;
     while (offset < bytes.length) {
       signal.throwIfAborted();
       const { bytesRead } = await handle.read(bytes, offset, bytes.length - offset, offset);
-      if (bytesRead === 0) throw new Error("Incomplete replay file");
+      if (bytesRead === 0) throw new ReplayError("corrupt");
       offset += bytesRead;
     }
     const after = await handle.stat();
     if (after.size !== before.size || after.mtimeMs !== before.mtimeMs) {
-      throw new Error("Replay file changed while reading");
+      throw new ReplayError("corrupt");
     }
     return bytes;
   } finally {
@@ -138,17 +166,17 @@ async function decodeFrames(input: Buffer, signal: AbortSignal): Promise<string>
   let bytes = 0;
   while (offset < input.length) {
     signal.throwIfAborted();
-    if (parts.length >= MAX_RECORDS || bytes >= MAX_TEXT_BYTES) throw new Error("Replay text limit");
+    if (parts.length >= MAX_RECORDS || bytes >= MAX_TEXT_BYTES) throw new ReplayError("limit");
     const remaining = input.subarray(offset);
     if (remaining.length < 4 || remaining.readUInt32LE(0) !== 0xfd2fb528) {
-      throw new Error("Unrecognised Zstandard frame");
+      throw new ReplayError("corrupt");
     }
     const length = frameLength(remaining);
     // DSH appends independent frames. Walk their headers instead of searching
     // payloads for magic bytes, which can also occur inside a valid frame.
     const decoded = await new Promise<Buffer>((resolve, reject) => {
       zstdDecompress(remaining.subarray(0, length), { maxOutputLength: MAX_TEXT_BYTES - bytes }, (error, result) => {
-        if (error) reject(error);
+        if (error) reject(new ReplayError((error as NodeJS.ErrnoException).code === "ERR_BUFFER_TOO_LARGE" ? "limit" : "corrupt"));
         else resolve(result);
       });
     });
@@ -163,42 +191,42 @@ async function decodeFrames(input: Buffer, signal: AbortSignal): Promise<string>
 /** RFC 8878 framing: require every block and optional checksum before decoding.
  * Node can return decoded bytes for a truncated last frame without an error. */
 function frameLength(input: Buffer): number {
-  if (input.length < 5) throw new Error("Incomplete Zstandard header");
+  if (input.length < 5) throw new ReplayError("corrupt");
   const flags = input[4];
-  if (flags & 0x18) throw new Error("Reserved Zstandard header bits");
+  if (flags & 0x18) throw new ReplayError("corrupt");
   const singleSegment = (flags & 0x20) !== 0;
   const contentSizeFlag = flags >>> 6;
   const dictionaryBytes = [0, 1, 2, 4][flags & 3];
   const contentSizeBytes = contentSizeFlag === 0 ? (singleSegment ? 1 : 0) : 2 ** contentSizeFlag;
   let end = 5 + (singleSegment ? 0 : 1) + dictionaryBytes + contentSizeBytes;
   for (;;) {
-    if (end + 3 > input.length) throw new Error("Incomplete Zstandard block header");
+    if (end + 3 > input.length) throw new ReplayError("corrupt");
     const block = input.readUIntLE(end, 3);
     const kind = (block >>> 1) & 3;
     const size = block >>> 3;
-    if (kind === 3 || size > 128 * 1024) throw new Error("Invalid Zstandard block");
+    if (kind === 3 || size > 128 * 1024) throw new ReplayError("corrupt");
     end += 3 + (kind === 1 ? 1 : size);
-    if (end > input.length) throw new Error("Incomplete Zstandard block");
+    if (end > input.length) throw new ReplayError("corrupt");
     if (block & 1) break;
   }
   if (flags & 4) end += 4;
-  if (end > input.length) throw new Error("Incomplete Zstandard checksum");
+  if (end > input.length) throw new ReplayError("corrupt");
   return end;
 }
 
 function replayEvent(event: RecordValue): RecordValue[] {
   const data = record(event.data);
-  if (typeof event.type !== "string") throw new Error("Missing event type");
+  if (typeof event.type !== "string") throw new ReplayError("corrupt");
   if (BOOKKEEPING.has(event.type)) return [];
   // Replacements change the model's surface rather than append conversation.
   // Until mapped explicitly, retain the empty-timeline fallback for these logs.
   if (event.surfaceOp !== undefined && event.surfaceOp !== "append") {
-    throw new Error("Unsupported surface operation");
+    throw new ReplayError("unsupported");
   }
   switch (event.type) {
     case "user/message": {
       const source = record(data.source);
-      if (typeof source.kind !== "string") throw new Error("Missing user source");
+      if (typeof source.kind !== "string") throw new ReplayError("corrupt");
       if (source.kind !== "user") return [];
       return textUpdates(data, "user_message_chunk");
     }
@@ -216,11 +244,11 @@ function replayEvent(event: RecordValue): RecordValue[] {
     case "tool/result": {
       const message = record(data.message);
       const content = blocks(message.content).map((block) => {
-        if (block.type !== "text") throw new Error("Unsupported tool content");
+        if (block.type !== "text") throw new ReplayError("unsupported");
         return { type: "content", content: { type: "text", text: string(block.text) } };
       });
       if (message.isError !== undefined && typeof message.isError !== "boolean") {
-        throw new Error("Invalid tool status");
+        throw new ReplayError("corrupt");
       }
       return [{
         sessionUpdate: "tool_call_update", toolCallId: string(message.toolCallId),
@@ -228,7 +256,7 @@ function replayEvent(event: RecordValue): RecordValue[] {
       }];
     }
     default:
-      throw new Error("Unknown session event");
+      throw new ReplayError("unsupported");
   }
 }
 
@@ -238,7 +266,7 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
     // The separate tool/call record owns this card.
     if (block.type === "tool-call" && kind === "agent_message_chunk") return [];
     const thought = block.type === "reasoning" && kind === "agent_message_chunk";
-    if (block.type !== "text" && !thought) throw new Error("Unsupported message content");
+    if (block.type !== "text" && !thought) throw new ReplayError("unsupported");
     return [{
       sessionUpdate: thought ? "agent_thought_chunk" : kind,
       messageId: `replay:${id}:${index}`,
@@ -249,17 +277,17 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
 
 function record(value: unknown): RecordValue {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    throw new Error("Expected an object");
+    throw new ReplayError("corrupt");
   }
   return value as RecordValue;
 }
 
 function string(value: unknown): string {
-  if (typeof value !== "string") throw new Error("Expected a string");
+  if (typeof value !== "string") throw new ReplayError("corrupt");
   return value;
 }
 
 function blocks(value: unknown): RecordValue[] {
-  if (!Array.isArray(value)) throw new Error("Expected content blocks");
+  if (!Array.isArray(value)) throw new ReplayError("corrupt");
   return value.map(record);
 }

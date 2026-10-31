@@ -12,9 +12,38 @@ const target = { sessionId: "synthetic-session", cwd: "/synthetic/workspace" };
 beforeEach(async () => { home = await mkdtemp(join(tmpdir(), "dsh-replay-")); });
 afterEach(async () => { vi.restoreAllMocks(); await rm(home, { recursive: true, force: true }); });
 
-const replay = () => buildSessionReplay(target, { DSH_HOME: home });
+const result = () => buildSessionReplay(target, { DSH_HOME: home });
+const replay = async () => (await result()).frames;
 
 describe("DSH v4 transcript replay", () => {
+  it("distinguishes a legitimately empty transcript from a missing log", async () => {
+    expect(await result()).toEqual({ frames: [], failure: "missing" });
+    await writeReplayFixture(home, undefined, undefined, (rows) => { rows.splice(1); });
+    expect(await result()).toEqual({ frames: [] });
+  });
+
+  it.each(["missing", "corrupt", "unsupported", "limit", "unavailable"] as const)(
+    "returns only frames and a safe classified reason for %s",
+    async (reason) => {
+      if (reason !== "missing") {
+        const path = await writeReplayFixture(home, undefined, undefined, (rows) => {
+          if (reason === "unsupported") rows[7].type = "private-future-event";
+        });
+        if (reason === "corrupt") await writeFile(path, "private transcript /private/path api_key=private-key");
+        if (reason === "limit") {
+          const handle = await open(path, "r+");
+          try { await handle.truncate(16 * 1024 * 1024 + 1); }
+          finally { await handle.close(); }
+        }
+        if (reason === "unavailable") {
+          await rm(path);
+          await import("node:fs/promises").then(({ mkdir }) => mkdir(path));
+        }
+      }
+      expect(await result()).toEqual({ frames: [], failure: reason });
+    },
+  );
+
   it("replays all flush frames in order with separate thought and answer identities", async () => {
     await writeReplayFixture(home);
     const frames = await replay();
@@ -28,7 +57,7 @@ describe("DSH v4 transcript replay", () => {
     expect(updates[3]).toMatchObject({ toolCallId: "tool-1", rawInput: { path: "note.txt" } });
     expect(updates[4]).toMatchObject({ toolCallId: "tool-1", status: "completed", rawOutput: { content: [{ content: { text: "Synthetic note: violet-4817." } }] } });
     expect(updates[5].content.text).toBe("The note says violet-4817.");
-    expect(await replay()).toEqual(frames);
+    expect(await result()).toEqual({ frames });
   });
 
   it("keeps tool failures and complete output, including its tail", async () => {
@@ -88,15 +117,15 @@ describe("DSH v4 transcript replay", () => {
     const handle = await open(path, "r+");
     await handle.truncate(16 * 1024 * 1024 + 1);
     await handle.close();
-    expect(await replay()).toEqual([]);
+    expect(await result()).toEqual({ frames: [], failure: "limit" });
     await writeFile(path, zstdCompressSync(Buffer.alloc(64 * 1024 * 1024 + 1, 65)));
-    expect(await replay()).toEqual([]);
+    expect(await result()).toEqual({ frames: [], failure: "limit" });
   });
 
   it("fails closed when its replay deadline has expired", async () => {
     await writeReplayFixture(home);
     vi.spyOn(AbortSignal, "timeout").mockReturnValue(AbortSignal.abort());
-    expect(await replay()).toEqual([]);
+    expect(await result()).toEqual({ frames: [], failure: "limit" });
   });
 
   it("bounds transcript event counts", async () => {
@@ -104,12 +133,12 @@ describe("DSH v4 transcript replay", () => {
     const rows = [JSON.stringify({ type: "session", version: 4, id: target.sessionId, cwd: target.cwd })];
     while (rows.length < 50_001) rows.push(JSON.stringify({ type: "turn/end", seq: rows.length - 1, time: 0, data: {} }));
     await writeFile(path, zstdCompressSync(Buffer.from(rows.join("\n") + "\n")));
-    expect(await replay()).toEqual([]);
+    expect(await result()).toEqual({ frames: [], failure: "limit" });
   });
 
   it("does not use a session id as an arbitrary filesystem path", async () => {
     await writeReplayFixture(home);
-    expect(await buildSessionReplay({ ...target, sessionId: "../synthetic-session" }, { DSH_HOME: home })).toEqual([]);
+    expect(await buildSessionReplay({ ...target, sessionId: "../synthetic-session" }, { DSH_HOME: home })).toEqual({ frames: [], failure: "unsupported" });
   });
 
   it("resolves DSH_HOME exactly like the usage source", () => {

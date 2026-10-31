@@ -73,6 +73,7 @@ async function handshake(
   transport: MemoryTransport,
   capabilities: Record<string, unknown>,
   replayEnv?: Readonly<Record<string, string>>,
+  onReplayFailure?: Parameters<typeof createAcpCompatibilityStream>[4],
 ): Promise<{
   managed: ReturnType<typeof createAcpCompatibilityStream>;
   writer: WritableStreamDefaultWriter<AcpStreamMessage>;
@@ -83,6 +84,7 @@ async function handshake(
     transport.owner,
     undefined,
     replayEnv,
+    onReplayFailure,
   );
   const writer = managed.writable.getWriter();
   const reader = managed.readable.getReader();
@@ -112,9 +114,10 @@ describe("DeepSeek ACP compatibility stream", () => {
   it.each(["resume", "native", "error", "missing", "direct-resume"])("keeps load/replay response ordering for %s", async (mode) => {
     const home = await mkdtemp(join(tmpdir(), "dsh-bridge-replay-"));
     const transport = memoryTransport();
+    const onReplayFailure = vi.fn();
     const { managed, writer, reader } = await handshake(transport,
       mode === "native" ? { loadSession: true } : { sessionCapabilities: { resume: {} } },
-      { DSH_HOME: home });
+      { DSH_HOME: home }, onReplayFailure);
     try {
       if (mode !== "missing") await writeReplayFixture(home);
       await writer.write(frame({ jsonrpc: "2.0", id: "load-1", method: mode === "direct-resume" ? "session/resume" : "session/load", params: {
@@ -139,6 +142,7 @@ describe("DeepSeek ACP compatibility stream", () => {
       transport.input.enqueue(response);
       expect(await readMessage(reader)).toEqual(response);
       expect(transport.writes).toHaveLength(2);
+      expect(onReplayFailure.mock.calls).toEqual(mode === "missing" ? [["missing"]] : []);
     } finally {
       await managed.close();
       await rm(home, { recursive: true, force: true });

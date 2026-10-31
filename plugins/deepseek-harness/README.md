@@ -160,6 +160,12 @@ corrupt or changed files, newer generations, unknown events, unsupported content
 (such as attachments) or surface replacements leave the timeline empty while
 DSH still restores context. Reads are capped at 16 MiB compressed, 64 MiB decoded,
 50,000 records/updates and one second; exceeding a cap discards the entire replay.
+After a successful context resume with history recovery requested, a brief
+nonfatal warning explains if the log is missing, damaged/incomplete, unsupported,
+over the recovery limit or unreadable. It uses the public provider notice channel,
+not an assistant message, and includes no transcript, file paths, credentials or
+raw error text. Successful and legitimately empty replay stay silent. Opens that
+skip history, native `session/load` and failed resumes do not get this warning.
 Successful text/tool replay preserves full content within those bounds. Paseo
 0.11/0.12 may drop pre-response history; 0.14.0 is the integration test target.
 This is a compatibility fallback for an unpublished DSH file format, to be removed
@@ -169,8 +175,35 @@ for the distinction between automated checks and daemon/UI testing.
 **Known side effects and boundaries:** catalog discovery uses ACP `session/new`
 and can leave empty sessions in DSH's native session list. DSH profile settings
 remain authoritative; the generic ACP shim does not inject Paseo's extra
-`systemPrompt`. Real vision/MCP services, custom profiles, Windows and native
-iOS/Android clients have not been exercised. See [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md).
+`systemPrompt`. Real MCP services, Windows and native iOS/Android clients
+have not been exercised. See [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md).
+
+### Image input and ACP profiles
+
+Image input depends on the capabilities the ACP profile advertises. With
+DSH **0.2.1-rc.5**, the default `acp.config.model=deepseek-v4-flash` does not
+advertise `prompt.image`. An isolated Paseo **0.14.0** check passed real image
+input after setting `$DSH_HOME/profiles/acp/cordis.patch.yml` to:
+
+```yaml
+- id: acp
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+```
+
+The selected model ID was `["deepseek-official","deepseek-flash"]`; the model
+identified itself as DeepSeek-V4.1-Flash. Reload the plugin after changing the
+profile, because the connection caches capabilities. Creating another agent alone
+did not refresh them in that check.
+
+Both a PNG sent through the CLI and a JPEG uploaded through the 0.14.0 web client's
+Add image flow passed: the model read each random code and three colored shapes
+without tools. After a daemon restart, it still recalled them from DSH context, but the timeline was
+empty because v4 transcript replay does not support image attachments. With the
+recovery-notice change, requested history recovery reports unsupported format or content;
+this warning does not mean the model lost its context. This is one profile/model
+check, not a guarantee that every DSH model accepts images.
 
 ## Paseo installation
 
@@ -198,7 +231,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.16 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.17 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -330,7 +363,7 @@ Separately, an installed macOS Paseo 0.8.0 daemon completed real turns and kept
 tool-output tails, prior displayed history and DSH context through a plugin
 disable/enable cycle. An initial host IPC shutdown race was fixed by explicit
 async cleanup ownership; the repeated installed cycle had no new IPC errors,
-and the following real turn retained context and history. The current **65-test** suite
+and the following real turn retained context and history. The historical **65-test** suite
 includes pending-connect and close-ordering regressions; exact evidence is
 tracked in [verification](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/verification.md).
 The [post-release review](https://github.com/geoqiao/paseo-stuff/blob/main/plugins/deepseek-harness/docs/code-review.md) adds diagnostic-redaction, timeout,

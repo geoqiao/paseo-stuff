@@ -10,7 +10,7 @@ import type {
   ProviderLaunch,
   ProviderStatus,
 } from "@getpaseo/plugin/server/provider";
-import { buildSessionReplay, type ReplayTarget } from "./session-replay";
+import { buildSessionReplay, type ReplayFailureReason, type ReplayTarget } from "./session-replay";
 
 // Minimum only, like the Paseo requirements range: newer DSH releases are
 // accepted, and ACP behaviour is chosen from the capabilities DSH advertises.
@@ -39,6 +39,7 @@ export interface DshConnectorContext {
   env: Readonly<Record<string, string>>;
   resources: Set<ConnectorResource>;
   isClosed?: () => boolean;
+  onReplayFailure?: (reason: ReplayFailureReason) => void;
 }
 
 export interface AcpStreamOwner {
@@ -191,7 +192,7 @@ export async function createDshAcpStream(
     if (resource) {
       context.resources.delete(resource);
     }
-  }, env);
+  }, env, context.onReplayFailure);
   resource = {
     close: (reason) => managed.close(reason),
   };
@@ -223,6 +224,7 @@ export function createAcpCompatibilityStream(
   owner: AcpStreamOwner,
   onClosed: () => void = () => undefined,
   replayEnv?: Readonly<Record<string, string | undefined>>,
+  onReplayFailure?: (reason: ReplayFailureReason) => void,
 ): ManagedAcpStream {
   const reader = source.readable.getReader();
   const writer = source.writable.getWriter();
@@ -302,7 +304,8 @@ export function createAcpCompatibilityStream(
             // Paseo must receive history before the translated load resolves.
             const replay = await buildSessionReplay(load, replayEnv);
             if (state === "closed") return;
-            for (const frame of replay) controller.enqueue(transformInbound(frame));
+            for (const frame of replay.frames) controller.enqueue(transformInbound(frame));
+            if (replay.failure) onReplayFailure?.(replay.failure);
           }
         }
         controller.enqueue(transformInbound(message));
