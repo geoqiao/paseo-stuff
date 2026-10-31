@@ -8,6 +8,8 @@ Usage 面板显示你的 DeepSeek API 余额。为了查询余额，插件按 `d
 
 每个 agent 会话都以你的操作系统用户身份，作为子进程运行 `dsh --profile acp`，使用 daemon 的环境变量加上该会话的环境变量。这些环境变量里的凭据都会传给 `dsh`。插件本身不添加沙箱或权限策略。对 DeepSeek 服务的调用由 `dsh` 自己发出。
 
-恢复会话时，插件请求 `dsh` 恢复它自己的上下文。如果恢复失败，插件会报告错误，不会新开一个会话。在 Paseo 0.13 及以上版本中，插件可读取会话 `DSH_HOME` 下的 DSH v4 日志，在 agent reload 或 daemon 重启后恢复文字历史。日志缺失、损坏、格式不支持或过大时，时间线仍为空，但不妨碍恢复上下文。回放上限为 1 秒、16 MiB 压缩数据和 64 MiB 解压数据；暂不回放附件和替换历史的操作。插件不支持 provider 斜杠命令、steering 和计划，Paseo 额外的系统提示词也不会传给 `dsh`。列出模型时，可能会在 `dsh` 的会话列表里留下空会话。
+恢复会话时，插件请求 `dsh` 恢复它自己的上下文。如果恢复失败，插件会报告错误，不会新开一个会话。在 Paseo 0.13 及以上版本中，插件可读取会话 `DSH_HOME` 下的 DSH v4 日志，在 agent reload 或 daemon 重启后恢复文字历史。日志缺失、损坏、格式不支持或过大时，时间线仍为空，但不妨碍恢复上下文。如果本次请求恢复显示历史，插件会给出一次简短警告，说明无法显示的原因。恢复成功或历史本来为空时不提示；警告不含对话内容、路径或凭据。回放上限为 1 秒、16 MiB 压缩数据和 64 MiB 解压数据；暂不回放附件和替换历史的操作。插件不支持 provider 斜杠命令、steering 和计划，Paseo 额外的系统提示词也不会传给 `dsh`。列出模型时，可能会在 `dsh` 的会话列表里留下空会话。
+
+图片输入取决于 ACP profile。在 DSH 0.2.1-rc.5 中，默认的 `deepseek-v4-flash` profile 不声明支持图片输入。使用 provider `deepseek-official`、model `deepseek-flash` 的 ACP profile，已在隔离的 Paseo 0.14.0 环境中通过真实图片检查，分别使用 CLI 发送 PNG 和网页端上传 JPEG。修改 profile 后，需要 reload 插件来刷新能力。图片附件不会从历史日志中回放。
 
 自动化检查在 Paseo 0.11.4 和 0.14.0 SDK 下通过。真实对话在 macOS 上的 Paseo 0.11.4、0.12.0-beta.2、0.13.0、0.13.2 和 0.14.0 daemon 上运行过，最近一次使用 DSH 0.2.1-rc.5。Windows 以及原生 iOS 和 Android 客户端未经测试。

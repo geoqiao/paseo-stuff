@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased — replay recovery notices
+
+- After a successful context resume with history recovery requested, emit one
+  nonfatal provider notice if the transcript log is missing, corrupt, unsupported,
+  over the existing recovery limits or unreadable. Keep successful/empty replay,
+  history-skipping opens, native load and failed opens silent.
+- Use fixed plain-English reasons without transcript text, paths, credentials or
+  raw errors. Preserve replay bounds and avoid synthetic assistant messages.
+- Add synthetic provider/bridge coverage for ordering, session keys, duplicate
+  responses, close/failure safety and privacy. Check exact image pass-through and
+  document the separately verified image-capable ACP profile and replay limit.
+
 ## 0.1.0-beta.16 — 2026-10-31
 
 - Replay recognised DSH v4 text transcripts before completing translated

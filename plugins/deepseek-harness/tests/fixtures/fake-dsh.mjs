@@ -380,6 +380,11 @@ input.on("line", (line) => {
     return;
   }
   if (message.method === "session/load" || message.method === "session/resume") {
+    log("load", { method: message.method });
+    if (process.env.DSH_FAKE_FAIL_LOAD === "1") {
+      errorResponse(message.id, -32000, "synthetic load failure");
+      return;
+    }
     const sessionId = message.params.sessionId;
     const lifecycle = message.method === "session/resume" ? "resumed" : "loaded";
     const session = {
@@ -391,7 +396,14 @@ input.on("line", (line) => {
       thinking: "off",
     };
     sessions.set(sessionId, session);
-    response(message.id, { configOptions: configOptions(session) });
+    const result = { configOptions: configOptions(session) };
+    const respond = () => {
+      response(message.id, result);
+      if (process.env.DSH_FAKE_DUPLICATE_LOAD === "1") response(message.id, result);
+    };
+    const delay = Number(process.env.DSH_FAKE_LOAD_DELAY_MS ?? "0");
+    if (delay > 0) setTimeout(respond, delay);
+    else respond();
     return;
   }
   if (message.method === "session/list") {
@@ -408,6 +420,10 @@ input.on("line", (line) => {
     return;
   }
   if (message.method === "session/set_config_option") {
+    if (process.env.DSH_FAKE_FAIL_CONFIG === "1") {
+      errorResponse(message.id, -32000, "synthetic configuration failure");
+      return;
+    }
     const session = sessionFor(message.params.sessionId);
     if (message.params.configId === "model") {
       session.model = message.params.value;
@@ -418,6 +434,7 @@ input.on("line", (line) => {
     return;
   }
   if (message.method === "session/prompt") {
+    log("prompt", { prompt: message.params.prompt });
     prompt(message.id, message.params);
     return;
   }

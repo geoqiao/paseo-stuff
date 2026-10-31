@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, open, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -112,6 +112,198 @@ describe.sequential("DeepSeek Harness provider", () => {
       collector.unsubscribe();
       await connection.close();
     }
+  });
+
+  it.each(["success", "empty", "oversized", "unsupported", "missing", "corrupt"] as const)(
+    "reports only failed transcript recovery through the production provider: %s",
+    async (mode) => {
+      const connection = await connect();
+      const collector = collect(connection);
+      const secondListener = vi.fn();
+      const unsubscribeSecond = connection.onEvent(secondListener);
+      try {
+        const input = openInput("host-recovery-" + mode, cwdA, "notice-" + mode, "replay", nativePersistence("native-recovery-" + mode));
+        const home = input.config.env!.DSH_HOME;
+        if (mode !== "missing") {
+          const path = await writeReplayFixture(home, "native-recovery-" + mode, cwdA, (rows) => {
+            if (mode === "empty") rows.splice(1);
+            if (mode === "unsupported") rows[6].data.message.content = [{ type: "image", data: "private-image-api_key=secret", mimeType: "image/png" }];
+          });
+          if (mode === "corrupt") await writeFile(path, "private transcript /private/path api_key=secret");
+          if (mode === "oversized") {
+            const handle = await open(path, "r+");
+            try { await handle.truncate(16 * 1024 * 1024 + 1); }
+            finally { await handle.close(); }
+          }
+        }
+        await connection.send(input);
+        await waitForReady(collector, input.sessionId);
+        const notices = collector.events.filter((event) => event.type === "session.notice");
+        if (mode === "success" || mode === "empty") {
+          expect(notices).toEqual([]);
+          if (mode === "empty") expect(collector.events.filter((event) => event.type === "timeline.item")).toEqual([]);
+        } else {
+          const suffix = {
+            oversized: "it exceeds the recovery limit.",
+            unsupported: "it contains a format or content that cannot be restored yet.",
+            missing: "its recovery log is missing.",
+            corrupt: "its recovery log is damaged or incomplete.",
+          }[mode];
+          expect(notices).toEqual([{
+            type: "session.notice", sessionId: input.sessionId,
+            notice: {
+              id: "deepseek-harness:history-unavailable", severity: "warning",
+              title: "Chat history unavailable",
+              description: "Context restored, but chat history could not be displayed because " + suffix,
+            },
+          }]);
+          expect(collector.events.findIndex((event) => event.type === "session.opened")).toBeLessThan(collector.events.indexOf(notices[0]));
+          expect(collector.events.indexOf(notices[0])).toBeLessThan(collector.events.findIndex((event) => event.type === "session.ready"));
+          expect(collector.events.filter((event) => event.type === "timeline.item")).toEqual([]);
+          const serialized = JSON.stringify(notices);
+          for (const privateValue of [home, cwdA, "native-recovery", "private", "api_key", "secret"]) {
+            expect(serialized).not.toContain(privateValue);
+          }
+        }
+        expect(secondListener.mock.calls.map(([event]) => event).filter((event) => event.type === "session.notice")).toEqual(notices);
+        // A nonfatal warning must leave the restored context usable.
+        await connection.send(messagePrompt(input.sessionId, "after-" + mode, "continue"));
+        await collector.waitFor((event) => event.type === "session.turn" && event.state === "completed");
+        expect(collector.events.filter((event) => event.type === "session.notice")).toEqual(notices);
+        expect(collector.events.some((event) => event.type === "request.failed" || event.type === "session.runtime_failed")).toBe(false);
+      } finally {
+        unsubscribeSecond();
+        collector.unsubscribe();
+        await connection.close();
+      }
+    },
+  );
+
+  it.each(["native", "resume-error", "native-error", "config-error", "history-skip"] as const)(
+    "does not notify for native load or failed opening: %s",
+    async (mode) => {
+      await withEnvironment({
+        DSH_FAKE_CAPABILITIES: mode.startsWith("native") ? "load" : "resume",
+        DSH_FAKE_FAIL_LOAD: mode.endsWith("error") && mode !== "config-error" ? "1" : undefined,
+        DSH_FAKE_FAIL_CONFIG: mode === "config-error" ? "1" : undefined,
+      }, async () => {
+        const connection = await connect();
+        const collector = collect(connection);
+        try {
+          const input = openInput("no-notice-" + mode, cwdA, "no-notice-" + mode, "replay", nativePersistence("native-no-notice"));
+          if (mode === "history-skip") input.history = "skip";
+          await connection.send(input);
+          if (mode === "native" || mode === "history-skip") await waitForReady(collector, input.sessionId);
+          else await collector.waitFor((event) => event.type === "request.failed" && event.requestId === input.requestId);
+          expect(collector.events.filter((event) => event.type === "session.notice")).toEqual([]);
+          if (mode !== "native" && mode !== "history-skip") expect(collector.events.some((event) => event.type === "session.opened")).toBe(false);
+        } finally {
+          collector.unsubscribe();
+          await connection.close();
+        }
+      });
+    },
+  );
+
+  it("keeps concurrent open notices bound to their own host session keys", async () => {
+    const connection = await connect();
+    const collector = collect(connection);
+    try {
+      const missing = openInput("host-missing", cwdA, "concurrent-missing", "replay", nativePersistence("native-missing"));
+      const unsupported = openInput("host-unsupported", cwdB, "concurrent-unsupported", "replay", nativePersistence("native-unsupported"));
+      await writeReplayFixture(unsupported.config.env!.DSH_HOME, "native-unsupported", cwdB, (rows) => { rows[0].version = 5; });
+      await Promise.all([connection.send(missing), connection.send(unsupported)]);
+      await Promise.all([waitForReady(collector, missing.sessionId), waitForReady(collector, unsupported.sessionId)]);
+      const notices = collector.events.filter((event) => event.type === "session.notice");
+      expect(notices).toHaveLength(2);
+      expect(notices).toEqual(expect.arrayContaining([
+        expect.objectContaining({ sessionId: missing.sessionId, notice: expect.objectContaining({ description: expect.stringContaining("missing.") }) }),
+        expect.objectContaining({ sessionId: unsupported.sessionId, notice: expect.objectContaining({ description: expect.stringContaining("cannot be restored yet.") }) }),
+      ]));
+    } finally {
+      collector.unsubscribe();
+      await connection.close();
+    }
+  });
+
+  it("does not duplicate a notice for a repeated native response", async () => {
+    await withEnvironment({ DSH_FAKE_DUPLICATE_LOAD: "1" }, async () => {
+      const connection = await connect();
+      const collector = collect(connection);
+      try {
+        const input = openInput("duplicate-notice", cwdA, "duplicate-notice", "replay", nativePersistence("native-duplicate"));
+        await connection.send(input);
+        await waitForReady(collector, input.sessionId);
+        await connection.send(messagePrompt(input.sessionId, "after-duplicate", "continue"));
+        await collector.waitFor((event) => event.type === "session.turn" && event.state === "completed");
+        expect(collector.events.filter((event) => event.type === "session.notice")).toHaveLength(1);
+      } finally {
+        collector.unsubscribe();
+        await connection.close();
+      }
+    });
+  });
+
+  it("suppresses a pending notice when a listener closes the connection on opened", async () => {
+    const connection = await connect();
+    const collector = collect(connection);
+    let closing: Promise<void> | undefined;
+    const unsubscribe = connection.onEvent((event) => {
+      if (event.type === "session.opened") closing = connection.close();
+    });
+    try {
+      const input = openInput("closed-notice", cwdA, "closed-notice", "replay", nativePersistence("native-closed"));
+      await connection.send(input);
+      await collector.waitFor((event) => event.type === "session.opened");
+      await closing;
+      expect(collector.events.filter((event) => event.type === "session.notice")).toEqual([]);
+      expect(collector.events.at(-1)?.type).toBe("session.opened");
+    } finally {
+      unsubscribe();
+      collector.unsubscribe();
+      await connection.close();
+    }
+  });
+
+  it("does not emit after closing while resume is pending", async () => {
+    const spawnLog = join(testRoot, "pending-load-close.jsonl");
+    await withEnvironment({ DSH_FAKE_SPAWN_LOG: spawnLog, DSH_FAKE_LOAD_DELAY_MS: "500" }, async () => {
+      const connection = await connect();
+      const collector = collect(connection);
+      try {
+        await connection.send(openInput("pending-load-close", cwdA, "pending-load-close", "replay", nativePersistence("native-pending-load")));
+        await waitForFakeSpawnLog(spawnLog, (records) => records.some((record) => record.event === "load"));
+        const atClose = [...collector.events];
+        await connection.close();
+        expect(collector.events).toEqual(atClose);
+        expect(collector.events.some((event) => event.type === "session.notice")).toBe(false);
+      } finally {
+        collector.unsubscribe();
+        await connection.close();
+      }
+    });
+  });
+
+  it("passes image bytes and MIME type unchanged to the synthetic ACP peer", async () => {
+    const spawnLog = join(testRoot, "image-pass-through.jsonl");
+    await withEnvironment({ DSH_FAKE_SPAWN_LOG: spawnLog }, async () => {
+      const connection = await connect();
+      const collector = collect(connection);
+      try {
+        const input = openInput("image-pass-through", cwdA, "image-pass-through", "skip");
+        await connection.send(input);
+        await waitForReady(collector, input.sessionId);
+        const image = { type: "image", data: "aGVsbG8=", mimeType: "image/png" } as const;
+        await connection.send(messagePrompt(input.sessionId, "image-exact", "inspect image", [image]));
+        await collector.waitFor((event) => event.type === "session.turn" && event.state === "completed");
+        const records = await readFakeSpawnLog(spawnLog);
+        const record = records.find((entry) => entry.event === "prompt") as FakeLogRecord & { prompt: unknown[] };
+        expect(record.prompt).toEqual([{ type: "text", text: "inspect image" }, image]);
+      } finally {
+        collector.unsubscribe();
+        await connection.close();
+      }
+    });
   });
 
   it.each([0, -1, NaN, Infinity])("rejects invalid startup timeout %s before connecting", (startupTimeoutMs) => {
@@ -1062,6 +1254,10 @@ function testLaunch(command: string = process.execPath): ProviderLaunch {
     }
   }
   return { command, args: [fakeDsh, "--profile", "acp"], env };
+}
+
+function nativePersistence(sessionId: string) {
+  return { version: 1, data: { sessionId } } as const;
 }
 
 function connectRequest(): ProviderConnectRequest {

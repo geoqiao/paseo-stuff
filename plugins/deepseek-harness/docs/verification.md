@@ -1,5 +1,69 @@
 # Verification and limits
 
+## Unreleased — replay recovery notices
+
+- Node **24.18.0**, macOS, separate implementation worktree. No installed plugin,
+  daemon, version, release or upstream tracking state was changed by this work.
+- `npm run check` passes with the pinned **0.11.4** SDKs and with the
+  **0.14.0** client/plugin/protocol SDKs installed without saving: typecheck,
+  lint (0 warnings/errors) and **130 tests in five files** each. Dependencies
+  were installed with `npm ci --legacy-peer-deps`: plain `npm ci` reports a
+  pre-existing missing React peer in the lockfile. The lockfile is unchanged.
+- Production-provider integration uses the authored synthetic ACP peer, not a
+  live daemon or model. It checks successful and header-only empty replay,
+  oversized/image-containing/missing/corrupt logs, native load, failed native
+  load/resume, configuration failure after resume, explicit `history: "skip"`,
+  concurrent host session keys, two listeners, repeated native responses and
+  connection closure both during resume and from an opened-event listener.
+- A failed recovery produces one `session.notice` warning after
+  `session.opened` and before `session.ready`, keyed by the Paseo session ID.
+  It never produces a fake assistant message. Exact fixed wording and privacy
+  assertions exclude transcript text, native session IDs, paths and credentials.
+  A subsequent prompt completes normally after each recoverable log failure.
+- Reader tests distinguish valid empty history from failure and cover classified
+  reasons, malformed/unsupported content, file/decoded/record limits and deadline.
+  Bridge tests retain pre-response replay and ensure a repeated response cannot
+  produce duplicate history or a duplicate failure callback. Existing conservative
+  replay execution and limits are unchanged; only notices are gated by requested
+  history recovery.
+- The image pass-through test checks exact bytes and MIME type at the synthetic
+  ACP peer, alongside the existing `image=yes` turn test. It is not a real image
+  interpretation test.
+
+### Separately verified live image input, before the notice change
+
+Release validation separately tested the beta.16 packed plugin on an isolated
+**Paseo 0.14.0** daemon with **DSH 0.2.1-rc.5**. The default ACP configuration,
+`acp.config.model=deepseek-v4-flash`, did not advertise `prompt.image`.
+The check set `$DSH_HOME/profiles/acp/cordis.patch.yml` to:
+
+```yaml
+- id: acp
+  config:
+    provider: deepseek-official
+    model: deepseek-flash
+```
+
+Creating another agent did not refresh the cached capabilities. After plugin
+reload, a new agent using `["deepseek-official","deepseek-flash"]` identified
+its model as **DeepSeek-V4.1-Flash**. With a PNG sent through the CLI, it correctly
+read random code `22SHYYE`
+and a red circle, blue square and green triangle without tools. After a daemon
+restart, the timeline was empty because image content is unsupported by v4
+replay, but the model recalled the code and shapes. This establishes context
+restoration and the image replay limit; it does not verify the new notice UI.
+
+Release validation also used the Paseo **0.14.0 web client** Add image flow to
+upload a JPEG and send a prompt on the same `deepseek-flash` route. The model
+correctly read a new random code, `PAFE9JJ`, and all three shapes without tools.
+Both PNG CLI input and JPEG web upload were verified; the default ACP model was
+not changed to claim image support.
+
+**Not verified by this implementation work:** live notice delivery or rendering,
+desktop/mobile layouts, Windows or a live model call. Live image evidence above
+was reported from separate release validation, not rerun in this worktree. The
+separate live notice/daemon/UI acceptance check remains pending.
+
 ## Beta.16 — release check (2026-10-31)
 
 - `npm run check` passes with the pinned 0.11.4 SDK: typecheck, lint and 108 tests.
