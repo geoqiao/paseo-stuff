@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.18 — 2026-10-31
 
 - Repair DSH rc.5's stale official ACP startup default using a private process-only
   overlay. Default-config image prompts no longer require editing the DSH profile.

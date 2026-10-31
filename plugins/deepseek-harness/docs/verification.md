@@ -1,6 +1,6 @@
 # Verification and limits
 
-## Unreleased — default ACP image startup (2026-10-31)
+## Beta.18 — default ACP image startup (2026-10-31)
 
 - Root cause confirmed in published **DSH 0.2.1-rc.5**: the base
   `agent-default-model` selects `deepseek-flash`, whose official model catalog
