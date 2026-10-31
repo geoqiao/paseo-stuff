@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — replay recovery notices
+## 0.1.0-beta.17 — 2026-10-31
 
 - After a successful context resume with history recovery requested, emit one
   nonfatal provider notice if the transcript log is missing, corrupt, unsupported,

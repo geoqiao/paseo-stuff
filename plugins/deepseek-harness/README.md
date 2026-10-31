@@ -199,8 +199,7 @@ did not refresh them in that check.
 
 Both a PNG sent through the CLI and a JPEG uploaded through the 0.14.0 web client's
 Add image flow passed: the model read each random code and three colored shapes
-without tools. After a
-daemon restart, it still recalled them from DSH context, but the timeline was
+without tools. After a daemon restart, it still recalled them from DSH context, but the timeline was
 empty because v4 transcript replay does not support image attachments. With the
 recovery-notice change, requested history recovery reports unsupported format or content;
 this warning does not mean the model lost its context. This is one profile/model
@@ -232,7 +231,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.16 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.17 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
