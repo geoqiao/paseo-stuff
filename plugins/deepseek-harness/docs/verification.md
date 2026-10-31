@@ -1,5 +1,16 @@
 # Verification and limits
 
+## Beta.16 — release check (2026-10-31)
+
+- `npm run check` passes with the pinned 0.11.4 SDK: typecheck, lint and 108 tests.
+- The beta.16 tarball was unpacked and its production dependencies installed with
+  `npm ci --omit=dev`. It loaded as `running` on an isolated Paseo 0.14.0 daemon
+  (port 6844, relay off, temporary home), with DSH 0.2.1-rc.5 and a separate DSH_HOME.
+- A real tool turn read a synthetic marker. After a daemon restart, the CLI timeline
+  was identical to the pre-restart timeline; a follow-up recalled the marker without tools.
+- Runtime code is unchanged from #47. Its 0.14.0 web-client check below remains
+  the UI evidence; this release check used the CLI, not desktop or native mobile.
+
 ## Unreleased — Paseo 0.14.0 and DSH 0.2.1-rc.5 (2026-10-30)
 
 - `npm run check` passes with the pinned **0.11.4** SDKs and with the **0.14.0**

@@ -18,7 +18,7 @@ The current support target is Paseo **0.14.0**. Activity **0.1.0-beta.14** and M
 Renderer **0.1.0-beta.8** require Paseo **0.13.0**; their checks pass with the pinned
 0.13.2 SDK and the 0.14.0 SDK, and their host-pipeline tests run on 0.14.0 source. On
 Paseo 0.9 to 0.12, keep Activity beta.11 and Math beta.6. DeepSeek Harness
-**0.1.0-beta.15** requires Paseo **0.11.0**, is checked against the **0.11.4** SDK and
+**0.1.0-beta.16** requires Paseo **0.11.0**, is checked against the **0.11.4** SDK and
 also passes with the 0.14.0 SDK. Packed builds of all three ran on a 0.14.0 daemon in
 the 0.14.0 web client, with DeepSeek Harness on DSH **0.2.1-rc.5**. Registry installs
 of the released versions (Activity beta.13, Math beta.8, DeepSeek Harness beta.15)

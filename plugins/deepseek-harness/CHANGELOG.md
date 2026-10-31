@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.16 — 2026-10-31
 
 - Replay recognised DSH v4 text transcripts before completing translated
   `session/load` requests, including user messages, reasoning, answers and tool
