@@ -33,6 +33,11 @@ jobs:
             node: 24
             os: windows-latest
             label: Windows tests
+            # Separate the small test-only cache from historical Windows
+            # caches that also contained hundreds of global tool packages.
+            cache_lockfiles: |
+              plugins/deepseek-harness/package-lock.json
+              plugins/deepseek-harness/package.json
     defaults:
       run:
         shell: bash
@@ -45,7 +50,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-          cache-dependency-path: plugins/${{ matrix.plugin }}/package-lock.json
+          cache-dependency-path: ${{ matrix.cache_lockfiles || format('plugins/{0}/package-lock.json', matrix.plugin) }}
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
       - if: matrix.plugin == 'math-renderer'
         run: npm run prepare:markdown && npm run prepare:wasm
