@@ -5,6 +5,7 @@ on:
     paths-ignore: &docs-only
       - '*.md'
       - 'docs/**'
+      - '.github/ci/*.md'
       - 'plugins/*/*.md'
   pull_request:
     paths-ignore: *docs-only

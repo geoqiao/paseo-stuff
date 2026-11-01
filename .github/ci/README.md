@@ -24,13 +24,18 @@ Use setup-node's npm download cache, not node_modules or daemon homes. Its keys
 include both plugin and tool locks where applicable, so a tool update invalidates
 the correct cache. Node 22 and 24 share downloads, not native installed modules.
 Only Windows installs DSH. Package smoke jobs install Paseo, but ordinary plugin
-checks do not.
+checks do not. Windows uses one explicit npm cache path for setup-node and all
+installs: changing npm's prefix can otherwise change globalconfig and silently
+send tool downloads to a different, uncached directory.
 
 All plugin tests still run on Node 22 and 24. Windows additionally runs all DSH
-tests and the real daemon/provider/model-catalog smoke check; typecheck and lint
-are already covered on Ubuntu with Node 24. There are no cross-job dependencies.
+tests and the real daemon/provider/model-catalog smoke check in independent jobs;
+typecheck and lint are already covered on Ubuntu with Node 24. Tool installations
+run concurrently, with both exit statuses checked. The smoke job installs only
+the plugin's production dependencies, like the npm package checks. There are no
+cross-job dependencies.
 
-CI ignores root Markdown, `docs/**`, and Markdown directly inside plugin roots.
+CI ignores root Markdown, `docs/**`, CI tooling documentation, and Markdown directly inside plugin roots.
 Nested Markdown test fixtures remain CI inputs. The repository had no required
 checks or rulesets when this filter was introduced. Before requiring checks,
 replace workflow-level filtering with an always-running change detector and a
