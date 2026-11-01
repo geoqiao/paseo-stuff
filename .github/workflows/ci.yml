@@ -2,7 +2,18 @@ name: Plugin checks
 on:
   push:
     branches: [main]
+    paths-ignore: &docs-only
+      - '*.md'
+      - 'docs/**'
+      - 'plugins/*/*.md'
   pull_request:
+    paths-ignore: *docs-only
+  workflow_dispatch:
+# Do not use github.ref for main: even cancel-in-progress: false can evict a
+# pending run in the same group. Every non-PR run gets its own group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 permissions:
   contents: read
 jobs:
@@ -28,8 +39,8 @@ jobs:
           cache: npm
           cache-dependency-path: plugins/${{ matrix.plugin }}/package-lock.json
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-      - run: npm run prepare:markdown --if-present
-      - run: npm run prepare:wasm --if-present
+      - if: matrix.plugin == 'math-renderer'
+        run: npm run prepare:markdown && npm run prepare:wasm
       - run: npm run check
   npm-package:
     # Loads the packed npm package with only its shrinkwrapped production
@@ -59,8 +70,14 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: plugins/${{ matrix.plugin }}/package-lock.json
+          cache-dependency-path: |
+            plugins/${{ matrix.plugin }}/package-lock.json
+            .github/ci/paseo/package-lock.json
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+      - name: Install Paseo CLI
+        run: |
+          npm ci --prefix "$GITHUB_WORKSPACE/.github/ci/paseo" --ignore-scripts --no-audit --no-fund --prefer-offline
+          echo "$GITHUB_WORKSPACE/.github/ci/paseo/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Pack and install production dependencies
         run: |
           pack="$RUNNER_TEMP/pack"
@@ -75,7 +92,6 @@ jobs:
         env:
           PLUGIN_ID: ${{ matrix.id }}
         run: |
-          npm install -g --no-audit --no-fund @getpaseo/cli@0.14.0
           home="$RUNNER_TEMP/paseo-home"
           mkdir -p "$home"
           echo '{"version":1,"daemon":{"listen":"127.0.0.1:6798","relay":{"enabled":false}},"pluginsEnabled":true}' > "$home/config.json"
@@ -108,13 +124,24 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: plugins/deepseek-harness/package-lock.json
+          cache-dependency-path: |
+            plugins/deepseek-harness/package-lock.json
+            .github/ci/paseo/package-lock.json
+            .github/ci/dsh/package-lock.json
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-      - run: npm run check
-      - name: Install Paseo and DSH
+      # Typecheck and lint already run on Ubuntu/Node 24. Keep all tests on
+      # Windows, where process lifecycle and .cmd behavior are platform-specific.
+      - run: npm test
+      - name: Install Paseo CLI
         run: |
-          npm install -g --no-audit --no-fund @getpaseo/cli@0.14.0
-          npm install -g --ignore-scripts --no-audit --no-fund @deepseek-ai/dsh@latest
+          npm ci --prefix "$GITHUB_WORKSPACE/.github/ci/paseo" --ignore-scripts --no-audit --no-fund --prefer-offline
+          echo "$GITHUB_WORKSPACE/.github/ci/paseo/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Install official DSH launcher
+        run: |
+          npm ci --prefix "$GITHUB_WORKSPACE/.github/ci/dsh" --ignore-scripts --no-audit --no-fund --prefer-offline
+          echo "$GITHUB_WORKSPACE/.github/ci/dsh/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Check official DSH launcher
+        run: |
           where dsh
           dsh --profile acp --version
       - name: Load the plugin in a daemon
