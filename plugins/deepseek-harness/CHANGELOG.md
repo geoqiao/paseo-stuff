@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.20 — 2026-11-10
 
 - Recognise all non-transcript event types in the published DSH 0.2.2-rc.1
   v4 catalog. Todo snapshots, approvals, retries, title requests, subagent and

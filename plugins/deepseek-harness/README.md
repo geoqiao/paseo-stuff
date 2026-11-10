@@ -253,7 +253,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.19 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.20 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -272,14 +272,17 @@ the resolved launch, the process helpers, provider `status()` and usage
 sources. Under Paseo's requirements contract, a minimum-only range admits
 0.11.0 and every later release, including prereleases and future breaking
 releases; it is not a promise that untested versions work. Typecheck, lint and
-all 171 tests pass with the pinned 0.11.4 SDK and the no-save 0.15.3 SDK.
+all 250 tests pass with the pinned 0.11.4 SDK and the no-save 0.15.3 SDK.
 The production provider factory also passes no-inference checks against official
 DSH 0.2.2-rc.1 on Node 24.18.0 with SDK 0.15.3, including persistence reopen in a
 fresh process. Real model turns ran on macOS daemons 0.11.4, 0.12.0-beta.2,
 0.13.0, 0.13.2 and 0.14.0; the newest real-turn check used DSH 0.2.1-rc.5.
 The beta.19 tarball also loads as running on an isolated 0.15.3 daemon, with
 provider diagnostic Ready and model/reasoning discovery passing without model
-calls. No 0.15.3 UI or real model turn was exercised.
+calls. Text/tool history recovery was subsequently checked on the macOS 0.15.3
+desktop after a plugin reload, without a new model prompt. Other 0.15.3 UI flows
+and real model turns remain untested. Windows automated tests and isolated
+daemon smoke checks pass in CI; manual Windows and native mobile UI remain untested.
 Do not restart the daemon for this plugin. Follow Paseo's
 global plugin-enable and per-installation
 enable/disable rules; an existing disabled installation should remain

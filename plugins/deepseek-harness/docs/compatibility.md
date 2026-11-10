@@ -54,7 +54,7 @@ and 0.14 admit updates in its load replay window. The provider regression checks
 window on 0.13.2 and 0.14.0 and explicitly records the empty-history behavior of the minimum 0.11.4
 SDK. See [verification.md](verification.md) for the executed checks and limits.
 
-The unreleased reader recognises all 62 event types from the published DSH
+The beta.20 reader recognises all 62 event types from the published DSH
 0.2.2-rc.1 v4 catalog. It displays the four conversation/tool types and omits
 auxiliary metadata, matching the ACP presentation scope. Unknown events may be
 omitted only with DSH's explicit `ignorable: true` envelope and no surface
@@ -65,7 +65,7 @@ catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 ## Paseo 0.15.3 and DSH 0.2.2-rc.1
 
 The 0.15.3 public SDK retains the resolved launch and ACP load-replay interfaces.
-Typecheck, lint and 171 tests pass with both the pinned 0.11.4 SDK and no-save
+Typecheck, lint and 250 tests pass with both the pinned 0.11.4 SDK and no-save
 0.15.3 SDK. The production provider also passes official DSH 0.2.2-rc.1
 initialization, catalog/list, configured-session persistence reopen and cleanup
 on Node 24.18.0 without model calls. DSH now requires Node 24.9+ for its CLI;

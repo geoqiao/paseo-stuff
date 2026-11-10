@@ -1,6 +1,6 @@
 # Verification and limits
 
-## Unreleased — v4 event coverage (2026-11-09)
+## Beta.20 — v4 event coverage (2026-11-10)
 
 - Compare the replay reader with the independently published
   `@deepseek-ai/dsh-session@0.2.2-rc.1` v4 catalog: 62 event types, of which
@@ -29,11 +29,19 @@
   tool history. The original persistence identity is preserved. Verification
   sends no new model prompt, does not restart the daemon, and does not rewrite
   existing transcript records. Native DSH resume may append its ordinary
-  initialization records. The registry installation stays on beta.19 with a
-  backed-up local runtime patch; this is not a published release.
+  initialization records. That desktop check used a backed-up local runtime
+  patch on the beta.19 registry installation.
 - Image/attachment recovery, unknown required events, malformed replacements
   and the existing time/size limits retain their prior behavior. No fresh live
   model-turn, compact/mobile layout or native-mobile acceptance is claimed.
+- Independent maintenance review of PR #53 on 2026-11-10 matched the fixture
+  and reader allowlist to the published DSH session package and traced replay
+  through the ACP bridge into the 0.15.3 SDK load window. Typecheck, lint and
+  all 250 tests passed on Node 22.23.4 with no-save 0.15.3 SDKs. Minimum SDK
+  pins remain 0.11.4. The same head passed CI on Node 22/24 with the pinned SDK,
+  250 Windows tests, packed-package loading and an isolated Windows daemon
+  smoke check. This review did not repeat the contributor's private-log or
+  desktop checks and made no model calls.
 - When updating supported DSH versions, refresh the independent published
   catalog fixture and review each new event's transcript/auxiliary role.
 
