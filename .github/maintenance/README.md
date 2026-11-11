@@ -35,13 +35,26 @@ lock ownership blocks writes. Use the actual current daemon and schedule IDs.
 ## Operational boundaries
 
 The daily result is the status surface: last successful check, changes processed,
-waiting items and exact user actions. Since 2026-11-07, the owner authorizes
-verified replies and review comments on existing issues/PRs in
-`geoqiao/paseo-stuff`. Record each response URL and the activity/head it answers;
-do not duplicate replies or react to the task's own response. External-repository
-messages, new issues/PRs, closing issues, pushing, publishing, merging and changing
-the main daemon's plugin state require their own recorded authorization.
-One-off release/merge permissions do not become standing daily permissions.
+waiting items and exact user actions. Since 2026-11-11, standing authorization
+covers fixes, tests, commits, branch pushes, PR creation and updates, verified
+replies, merging after checks and review, and releases through the existing
+GitHub Release → npm trusted-publishing workflow in `geoqiao/paseo-stuff`.
+Verify the published package, version, dist-tag and workflow before recording a
+release as complete. Documentation-only changes do not require a plugin release.
+Record public text and resulting URLs; never duplicate a PR or overwrite a
+published version. Follow the detailed gates in [prompt.md](prompt.md).
+External-repository writes, issue closure, destructive changes, paid services and
+main-daemon/plugin installation changes still require separate authorization;
+first npm publication and interactive authentication remain owner actions.
+
+Resume actionable pending work even when the detector reports `NO_CHANGE`,
+including items previously blocked only on push, PR, merge or release permission.
+Store all evidence and recovery steps in the canonical checkout's state directory.
+The schedule uses local isolation with `target.config.archiveOnFinish=true`:
+Paseo archives each run's workspace and agent after it ends, leaving project files
+intact. Stop owned services, finish delegates and release the coordination lock
+before ending. Persist external blockers for the next run instead of retaining
+daily conversations.
 
 A merged upstream fix stays pending until a released tag contains it and the
 affected plugin behavior has been verified. A green unit suite is not a native
