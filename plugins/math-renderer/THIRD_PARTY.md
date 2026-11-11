@@ -32,6 +32,6 @@ test cases, but its application renderer and tokenizer were not copied:
 https://github.com/getpaseo/paseo/pull/2562
 
 Nine unmodified Paseo source fixtures and one reduced file are Apache-2.0, pinned
-to v0.15.3 commit d91ae138cb931447635e94296023414a58bedcc5. See
-tests/fixtures/paseo-0.15.3/README.md and its LICENSE. They are test-only and excluded
+to v0.15.4 commit 1c00b365c9e0b74c1580eba33d905d693125ae21. See
+tests/fixtures/paseo-0.15.4/README.md and its LICENSE. They are test-only and excluded
 from production bundles.

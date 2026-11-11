@@ -1,5 +1,37 @@
 # Verification and limits
 
+## Paseo 0.16.0-beta.1 prerelease review (2026-11-11)
+
+- Typecheck, lint and **250 tests** pass with the no-save beta SDK. The test
+  helper accepts optional `ProviderConfigState.settings`, matching the public
+  beta contract; minimum-SDK checks also pass. No production adapter changed.
+- The beta ACP shim applies configuration in the peer's declared order and
+  prefers an option with ID `model` among controls in that category. Its load,
+  resume and replay paths remain intact. Existing fake-peer coverage passes;
+  official DSH **0.2.2-rc.1** has not changed, so its earlier no-model-call
+  factory/persistence checks were not repeated.
+- This is prerelease SDK acceptance, separate from stable **0.15.4**. No beta
+  daemon load, live model call, desktop or native mobile check was performed.
+- Local evidence: maintenance `evidence/2026-11-11/deepseek-harness-beta-tests.json`
+  and the tagged beta SDK/source audit.
+
+
+## Paseo 0.15.4 stable target (2026-11-11)
+
+- Typecheck, lint and all **250 tests** passed with the no-save **0.15.4**
+  client, plugin and protocol SDKs on 2026-11-10. The minimum SDK pin stays
+  **0.11.4**. Production code and plugin versions are unchanged.
+- The published ACP interfaces remain compatible. Official DSH stays at
+  **0.2.2-rc.1**; its existing factory/persistence evidence below used SDK 0.15.3.
+  No new DSH release or model-call verification was required.
+- Stable 0.15.4 still lacks upstream #8811 reply folding and #8756 mirror
+  installation fixes. Existing stable-release workarounds remain in place.
+- This target records SDK checks. No 0.15.4 live UI,
+  isolated daemon load, native mobile or Windows acceptance was performed.
+- Local evidence: `.scratch/upstream-compat-watch/evidence/2026-11-10/upstream-0.15.4/review.json`
+  and `.scratch/upstream-compat-watch/evidence/2026-11-11/source-audit.json`.
+
+
 ## Beta.20 — v4 event coverage (2026-11-10)
 
 - Compare the replay reader with the independently published

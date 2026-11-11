@@ -66,7 +66,7 @@ catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 
 The 0.15.3 public SDK retains the resolved launch and ACP load-replay interfaces.
 Typecheck, lint and 250 tests pass with both the pinned 0.11.4 SDK and no-save
-0.15.3 SDK. The production provider also passes official DSH 0.2.2-rc.1
+0.15.4 SDK. The production provider also passes official DSH 0.2.2-rc.1
 initialization, catalog/list, configured-session persistence reopen and cleanup
 on Node 24.18.0 without model calls. DSH now requires Node 24.9+ for its CLI;
 the plugin's Node 22.19+ requirement remains useful for older DSH versions.
