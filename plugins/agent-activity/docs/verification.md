@@ -1,5 +1,39 @@
 # Verification and remaining gaps
 
+## Paseo 0.16.0-beta.1 prerelease review (2026-11-11)
+
+- Typecheck, lint and **279 tests** pass with the no-save beta SDK. These SDK
+  suites still use the stable host fixtures; separate checks bundle the actual
+  beta tag's presentation pipeline and this plugin's production transformers.
+- The tagged beta retains the #8875 transformed-work limitation: two transformed
+  tool calls and one native final reply still produce no collapsed-turn summary.
+  With native rows selected, the same turn folds. Full-display guidance remains.
+- The beta contains #8811 reply provenance and #8756 integrity-only npm comparison.
+  Stable **0.15.4** lacks both. No beta live UI or daemon installation was tested.
+- Local evidence: `evidence/2026-11-11/agent-activity-beta-tests.json` and
+  `evidence/2026-11-11/beta-contract-tests.json` under the maintenance state directory.
+
+
+## Paseo 0.15.4 stable target (2026-11-11)
+
+- Typecheck, lint and all **279 tests** passed with the no-save **0.15.4**
+  client, plugin and protocol SDKs on 2026-11-10. The minimum SDK pin stays
+  **0.13.2**. Production code and plugin versions are unchanged.
+- Host fixtures now identify tag **v0.15.4**, source commit
+  `1c00b365c9e0b74c1580eba33d905d693125ae21`. Every vendored source and the
+  reduced message-ID helper match that tag; runtime content is unchanged from
+  0.15.3. Full, Collapse tool calls and Collapse turns retain the same behavior.
+- After refreshing fixture paths and the host-protocol alias, typecheck, lint
+  and the full suite also pass with the minimum SDK. Target-SDK checks from
+  2026-11-10 remain applicable to the unchanged runtime.
+- Stable 0.15.4 still lacks upstream #8811 reply folding and #8756 mirror
+  installation fixes. Existing stable-release workarounds remain in place.
+- This target records SDK and offline host-pipeline checks. No 0.15.4 live UI,
+  isolated daemon load, native mobile or Windows acceptance was performed.
+- Local evidence: `.scratch/upstream-compat-watch/evidence/2026-11-10/upstream-0.15.4/review.json`
+  and `.scratch/upstream-compat-watch/evidence/2026-11-11/source-audit.json`.
+
+
 ## Paseo 0.15.3 compatibility check (2026-11-07)
 
 - No production code or version change: this is verification of beta.14 with updated

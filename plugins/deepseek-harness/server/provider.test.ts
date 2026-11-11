@@ -1550,7 +1550,7 @@ function settingValue(event: ProviderEvent, id: string): unknown {
   if (event.type !== "session.config") {
     return undefined;
   }
-  return event.config.settings.find((setting) => setting.id === id)?.value;
+  return event.config.settings?.find((setting) => setting.id === id)?.value;
 }
 
 async function withEnvironment(
