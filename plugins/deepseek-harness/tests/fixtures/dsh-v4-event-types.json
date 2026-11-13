@@ -1,9 +1,9 @@
 {
   "provenance": {
     "package": "@deepseek-ai/dsh-session",
-    "version": "0.2.2-rc.1",
+    "version": "0.2.2-rc.2",
     "file": "lib/types/known-event-types.js",
-    "integrity": "sha512-e0zx9HFNn8EyqrymGQS85SjKOyr61//ChTgIVDlCBSZvBB723fuXyi9LiHIIuPTlkgmWJl3gm5J51ebEXew7PQ==",
+    "integrity": "sha512-OiVq3aZWfGjV3/YxebTKo3WozOUz9aGSG/IZnN0medfciAhprh5VkZTCWvwxQCFCN1I9b38Y5RZbwqcCX+m7Eg==",
     "repository": "https://github.com/deepseek-ai/deepseek-harness",
     "license": "MIT",
     "licenseFile": "dsh-session.LICENSE"
@@ -55,6 +55,7 @@
     "team/member",
     "team/message/delivered",
     "team/message/queued",
+    "team/mode",
     "team/task",
     "todo/write",
     "tool-workflow/agent-end",

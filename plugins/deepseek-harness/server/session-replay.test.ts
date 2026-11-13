@@ -87,10 +87,10 @@ describe("DSH v4 transcript replay", () => {
     expect(expected.failure).toBeUndefined();
   });
 
-  it("covers the published DSH 0.2.2-rc.1 catalog of 62 distinct v4 events", () => {
-    expect(new Set(catalog.eventTypes).size).toBe(62);
+  it("covers the published DSH 0.2.2-rc.2 catalog of 63 distinct v4 events", () => {
+    expect(new Set(catalog.eventTypes).size).toBe(63);
     expect(catalog.eventTypes.filter((type) => transcriptTypes.includes(type)).sort()).toEqual(transcriptTypes);
-    expect(nonTranscriptTypes).toHaveLength(58);
+    expect(nonTranscriptTypes).toHaveLength(59);
   });
 
   it.each(nonTranscriptTypes)("preserves complete text/tool history around %s metadata", async (type) => {

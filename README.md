@@ -26,10 +26,12 @@ history after context compaction and pruning, including repeated prefix compacti
 and recognises DSH model/reasoning selection records. Its checks
 pass with the pinned **0.11.4** and target **0.15.4** SDKs, and the production
 provider initializes, lists sessions/models and reopens persistence with official
-**DSH 0.2.2-rc.1** without model calls. Its packed source also loads on an isolated
-0.15.3 daemon, with provider diagnostic Ready and catalog discovery passing.
+**DSH 0.2.2-rc.2** without model calls. **Beta.21** also preserves history across
+Team-mode metadata and the official batch-append API. The beta.19 tarball loaded
+on an isolated 0.15.3 daemon, with provider diagnostic Ready and catalog discovery
+passing.
 That CLI requires **Node.js >=24.9.0**.
-Direct Git installs are pinned to the beta.19 release tag.
+Direct Git installs are pinned to the beta.21 release tag.
 
 The latest live web-client checks remain on Paseo **0.14.0** with DSH
 **0.2.1-rc.5**. Native mobile acceptance is not complete. Requirements are minimums;

@@ -1,5 +1,47 @@
 # Verification and limits
 
+## Beta.21 — DSH 0.2.2-rc.2 (2026-11-13)
+
+- Official npm `latest` remains 0.2.2-rc.1; `next` selects **0.2.2-rc.2** for
+  both CLI and ACP. Install the full official CLI closure with the checked-in
+  CI tool lock and `--ignore-scripts`, using Node **24.18.0**. CLI, ACP, Session
+  and JSONL persistence all resolve to rc.2; ACP SDK remains **1.4.0**.
+- Compare the independently published Session catalog with rc.1: **63 events**,
+  adding only `team/mode`. Its payload is `{ enabled: boolean }`; the official
+  Team service persists it when toggling Team mode. It has no transcript
+  projection. Before the fix, the synthetic catalog regression returns
+  `unsupported` and drops all six text/tool replay frames. The reader now skips
+  that metadata, preserving the complete history and unchanged log bytes.
+- Catalog provenance records the published package integrity, file and license.
+  Cover all **59 auxiliary types**, plus `team/mode` through the production
+  provider's metadata recovery regression. Unknown required records, malformed
+  data, image history and existing recovery bounds keep their previous behavior.
+- Typecheck, lint and **251 tests** pass with both pinned **0.11.4** and no-save
+  **0.15.4** SDKs. The checked-in development pins remain 0.11.4.
+- Using the public 0.15.4 SDK, the production provider reports available status,
+  initializes the actual official ACP process, negotiates messages/images,
+  configuration/list/persistence/permissions, discovers the default model and
+  `off/low/high/max` reasoning options, and applies reasoning changes. Collected
+  events pass `ProviderEventSchema`.
+- Open a configured session, close the connection and dispose the provider. In
+  a separate Node process, open its actual official JSONL persistence handle,
+  use the published `Session.append(array)` API to batch Team enable/disable,
+  turn/step boundaries and synthetic user/assistant text, then flush and close.
+  A third process reopens the same persistence through the production provider
+  with history requested: native identity and both synthetic messages survive,
+  session listing succeeds and no recovery notice is emitted. All resources
+  close without model calls. Homes and logs contain only synthetic data; no
+  user credentials or installed runtime are used.
+- The official ACP/default-model mismatch remains present, so image-startup
+  repair stays enabled. Existing context-resume and reasoning-ID adapters also
+  remain. This check makes no paid calls and adds no desktop/native-mobile UI
+  acceptance. Windows uses the actual rc.2 npm launcher in the PR's isolated
+  daemon CI job; manual Windows UI remains untested.
+- Evidence: maintenance `evidence/2026-11-13/` contains SDK check logs,
+  `official-open.json`, `official-batch.json`, `official-reopen.json`, scripts
+  and package provenance. Earlier verification sections retain their historical
+  versions and limits.
+
 ## Paseo 0.16.0-beta.1 prerelease review (2026-11-11)
 
 - Typecheck, lint and **250 tests** pass with the no-save beta SDK. The test

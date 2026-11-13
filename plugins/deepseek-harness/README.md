@@ -17,19 +17,19 @@ patched Paseo app is required.
 > **Requirements:** Paseo 0.11.0 or later (tested Paseo versions are listed
 > under [Paseo installation](#paseo-installation)), daemon Node.js 22.19.0 or
 > newer, and a separately installed official DeepSeek Harness executable
-> (DSH 0.2.2-rc.1 requires Node.js 24.9.0 or newer for its CLI),
+> (DSH 0.2.2-rc.2 requires Node.js 24.9.0 or newer for its CLI),
 > **DSH 0.1.5-rc.1 or newer**. Newer DSH releases are accepted without an
 > exact-version check. Tested: **0.1.5-rc.1**, **0.1.5-rc.2**, **0.1.6-alpha.2**,
 > **0.1.7-alpha.2**, **0.1.7-rc.1**, **0.1.7-rc.2**, **0.2.0-rc.1**,
-> **0.2.0-rc.2**, **0.2.1-rc.2**, **0.2.1-rc.3**, **0.2.1-rc.4**, **0.2.1-rc.5** and **0.2.2-rc.1**. The executable must be able to run
+> **0.2.0-rc.2**, **0.2.1-rc.2**, **0.2.1-rc.3**, **0.2.1-rc.4**, **0.2.1-rc.5**, **0.2.2-rc.1** and **0.2.2-rc.2**. The executable must be able to run
 > `dsh --profile acp --version` and `dsh --profile acp`.
 > On Paseo 0.8 to 0.10, install beta.12 instead:
 > `paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.12`.
 
-**Beta.19** restores displayed history after DSH context compaction and tool-output
-pruning, retaining original messages and full tool results. It also skips recorded
-model/reasoning selections, avoiding beta.18's unsupported-history warning after
-configuration changes with DSH 0.2.2-rc.1.
+**Beta.21** preserves text/tool history when DSH 0.2.2-rc.2 records Team-mode
+changes. Its replay catalog covers all 63 published v4 event types. Original
+messages and full tool results remain available after context compaction,
+pruning and model/reasoning configuration changes.
 
 ## What it does
 
@@ -53,13 +53,13 @@ configuration changes with DSH 0.2.2-rc.1.
 
 Install a verified official DSH version **on the daemon machine**, then check
 that the daemon can find the executable on its PATH. The npm `latest` dist-tag
-and `next` both currently resolve to `0.2.2-rc.1`. Its no-inference ACP and
+currently resolves to `0.2.2-rc.1` and `next` to `0.2.2-rc.2`. Its no-inference ACP and
 production-provider checks pass. Use Node.js **24.9.0 or newer** to install and
 run that CLI, including the executable selected by the daemon's `PATH` or
 provider command override:
 
 ~~~sh
-npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.2-rc.1
+npm install -g --ignore-scripts @deepseek-ai/dsh@0.2.2-rc.2
 dsh --version
 ~~~
 
@@ -108,7 +108,7 @@ The verified runtime compositions use CLI `0.1.5-rc.1` or `0.1.5-rc.2` with
 `@deepseek-ai/dsh-acp` `0.1.5-rc.2`, CLI `0.1.6-alpha.2` with
 `@deepseek-ai/dsh-acp` `0.1.6-alpha.2`, the isolated published CLI/ACP
 closures `0.1.7-alpha.2`, `0.1.7-rc.1`, `0.1.7-rc.2`, `0.2.0-rc.1`,
-`0.2.1-rc.2`, `0.2.1-rc.3`, `0.2.1-rc.4`, `0.2.1-rc.5` and `0.2.2-rc.1`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
+`0.2.1-rc.2`, `0.2.1-rc.3`, `0.2.1-rc.4`, `0.2.1-rc.5`, `0.2.2-rc.1` and `0.2.2-rc.2`, and the global CLIs `0.2.0-rc.2` and `0.2.1-rc.3`; all use
 ACP SDK `1.4.0`. The plugin probes the CLI version and rejects only releases
 older than `0.1.5-rc.1` or output it cannot parse. Newer releases are accepted
 but untested until listed here; ACP behaviour follows the capabilities DSH
@@ -202,7 +202,7 @@ have not been exercised. See [verification](https://github.com/geoqiao/paseo-stu
 ### Image input and ACP profiles
 
 DSH's ACP implementation supports images. DSH **0.2.1-rc.5** and
-**0.2.2-rc.1** have a startup mismatch: its base profile selects `deepseek-flash` (DeepSeek-V4.1-Flash), but
+**0.2.2-rc.1** and **0.2.2-rc.2** have a startup mismatch: its base profile selects `deepseek-flash` (DeepSeek-V4.1-Flash), but
 its ACP profile still selects `deepseek-v4-flash`. ACP checks image support
 at initialization, before Paseo applies a selected model. That stale default
 therefore blocks pictures even when the subsequently selected model supports them.
@@ -253,7 +253,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.20 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.21 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 
@@ -272,10 +272,10 @@ the resolved launch, the process helpers, provider `status()` and usage
 sources. Under Paseo's requirements contract, a minimum-only range admits
 0.11.0 and every later release, including prereleases and future breaking
 releases; it is not a promise that untested versions work. Typecheck, lint and
-all 250 tests pass with the pinned 0.11.4 SDK and the no-save 0.15.4 SDK.
+all 251 tests pass with the pinned 0.11.4 SDK and the no-save 0.15.4 SDK.
 The production provider factory also passes no-inference checks against official
-DSH 0.2.2-rc.1 on Node 24.18.0 with SDK 0.15.3, including persistence reopen in a
-fresh process. Real model turns ran on macOS daemons 0.11.4, 0.12.0-beta.2,
+DSH 0.2.2-rc.2 on Node 24.18.0 with SDK 0.15.4, including persistence reopen in a
+fresh process after an official batched append of synthetic text and Team-mode records. Real model turns ran on macOS daemons 0.11.4, 0.12.0-beta.2,
 0.13.0, 0.13.2 and 0.14.0; the newest real-turn check used DSH 0.2.1-rc.5.
 The beta.19 tarball also loads as running on an isolated 0.15.3 daemon, with
 provider diagnostic Ready and model/reasoning discovery passing without model

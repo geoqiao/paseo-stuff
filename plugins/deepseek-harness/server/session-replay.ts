@@ -12,7 +12,7 @@ const MAX_RECORDS = 50_000;
 const MAX_PROJECTS = 1_024;
 const MAX_REPLAY_MS = 1_000;
 
-// Non-transcript events from the published DSH 0.2.2-rc.1 v4 catalog. Like
+// Non-transcript events from the published DSH 0.2.2-rc.2 v4 catalog. Like
 // DSH's ACP projection, this reader displays conversation and tool updates,
 // not the native UI's command, plan, file-delivery or other auxiliary cards.
 // Unknown required events still fail the entire replay.
@@ -31,7 +31,7 @@ const BOOKKEEPING = new Set([
   "session/title-llm-request", "step/end", "step/start",
   "subagent/catalog", "subagent/descriptor", "subagent/model-selection-policy",
   "system/message", "team/member", "team/message/delivered",
-  "team/message/queued", "team/task", "todo/write",
+  "team/message/queued", "team/mode", "team/task", "todo/write",
   "tool-workflow/agent-end", "tool-workflow/agent-start",
   "tool-workflow/run-end", "tool-workflow/run-start",
   "tool/ptc-dispatch", "tool/ptc-dispatch-start", "turn/end", "turn/start",
