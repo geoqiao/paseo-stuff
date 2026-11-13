@@ -205,8 +205,8 @@ describe.sequential("DeepSeek Harness provider", () => {
           const path = await writeReplayFixture(home, "native-recovery-" + mode, cwdA, (rows) => {
             if (mode === "compacted") appendCompactionFixture(rows);
             if (mode === "metadata") {
-              for (const type of ["todo/write", "approval/asked", "llm/retry", "subagent/descriptor", "command/done", "session/title-llm-request", "workspace/changes"]) {
-                rows.push({ type, seq: rows.length - 1, time: 0, data: {} });
+              for (const type of ["todo/write", "approval/asked", "llm/retry", "subagent/descriptor", "command/done", "session/title-llm-request", "workspace/changes", "team/mode"]) {
+                rows.push({ type, seq: rows.length - 1, time: 0, data: type === "team/mode" ? { enabled: true } : {} });
               }
             }
             if (mode === "ignorable") {

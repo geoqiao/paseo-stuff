@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.1.0-beta.21 — 2026-11-13
+
+- Preserve text/tool history when DSH 0.2.2-rc.2 records `team/mode` changes.
+  Refresh the independently published v4 event catalog to all 63 types, with
+  exact npm provenance and the upstream license retained.
+- Cover the new metadata in replay and production-provider regressions. Keep
+  unknown required records, unsupported attachments and recovery bounds intact.
+- Verify the official rc.2 CLI/ACP/persistence distribution on Node 24.18.0:
+  provider status, model/reasoning discovery, configuration and fresh-process
+  persistence reopen after an official batch append of synthetic text and
+  Team-mode events. No model calls or user configuration changes are needed.
+- Typecheck, lint and 251 tests pass with pinned Paseo 0.11.4 and no-save
+  0.15.4 SDKs. Update the isolated Windows CI tool lock to DSH rc.2 and keep
+  plugin SDK pins, minimum requirements and installation state unchanged.
+
 ## 0.1.0-beta.20 — 2026-11-10
 
 - Recognise all non-transcript event types in the published DSH 0.2.2-rc.1
