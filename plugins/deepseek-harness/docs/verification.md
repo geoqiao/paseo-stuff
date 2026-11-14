@@ -1,5 +1,31 @@
 # Verification and limits
 
+## DSH 0.2.2-rc.3 (2026-11-14)
+
+- Official npm `latest` remains 0.2.2-rc.1; `next` selects **0.2.2-rc.3**.
+  The full official CLI closure, including ACP, Session and JSONL persistence,
+  resolves to rc.3. Node **24.18.0** runs the CLI; its minimum remains 24.9.0.
+- Compare complete rc.2 and rc.3 release-tag trees. CLI, ACP, Session and
+  persistence implementation sources are unchanged. The release adds an optional
+  DeepSeek chat import plugin and fixes desktop updating. The published ACP,
+  Session and persistence JavaScript also matches rc.2 byte for byte, retaining
+  all **63** v4 event types. The rc.2 catalog fixture keeps its exact provenance.
+- The unchanged **beta.21 npm runtime**, through the public **0.15.4 SDK**,
+  passes official rc.3 status, ACP initialization, image capability repair,
+  model/reasoning discovery, configuration and session listing. Three separate
+  processes open, batch-append synthetic text and Team-mode records through
+  official persistence APIs, then reopen with history replay. Both messages and
+  native session identity survive with no recovery warning. Events validate
+  against `ProviderEventSchema`; every provider/child process closes.
+- Keep context-resume, reasoning-ID and image-startup adapters: rc.3 retains
+  their upstream conditions. No runtime change or plugin release is needed.
+  The Windows CI tool lock selects rc.3 for its real npm launcher/isolated daemon
+  check. No paid calls, local installation changes or new desktop/native-mobile
+  UI acceptance are part of this verification.
+- Evidence: maintenance `evidence/2026-11-14/` contains the complete tagged-tree
+  audit, published-package comparison, official open/batch/reopen results and
+  PR/CI records. Minimum SDK pins remain **0.11.4**; stable target is **0.15.4**.
+
 ## Beta.21 — DSH 0.2.2-rc.2 (2026-11-13)
 
 - Official npm `latest` remains 0.2.2-rc.1; `next` selects **0.2.2-rc.2** for
