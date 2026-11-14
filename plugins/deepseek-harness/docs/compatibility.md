@@ -62,6 +62,17 @@ operation or source references; their payload can be any JSON value. Unknown
 required events and unsupported image content still prevent replay. Synthetic
 catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 
+## DSH 0.2.2-rc.3
+
+The rc.3 release tags retain the rc.2 CLI, ACP, Session and persistence
+implementation sources. Their published ACP, Session and persistence JavaScript
+also matches byte for byte. Beta.21 passes no-inference production-provider
+initialization, model/reasoning configuration, listing and fresh-process replay
+of official batched text and Team-mode records with SDK 0.15.4 on Node 24.18.0.
+All 63 event types and the existing resume, reasoning-ID and image-startup
+adapter conditions remain unchanged. See [verification.md](verification.md) for
+the package and tagged-source evidence and device limits.
+
 ## Paseo 0.15.4 and DSH 0.2.2-rc.2
 
 The 0.15.4 public SDK retains the resolved launch and ACP load-replay interfaces.
