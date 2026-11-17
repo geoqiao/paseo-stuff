@@ -1,5 +1,12 @@
 # Verification scope
 
+## Paseo 0.16.1 stable target (2026-11-18)
+
+- Typecheck, lint and **97 tests** pass with the minimum SDK and the published **0.16.1 SDK**. Minimum requirements and runtime code are unchanged.
+- The vendored presentation pipeline is byte-identical between 0.16.0 and 0.16.1; fixtures now record release commit `c09a3d81e772a747dd11bca43d860f3518f07c2d`. Math reply folding remains fixed, while Activity's transformed-work limitation remains tracked by #8875.
+- CI package loading and Windows daemon checks target 0.16.1. No new live UI or real-model checks are claimed.
+
+
 ## Paseo 0.16.0 stable target (2026-11-16)
 
 - Typecheck, lint and **97 tests** pass with the minimum pinned SDK and the no-save **0.16.0 SDK**.
