@@ -62,6 +62,16 @@ operation or source references; their payload can be any JSON value. Unknown
 required events and unsupported image content still prevent replay. Synthetic
 catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 
+## DSH 0.2.2-rc.4
+
+The rc.4 release retains the rc.3 CLI, ACP, Session and persistence implementation
+sources. The published ACP, Session and persistence JavaScript also matches
+byte for byte, including all 63 v4 event types. The published beta.21 provider
+passes initialization, model/reasoning configuration, listing and fresh-process
+replay of official batched text and Team-mode records with SDK 0.16.1 on
+Node 24.18.0. The existing resume, reasoning-ID and image-startup adapters
+remain necessary. See [verification.md](verification.md) for the executed checks.
+
 ## DSH 0.2.2-rc.3
 
 The rc.3 release tags retain the rc.2 CLI, ACP, Session and persistence
