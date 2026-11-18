@@ -45,7 +45,7 @@
 - Repository creation/development does not authorize publishing, remote creation, or replacing the installed Paseo app.
 
 ## Daily maintenance
-- Use one Paseo schedule at 08:00 Asia/Shanghai. The checked-in entrypoint is `.github/maintenance/prompt.md`; detection and coordination live beside it. Local state and evidence stay in `.scratch/upstream-compat-watch/`.
+- Use one Orca automation at 08:00 Asia/Shanghai, with a fresh Pi Chat UI or CLI session in the canonical checkout. The checked-in entrypoint is `.github/maintenance/prompt.md`; detection and coordination live beside it. Local state and evidence stay in `.scratch/upstream-compat-watch/`.
 - Track issue comments, reviews, PR head/check changes, official Paseo/DSH releases, registry versions and explicitly tracked upstream issues/PRs. Unchanged waiting items do not trigger repeated testing or comments.
 - Keep observed, reviewed, verified, released and registry state separate. A merged upstream change needs verification in a released tag before removing that release's workaround.
 - Preserve public-reply, merge, release and local-install authorization boundaries recorded in the maintenance prompt. No additional schedules or heartbeats.
