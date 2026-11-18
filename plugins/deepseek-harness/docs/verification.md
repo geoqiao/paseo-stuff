@@ -1,5 +1,28 @@
 # Verification and limits
 
+## DSH 0.2.2-rc.4 (2026-11-18)
+
+- Official npm `latest` remains 0.2.2-rc.1; `next` selects **0.2.2-rc.4**.
+  The CI tool lock selects the full official rc.4 CLI closure. Its CLI requires
+  Node 24.9.0 or newer; the macOS checks used **24.18.0**.
+- Complete release-tag trees show no CLI, ACP, Session or persistence
+  implementation changes from rc.3. All 14 published ACP, Session and
+  persistence JavaScript files match rc.3 byte for byte, retaining the 63-event
+  v4 catalog. The rc.2 catalog fixture keeps its original provenance.
+- The unchanged **beta.21 npm runtime**, through public SDK **0.16.1**, passes
+  status, official ACP initialization, image capability repair, model/reasoning
+  discovery, configuration and session listing. Three separate processes open,
+  batch-append synthetic text and Team-mode events through official APIs, then
+  reopen with history replay. Both messages and native identity survive without
+  recovery warnings; all emitted events pass `ProviderEventSchema`.
+- Typecheck, lint and **251 tests** pass with the pinned **0.11.4** SDK and
+  no-save **0.16.1** SDK. Minimum pins, runtime code and plugin version stay
+  unchanged. Existing resume, reasoning-ID and image-startup adapters remain.
+- No model calls, installed-host changes or new desktop/native-mobile UI checks
+  were performed. Provider connections and owned processes close after the probe.
+- Evidence: maintenance `evidence/2026-11-18/rc4/` contains tagged-source and
+  published-package comparisons, official open/batch/reopen results and SDK logs.
+
 ## Paseo 0.16.1 stable target (2026-11-18)
 
 - Typecheck, lint and **251 tests** pass with the minimum SDK and the published **0.16.1 SDK**. Minimum requirements and runtime code are unchanged.
