@@ -1,5 +1,11 @@
 # Verification and remaining gaps
 
+## Paseo 0.16.2 stable target (2026-11-19)
+
+- Typecheck, lint and **279 tests** pass with SDKs **0.13.2** (pinned) and **0.16.2** (no-save). The minimum and runtime code are unchanged.
+- The fixture files and reduced stream helper match the 0.16.2 tag. All three display modes run through the released pipeline and 0.16.2 protocol. Transformed work still bypasses grouping and folding ([#8875](https://github.com/getpaseo/paseo/issues/8875)).
+- Paseo [#10092](https://github.com/getpaseo/paseo/pull/10092) fixes turn assignment for Claude background notifications in the daemon. It leaves plugin work grouping unchanged. No new live app or mobile checks were performed.
+
 ## Paseo 0.16.1 stable target (2026-11-18)
 
 - Official registry install of beta.14 succeeds on an isolated macOS 0.16.1 daemon using npmmirror and a fresh npm cache. The tarball is fetched from the mirror, passes artifact verification and reaches `running`. The daemon was stopped after the check.

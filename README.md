@@ -12,25 +12,20 @@ shared runtime or root-hoisted dependency tree.
 | Readable Agent Activity | [plugins/agent-activity](plugins/agent-activity) | Paseo 0.13 or later. Tool cards need the Full chat display; before using Collapse tool calls, Collapse turns or Summary, choose "Activity: use native rows" in each client's Command Center. |
 | DeepSeek Harness | [plugins/deepseek-harness](plugins/deepseek-harness) | Paseo 0.11 or later. Provider adapter; requires a separately installed, compatible official DSH executable and credentials. |
 
-The current stable verification target is Paseo **0.16.1**. Activity **0.1.0-beta.14**
+The current stable verification target is Paseo **0.16.2**. Activity **0.1.0-beta.14**
 and Math Renderer **0.1.0-beta.8** require Paseo **0.13.0**. Their checks pass with
-the pinned **0.13.2** SDK and the **0.16.1** SDK; host-pipeline tests use actual
-0.16.1 sources in every chat display mode. Both packed plugins load on an isolated
-macOS 0.15.3 daemon. Paseo 0.16.1 fixes formula-reply folding; Activity still
-needs native rows for collapsed displays. The 0.16.1 checks cover SDKs and the
-offline host pipeline. Live UI checks remain on 0.14.0; prerelease checks are
-recorded separately.
+the pinned **0.13.2** SDK and the **0.16.2** SDK. Offline tests run the released
+0.16.2 pipeline in every chat display mode: formula replies fold, and Activity
+still needs native rows for collapsed displays. Live web UI checks remain on
+0.14.0; prerelease checks are recorded separately.
 
 DeepSeek Harness requires Paseo **0.11.0**. **Beta.19** restores original displayed
 history after context compaction and pruning, including repeated prefix compaction,
 and recognises DSH model/reasoning selection records. Its checks
-pass with the pinned **0.11.4** and target **0.16.1** SDKs. With SDK 0.15.4, the production
-provider initializes, lists sessions/models and reopens persistence with official
-**DSH 0.2.2-rc.3** without model calls. **Beta.21** also preserves history across
-Team-mode metadata and the official batch-append API. The beta.19 tarball loaded
-on an isolated 0.15.3 daemon, with provider diagnostic Ready and catalog discovery
-passing.
-That CLI requires **Node.js >=24.9.0**.
+pass with the pinned **0.11.4** and target **0.16.2** SDKs. With SDK 0.16.2, the
+**beta.21** npm runtime initialized the official **DSH 0.2.2-rc.5** CLI, listed
+sessions and models, and reopened a session with batched text and Team-mode
+history without model calls. That CLI requires **Node.js >=24.9.0**.
 Direct Git installs are pinned to the beta.21 release tag.
 
 The latest live web-client checks remain on Paseo **0.14.0** with DSH
