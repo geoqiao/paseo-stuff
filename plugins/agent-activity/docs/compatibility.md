@@ -1,11 +1,11 @@
-# Paseo 0.13 through 0.16.1 compatibility
+# Paseo 0.13 through 0.16.2 compatibility
 
 ## Supported scope
 
-Beta.14 requires **Paseo 0.13.0** and is checked against **0.16.1**, using the **Full**
+Beta.14 requires **Paseo 0.13.0** and is checked against **0.16.2**, using the **Full**
 chat display (0.13: **Full detail**). It pins the 0.13.2 SDK and protocol packages, and
-its checks also pass with the 0.16.1 SDK installed without saving. Host-pipeline tests
-run unmodified 0.16.1 sources (see [fixture provenance](../tests/fixtures/paseo-0.16.1/README.md)).
+its checks also pass with the 0.16.2 SDK installed without saving. Host-pipeline tests
+run unmodified 0.16.2 sources (see [fixture provenance](../tests/fixtures/paseo-0.16.2/README.md)).
 The last live web-client check used a 0.14.0 daemon and web client (see
 [verification](verification.md)). Paseo 0.8 to 0.12 are no longer supported; beta.11
 remains on npm for them.
@@ -42,7 +42,7 @@ package resolution and premature export snapshots from Paseo's CommonJS interop.
 No global polyfill, DOM access, host patch or native highlighter disable switch is used.
 Shell uses a small local grammar; this is not identical token classification to Shiki.
 
-`tests/client-bundle.compat.test.js` builds the complete entry with the 0.16.1
+`tests/client-bundle.compat.test.js` builds the complete entry with the 0.16.2
 compiler options (unchanged from 0.13.2), evaluates it from a string, registers/cleans
 up contributions and exercises all supported grammars in Hermes. React Native 0.86.3 ships only the
 `hermesc` compiler, not the Hermes VM, so the test runs the VM from React Native
@@ -52,7 +52,7 @@ it does not prove on-device rendering. The other Node tests exercise real Zod va
 
 ## Why collapsed displays cannot safely fall back
 
-In [0.16.1](https://github.com/getpaseo/paseo/tree/c09a3d81e772a747dd11bca43d860f3518f07c2d),
+In [0.16.2](https://github.com/getpaseo/paseo/tree/2ee30f4164af42ba209236ab3a31bf9532592fc3),
 as in 0.13.2, `agent-stream/presentation.ts` applies plugin transformation before
 tool-call grouping and turn folding. 0.14 replaces Summary with **Collapse tool calls**
 and **Collapse turns** (the default for new installations):
@@ -81,7 +81,7 @@ native pending/rejected/completed plan handling remains intact in all modes.
 
 Messages from other agents and heartbeats are tool calls that start turns. 0.14 shows
 an agent message as a user-style "Sent by" row and folds the following turn behind it.
-Paseo 0.16.1 includes `agentMessage` in transformer input. The plugin continues to recognise the
+Paseo 0.16.2 includes `agentMessage` in transformer input. The plugin continues to recognise the
 host envelope (name `agent_message` with a `paseo-agent-message:` call ID, or name
 `heartbeat`) and leaves those rows native in every mode. Beta.13 turned them into
 `agent_message` cards and kept those turns open.

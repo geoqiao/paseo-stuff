@@ -1,5 +1,11 @@
 # Verification and limits
 
+## Paseo 0.16.2 and DSH 0.2.2-rc.5 (2026-11-19)
+
+- Typecheck, lint and **251 tests** pass with SDKs **0.11.4** (pinned) and **0.16.2** (no-save). The minimum and runtime code are unchanged.
+- Official npm `latest` remains 0.2.2-rc.1 and `next` selects **0.2.2-rc.5**, matching the GitHub prerelease. The rc.5 CLI requires Node >=24.9.0. The published CLI, ACP and persistence JavaScript used by the provider matches rc.4; the release's web-search routing change does not change those interfaces.
+- The published **beta.21** provider with SDK **0.16.2** initializes rc.5 on Node 24.18.0, discovers and configures models, lists sessions and replays batched text and Team-mode events after a fresh-process reopen. Default image capability is negotiated with the existing temporary overlay. No model calls or new desktop/mobile UI checks were performed.
+
 ## DSH 0.2.2-rc.4 (2026-11-18)
 
 - Official npm `latest` remains 0.2.2-rc.1; `next` selects **0.2.2-rc.4**.

@@ -62,6 +62,16 @@ operation or source references; their payload can be any JSON value. Unknown
 required events and unsupported image content still prevent replay. Synthetic
 catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 
+## DSH 0.2.2-rc.5
+
+The rc.5 release changes web-search routing. The published CLI entry, ACP,
+Session and persistence JavaScript used by the provider matches rc.4.
+The published beta.21 provider passes no-inference startup, catalog,
+configuration, list and fresh-process history replay against the official
+rc.5 CLI with SDK 0.16.2. Its default ACP model still differs from the base
+profile, so the existing startup overlay remains in use.
+See [verification.md](verification.md) for the checks and their scope.
+
 ## DSH 0.2.2-rc.4
 
 The rc.4 release retains the rc.3 CLI, ACP, Session and persistence implementation

@@ -1,5 +1,11 @@
 # Verification scope
 
+## Paseo 0.16.2 stable target (2026-11-19)
+
+- Typecheck, lint and **97 tests** pass with SDKs **0.13.2** (pinned) and **0.16.2** (no-save). The minimum and runtime code are unchanged.
+- The fixture files and reduced stream helper match the 0.16.2 tag. All three display modes and chat Find run through the released pipeline and 0.16.2 protocol. Formula replies still fold; use native replies for Find to match formula source.
+- Paseo [#10092](https://github.com/getpaseo/paseo/pull/10092) changes Claude's daemon-side assignment of background notification turns. The plugin-facing presentation path is unchanged. No new live app or mobile checks were performed.
+
 ## Paseo 0.16.1 stable target (2026-11-18)
 
 - Typecheck, lint and **97 tests** pass with the minimum SDK and the published **0.16.1 SDK**. Minimum requirements and runtime code are unchanged.
