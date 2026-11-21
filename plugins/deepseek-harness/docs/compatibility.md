@@ -59,7 +59,9 @@ The beta.21 reader recognises all 63 event types from the published DSH
 auxiliary metadata, matching the ACP presentation scope. Unknown events may be
 omitted only with DSH's explicit `ignorable: true` envelope and no surface
 operation or source references; their payload can be any JSON value. Unknown
-required events and unsupported image content still prevent replay. Synthetic
+required events and unknown content blocks still prevent replay. Image blocks
+are restored as standalone markdown previews, with a short text placeholder when
+the attachment bytes are gone. Synthetic
 catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
 
 ## DSH 0.2.2-rc.5

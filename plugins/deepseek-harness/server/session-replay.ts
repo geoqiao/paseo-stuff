@@ -4,6 +4,7 @@ import { setImmediate as yieldLoop } from "node:timers/promises";
 import { zstdDecompress } from "node:zlib";
 import type { AcpStreamMessage } from "@getpaseo/plugin/server/acp";
 import { resolveDshHome } from "./dsh-home";
+import { dshImageMarkdown, materializeDshImage, readDshImageAttachment } from "./image-attachments";
 
 const SESSION_FILE = "session.v4.jsonl.zstd";
 const MAX_FILE_BYTES = 16 * 1024 * 1024;
@@ -141,7 +142,7 @@ async function readReplay(
       if (event.seq !== index - 1 || typeof event.time !== "number") {
         throw new ReplayError("corrupt");
       }
-      for (const update of replayEvent(event, previous)) {
+      for (const update of await replayEvent(event, previous, home)) {
         frames.push({
           jsonrpc: "2.0",
           method: "session/update",
@@ -235,7 +236,11 @@ function frameLength(input: Buffer): number {
   return end;
 }
 
-function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] {
+async function replayEvent(
+  event: RecordValue,
+  previous: RecordValue | undefined,
+  home: string,
+): Promise<RecordValue[]> {
   if (typeof event.type !== "string") throw new ReplayError("corrupt");
   if (!("data" in event)) throw new ReplayError("corrupt");
   if (BOOKKEEPING.has(event.type)) {
@@ -263,10 +268,18 @@ function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] 
       const source = record(data.source);
       if (typeof source.kind !== "string") throw new ReplayError("corrupt");
       if (source.kind !== "user") return [];
-      return textUpdates(data, "user_message_chunk");
+      return [
+        ...(await textUpdates(data, "user_message_chunk")),
+        ...(await imageUpdates(data.content, home, "user_message_chunk", string(data.id), "image attachment")),
+      ];
     }
-    case "assistant/message":
-      return textUpdates(record(data.message), "agent_message_chunk");
+    case "assistant/message": {
+      const message = record(data.message);
+      return [
+        ...(await textUpdates(message, "agent_message_chunk")),
+        ...(await imageUpdates(message.content, home, "agent_message_chunk", string(message.id), "image")),
+      ];
+    }
     case "tool/call": {
       const args = string(data.arguments);
       let rawInput: unknown = args;
@@ -278,17 +291,32 @@ function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] 
     }
     case "tool/result": {
       const message = record(data.message);
-      const content = blocks(message.content).map((block) => {
-        if (block.type !== "text") throw new ReplayError("unsupported");
-        return { type: "content", content: { type: "text", text: string(block.text) } };
-      });
+      const content: RecordValue[] = [];
+      const images: RecordValue[] = [];
+      for (const block of blocks(message.content)) {
+        if (block.type === "text") {
+          content.push({ type: "content", content: { type: "text", text: string(block.text) } });
+          continue;
+        }
+        if (block.type !== "image") throw new ReplayError("unsupported");
+        content.push({ type: "content", content: { type: "text", text: "[image]" } });
+        const path = await replayImagePath(block, home);
+        images.push({
+          sessionUpdate: "agent_message_chunk",
+          messageId: `replay:tool-image:${string(message.toolCallId)}:${images.length}`,
+          content: {
+            type: "text",
+            text: path ? dshImageMarkdown(path) : imagePlaceholder(block, "image output"),
+          },
+        });
+      }
       if (message.isError !== undefined && typeof message.isError !== "boolean") {
         throw new ReplayError("corrupt");
       }
       return [{
         sessionUpdate: "tool_call_update", toolCallId: string(message.toolCallId),
         status: message.isError ? "failed" : "completed", content, rawOutput: { content },
-      }];
+      }, ...images];
     }
     default:
       throw new ReplayError("unsupported");
@@ -327,6 +355,8 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
     // The separate tool/call record owns this card.
     if (block.type === "tool-call" && kind === "agent_message_chunk") return [];
     const thought = block.type === "reasoning" && kind === "agent_message_chunk";
+    // Image blocks are replayed separately as standalone markdown images.
+    if (block.type === "image") return [];
     if (block.type !== "text" && !thought) throw new ReplayError("unsupported");
     return [{
       sessionUpdate: thought ? "agent_thought_chunk" : kind,
@@ -334,6 +364,54 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
       content: { type: "text", text: string(block.text) },
     }];
   });
+}
+
+async function replayImagePath(block: RecordValue, home: string): Promise<string | null> {
+  const attachment = readDshImageAttachment(block.attachment);
+  return attachment ? materializeDshImage(attachment, home) : null;
+}
+
+/** Shown only when the attachment bytes are no longer available. */
+function imagePlaceholder(block: RecordValue, label: string): string {
+  const attachment = block.attachment;
+  if (typeof attachment !== "object" || attachment === null || Array.isArray(attachment)) {
+    return `[${label}]`;
+  }
+  const meta = attachment as RecordValue;
+  const details: string[] = [];
+  if (typeof meta.mediaType === "string") details.push(meta.mediaType);
+  if (typeof meta.width === "number" && typeof meta.height === "number") {
+    details.push(`${meta.width}×${meta.height}`);
+  }
+  return details.length > 0 ? `[${label}: ${details.join(", ")}]` : `[${label}]`;
+}
+
+/**
+ * Image blocks become standalone markdown images, the surface Paseo's Claude and
+ * Codex providers use for provider image output. They are emitted after the text
+ * chunks so a user turn keeps its bubble before the preview.
+ */
+async function imageUpdates(
+  content: unknown,
+  home: string,
+  kind: string,
+  messageId: string,
+  label: string,
+): Promise<RecordValue[]> {
+  const updates: RecordValue[] = [];
+  for (const [index, block] of blocks(content).entries()) {
+    if (block.type !== "image") continue;
+    const path = await replayImagePath(block, home);
+    updates.push({
+      sessionUpdate: path ? "agent_message_chunk" : kind,
+      messageId: `replay:${messageId}:${index}`,
+      content: {
+        type: "text",
+        text: path ? dshImageMarkdown(path) : imagePlaceholder(block, label),
+      },
+    });
+  }
+  return updates;
 }
 
 function record(value: unknown): RecordValue {
