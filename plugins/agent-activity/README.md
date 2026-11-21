@@ -1,5 +1,8 @@
 # Readable Agent Activity
 
+> **Maintenance ended.** Historical versions and source remain available. The
+> compatibility notes below describe the last release, 0.1.0-beta.14.
+
 **Formatted, highlighted tool-call JSON. Twenty-line previews. Recognizable tool icons.**
 
 **Version 0.1.0-beta.14** · [Release notes](CHANGELOG.md) · Paseo 0.13 or later, checked on 0.16.2. Tool cards need the Full

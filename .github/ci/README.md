@@ -1,7 +1,7 @@
 # CI tool dependencies
 
-These private packages are test tooling, not plugin runtime dependencies. Keep
-plugins independently installable. Install each directory with `npm ci
+These private packages are test tooling. DSH installs independently. Install
+each tooling directory with `npm ci
 --ignore-scripts --no-audit --no-fund --prefer-offline`.
 
 - `paseo/`: official prebuilt npm CLI and daemon, pinned to the verified host.
@@ -28,15 +28,18 @@ checks do not. Windows uses one explicit npm cache path for setup-node and all
 installs: changing npm's prefix can otherwise change globalconfig and silently
 send tool downloads to a different, uncached directory.
 
-All plugin tests still run on Node 22 and 24. Windows additionally runs all DSH
+DSH tests run on Node 22 and 24. Windows additionally runs all DSH
 tests and the real daemon/provider/model-catalog smoke check in independent jobs;
 typecheck and lint are already covered on Ubuntu with Node 24. Tool installations
 run concurrently, with both exit statuses checked. The smoke job installs only
 the plugin's production dependencies, like the npm package checks. There are no
 cross-job dependencies.
 
-CI ignores root Markdown, `docs/**`, CI tooling documentation, and Markdown directly inside plugin roots.
-Nested Markdown test fixtures remain CI inputs. The repository had no required
+CI ignores retired plugin directories, root Markdown, `docs/**`, CI tooling
+documentation and Markdown directly inside plugin roots. The nested workflow
+files inside the two retired plugins are historical. GitHub Actions uses the
+workflows under the repository root's `.github/workflows/`.
+Nested DSH Markdown test fixtures remain CI inputs. The repository had no required
 checks or rulesets when this filter was introduced. Before requiring checks,
 replace workflow-level filtering with an always-running change detector and a
 stable aggregate gate that passes documentation-only changes but fails any

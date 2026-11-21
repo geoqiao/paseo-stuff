@@ -22,14 +22,16 @@ const NPM_PACKAGES = [
   '@deepseek-ai/dsh',
   '@deepseek-ai/dsh-acp',
 ];
-// The maintained registry records and their independent release tag prefixes.
 const REGISTRY_PLUGINS = {
-  'geoqiao/agent-activity': { dir: 'plugins/agent-activity', tag: 'readable-agent-activity-v' },
   'geoqiao/deepseek-harness': { dir: 'plugins/deepseek-harness', tag: 'deepseek-harness-v' },
-  'geoqiao/math-renderer': { dir: 'plugins/math-renderer', tag: 'math-renderer-v' },
 };
 const REPO = 'geoqiao/paseo-stuff';
 const CLOSED_PENDING = /^(resolved|dropped|done|closed)/;
+const RETIRED_PATH = /^plugins\/(?:agent-activity|math-renderer)\//;
+const RETIRED_PLUGIN = /\b(?:readable[ -])?agent[ -]activity\b|\bmath[ -]renderer\b/i;
+const DSH_PLUGIN = /\b(?:deepseek[ -]harness|dsh)\b/i;
+const RETIRED_UPSTREAM = 'https://github.com/getpaseo/paseo/issues/8875';
+const RETIRED_PENDING_ID = 'upstream-transformed-work-folding';
 
 const run = (cmd, args) =>
   execFileSync(cmd, args, { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024, timeout: 60_000 });
@@ -151,30 +153,84 @@ export function compare(baseline, snapshot) {
   return changes;
 }
 
+export function includesMaintainedPaths(paths) {
+  return paths.some((name) => !RETIRED_PATH.test(name));
+}
+
+export function includesMaintainedRegistryRecord(paths) {
+  return Object.keys(REGISTRY_PLUGINS).some((id) => paths.includes(`plugins/${id}.json`));
+}
+
+export function isMaintainedApproval(run, pullRequests, maintainedPullRequests) {
+  // Fork runs may omit pull_requests. Match their head to the open PR instead.
+  const prs = run.pull_requests?.length
+    ? run.pull_requests
+    : pullRequests.filter((pr) => pr.headRefOid === run.head_sha);
+  const fromPullRequest = run.event === 'pull_request' || run.event === 'pull_request_target';
+  return prs.length || fromPullRequest
+    ? prs.some((pr) => maintainedPullRequests.has(pr.number))
+    : !RETIRED_PLUGIN.test(run.head_branch ?? '');
+}
+
+export function isMaintainedIssue({ title, body, labels = [] }) {
+  const text = [title, body, ...labels.map((label) => label.name)].join('\n');
+  const shared = labels.some((label) => /^(maintenance|ci)$/i.test(label.name));
+  // General repository reports still need triage, even without a plugin label.
+  return shared || DSH_PLUGIN.test(text) || !RETIRED_PLUGIN.test(text);
+}
+
+function isRetiredFollowup(item) {
+  return item.url === RETIRED_UPSTREAM || item.upstreamIssue === RETIRED_UPSTREAM
+    || item.id === RETIRED_PENDING_ID
+    || (item.kind === 'registry_behind' && !(item.id in REGISTRY_PLUGINS));
+}
+
+export function activeFollowupState(state) {
+  return {
+    tracked: (state.trackedUpstream ?? []).filter((url) => url !== RETIRED_UPSTREAM),
+    pending: (state.pending ?? []).filter((item) =>
+      !isRetiredFollowup(item) && !CLOSED_PENDING.test(item.status ?? '')),
+  };
+}
+
 async function followups() {
   const pending = [];
   const errors = [];
+  const ignoredUrls = new Set();
+  const pullRequests = [];
+  const maintainedPullRequests = new Set();
   let tracked = [];
   try {
     const state = JSON.parse(fs.readFileSync(path.join(STATE_DIR, 'state.json'), 'utf8'));
-    tracked = state.trackedUpstream ?? [];
-    for (const item of state.pending ?? []) {
-      if (!CLOSED_PENDING.test(item.status ?? '')) {
-        pending.push({ kind: 'state_pending', id: item.id, status: item.status, resumeWhen: item.resumeWhen ?? null, due: item.reviewAfter ? Date.parse(item.reviewAfter) <= Date.now() : false });
-        for (const url of [item.pullRequest, item.upstreamIssue]) {
-          if (url && !url.startsWith(`https://github.com/${REPO}/`)) tracked.push(url);
-        }
+    const active = activeFollowupState(state);
+    tracked = active.tracked;
+    for (const item of active.pending) {
+      pending.push({ kind: 'state_pending', id: item.id, status: item.status, resumeWhen: item.resumeWhen ?? null, due: item.reviewAfter ? Date.parse(item.reviewAfter) <= Date.now() : false });
+      for (const url of [item.pullRequest, item.upstreamIssue]) {
+        if (url && !url.startsWith(`https://github.com/${REPO}/`)) tracked.push(url);
       }
     }
   } catch (error) {
     errors.push(`state.json: ${error.message}`);
   }
   const gh = (args) => JSON.parse(run('gh', args));
+  const changedPaths = (repo, number) => {
+    const files = gh(['api', `repos/${repo}/pulls/${number}/files?per_page=100`, '--paginate', '--slurp']).flat();
+    if (files.length >= 3000) throw new Error(`PR #${number} in ${repo} reached the changed-file limit`);
+    return files.flatMap(({ filename, previous_filename }) =>
+      previous_filename ? [filename, previous_filename] : [filename]);
+  };
   const sources = [
     ['open PRs ' + REPO, () => {
-      const prs = gh(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '1000', '--json', 'number,title,url,isCrossRepository']);
+      const prs = gh(['pr', 'list', '-R', REPO, '--state', 'open', '--limit', '1000', '--json', 'number,title,url,isCrossRepository,headRefOid']);
       if (prs.length === 1000) throw new Error('PR list reached its limit; narrow or paginate before accepting');
+      pullRequests.push(...prs);
       for (const pr of prs) {
+        if (!includesMaintainedPaths(changedPaths(REPO, pr.number))) {
+          ignoredUrls.add(pr.url);
+          continue;
+        }
+        maintainedPullRequests.add(pr.number);
         const detail = gh(['pr', 'view', String(pr.number), '-R', REPO, '--json', 'headRefOid,updatedAt,comments,reviews,reviewDecision,statusCheckRollup']);
         pending.push({ kind: 'open_pr', repo: REPO, number: pr.number, title: pr.title, url: pr.url, external: pr.isCrossRepository, ...summarizeActivity(detail) });
       }
@@ -183,16 +239,34 @@ async function followups() {
       const issues = gh(['issue', 'list', '-R', REPO, '--state', 'open', '--limit', '1000', '--json', 'number,title,url,labels,body,comments,updatedAt']);
       if (issues.length === 1000) throw new Error('Issue list reached its limit; narrow or paginate before accepting');
       for (const issue of issues) {
+        if (!isMaintainedIssue(issue)) {
+          ignoredUrls.add(issue.url);
+          continue;
+        }
         pending.push({ kind: 'open_issue', number: issue.number, title: issue.title, url: issue.url, labels: issue.labels.map((label) => label.name), ...summarizeActivity(issue) });
       }
     }],
     ['CI approvals ' + REPO, () => {
       const runs = gh(['api', `repos/${REPO}/actions/runs?status=action_required&per_page=20`]).workflow_runs ?? [];
-      for (const r of runs) pending.push({ kind: 'ci_approval_needed', branch: r.head_branch, url: r.html_url });
+      for (const r of runs) {
+        if (isMaintainedApproval(r, pullRequests, maintainedPullRequests)) {
+          pending.push({ kind: 'ci_approval_needed', branch: r.head_branch, url: r.html_url });
+        } else {
+          ignoredUrls.add(r.html_url);
+        }
+      }
     }],
     ['registry PRs', () => {
       const prs = gh(['pr', 'list', '-R', 'getpaseo/plugins', '--state', 'open', '--limit', '1000', '--search', 'geoqiao', '--json', 'number,title,url,updatedAt,headRefOid,comments,reviews,statusCheckRollup']);
-      for (const pr of prs) pending.push({ kind: 'registry_pr', number: pr.number, title: pr.title, url: pr.url, ...summarizeActivity(pr) });
+      if (prs.length === 1000) throw new Error('Registry PR list reached its limit; narrow or paginate before accepting');
+      for (const pr of prs) {
+        const paths = changedPaths('getpaseo/plugins', pr.number);
+        if (includesMaintainedRegistryRecord(paths)) {
+          pending.push({ kind: 'registry_pr', number: pr.number, title: pr.title, url: pr.url, ...summarizeActivity(pr) });
+        } else {
+          ignoredUrls.add(pr.url);
+        }
+      }
     }],
   ];
   for (const [name, fn] of sources) {
@@ -202,7 +276,8 @@ async function followups() {
       errors.push(`${name}: ${error.message.split('\n')[0]}`);
     }
   }
-  for (const url of [...new Set(tracked)]) {
+  for (const url of new Set(tracked)) {
+    if (url === RETIRED_UPSTREAM || ignoredUrls.has(url)) continue;
     const match = /^https:\/\/github\.com\/([^/]+\/[^/]+)\/(issues|pull)\/(\d+)$/.exec(url);
     if (!match) { errors.push(`Invalid tracked upstream URL: ${url}`); continue; }
     const [, repo, type, number] = match;
@@ -243,7 +318,7 @@ async function followups() {
       }
     }),
   );
-  return { pending, errors };
+  return { pending, errors, ignoredUrls };
 }
 
 export function summarizeActivity(detail) {
@@ -257,10 +332,13 @@ export function summarizeActivity(detail) {
   };
 }
 
-export function followupChanges(before = [], after = []) {
+export function followupChanges(before = [], after = [], ignoredUrls = new Set()) {
   const key = (item) => item.url ?? `${item.kind}:${item.id ?? item.number ?? item.branch}`;
-  const old = new Map(before.map((item) => [key(item), item]));
-  const current = new Map(after.map((item) => [key(item), item]));
+  const index = (items) => new Map(items
+    .filter((item) => !isRetiredFollowup(item) && !ignoredUrls.has(item.url))
+    .map((item) => [key(item), item]));
+  const old = index(before);
+  const current = index(after);
   const changes = [];
   for (const [id, item] of current) {
     if (JSON.stringify(old.get(id)) !== JSON.stringify(item)) changes.push({ kind: 'followup_changed', item });
@@ -282,7 +360,7 @@ async function check() {
   const follow = await followups();
   errors.push(...follow.errors);
   const changes = baseline ? compare(baseline, snapshot) : [];
-  const followChanges = followupChanges(baseline?.followups, follow.pending);
+  const followChanges = followupChanges(baseline?.followups, follow.pending, follow.ignoredUrls);
   fs.mkdirSync(STATE_DIR, { recursive: true });
   const temporary = `${CANDIDATE}.tmp`;
   fs.writeFileSync(temporary, `${JSON.stringify({ ...snapshot, followups: follow.pending, errors }, null, 2)}\n`);

@@ -1,5 +1,8 @@
 # Math Renderer for Paseo
 
+> **Maintenance ended.** Historical versions and source remain available. The
+> compatibility notes below describe the last release, 0.1.0-beta.8.
+
 Render **block and inline LaTeX inside assistant reply bodies**. Block formulas get one
 muted English action row: **Show LaTeX** and **Copy LaTeX**. Inline formulas sit in the
 text; tap one to see its source. No extra panel or duplicate message toolbar.

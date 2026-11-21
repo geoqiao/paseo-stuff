@@ -1,7 +1,11 @@
-# Moving to the plugin monorepo
+# Plugin source migration
 
-Development and new releases now live in `geoqiao/paseo-stuff`. Old repositories,
-commits and release tags remain available; they are not deleted or rewritten.
+DeepSeek Harness development and new releases live in `geoqiao/paseo-stuff`.
+Use the [DSH installation guide](plugins/deepseek-harness/README.md) for new
+installations. Math Renderer and Readable Agent Activity have stopped receiving
+updates. Their source, historical npm versions and Git tags remain available.
+
+## Historical moves
 
 | Existing plugin / catalog ID | New source | First monorepo tag |
 | --- | --- | --- |
@@ -16,14 +20,7 @@ Math Renderer's [PR #98](https://github.com/paseo-cafe/paseo-cafe/pull/98) merge
 a separate new entry, not a replacement for either plugin. Cafe derives later
 versions from each plugin's package.json during its scan/deployment cycle.
 
-## New installations
-
-Use the install command in the selected plugin's README. Each subdirectory has
-its own manifest, lockfile and build commands; installing one does not install
-its siblings. Tags pin a version. Tracking `main` opts into future updates from
-this trusted, unsandboxed repository.
-
-## Existing installations
+## Existing DeepSeek Harness installations
 
 A Cafe pointer change does **not** redirect a Git installation's stored remote.
 `paseo plugin update <id>` follows that installation's existing source; an old
@@ -51,8 +48,8 @@ Therefore migration is opt-in, not an automatic background action:
    its pinned tag. Use the same explicit host for both commands. This has
    downtime and can require restoring user settings; it is not transactional.
    Keep the old source/ref for recovery if the new install fails.
-5. Verify the resulting source, ID and runtime status. Do not create an enabled
-   duplicate. Activity cards still require the Full chat display on **all** connected clients.
+5. Verify the resulting source, ID and runtime status. Keep only one enabled
+   installation of the provider.
 
 No daemon restart or manual edit to Paseo's private source records is required.
 Publishing this repository does not itself change anyone's installed plugins.
