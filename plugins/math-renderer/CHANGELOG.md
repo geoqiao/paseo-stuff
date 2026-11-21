@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Leave a reply that opens a ```ui or ```app fence to the generative-UI plugin that renders it (genui), even when the reply also contains a formula. Paseo offers a message to chat transformers first-wins in plugin-name order and math-renderer sorts before genui, so claiming such a reply showed the widgets as code. Plain formula replies are unchanged.
 - Replace the pinned 0.13.2 host fixtures with unmodified 0.14.0 sources and run the host tests in Full, Collapse tool calls and Collapse turns. Rendering is unchanged from beta.8.
 - Document a Paseo 0.14 limitation: Collapse turns folds a turn only around a native reply, and a transformer can return only plugin rows, so a turn whose reply contains a formula stays unfolded. Native-reply mode folds it. Tests pin this behavior.
 - Typecheck, lint and 97 tests pass with SDK 0.13.2 and with SDK 0.14.0.
