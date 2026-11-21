@@ -52,8 +52,8 @@ pruning and model/reasoning configuration changes.
 ## Install prerequisites
 
 Install a verified official DSH version **on the daemon machine**, then check
-that the daemon can find the executable on its PATH. The npm `latest` dist-tag
-currently resolves to `0.2.2-rc.1` and `next` to `0.2.2-rc.5`. Its no-inference ACP and
+that the daemon can find the executable on its PATH. The npm `latest` and `next`
+dist-tags both resolve to `0.2.2-rc.5`. Its no-inference ACP and
 production-provider checks pass. Use Node.js **24.9.0 or newer** to install and
 run that CLI, including the executable selected by the daemon's `PATH` or
 provider command override:
@@ -117,7 +117,7 @@ advertises; resuming against a peer without `session/resume` fails with a clear 
 ## ACP compatibility and limitations
 
 DSH advertises session/resume but not ACP's older top-level loadSession
-capability. Paseo's public ACP shim (through the tested 0.15.3) uses session/load when
+capability. Paseo's public ACP shim (through the tested 0.17.0-beta.1) uses session/load when
 it sees persistence. A small typed stdio adapter therefore does the following:
 
 1. After initialize, if the peer has session/resume and does not have

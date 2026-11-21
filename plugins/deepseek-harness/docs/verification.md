@@ -1,9 +1,27 @@
 # Verification and limits
 
+## Paseo 0.17.0-beta.1 preview (2026-11-20 to 2026-11-21)
+
+- `npm run check` passes with the published 0.17.0-beta.1 SDK (251 tests). The
+  0.11.4 pin and the 0.16.2 stable target are unchanged.
+- An isolated macOS 0.17.0-beta.1 daemon loaded the packed plugin, reported
+  Ready with the official DSH 0.2.2-rc.5 CLI and returned its model catalog.
+  Separate provider checks with SDKs 0.16.2 and 0.17.0-beta.1 passed model
+  discovery and configuration, image capability negotiation, session listing,
+  and fresh-process history replay of synthetic text with Team-mode events.
+  No model calls or new live client checks were performed.
+- [Plugin agent instructions](https://github.com/getpaseo/paseo/pull/9781) are
+  optional. Official DSH rc.5 does not apply Paseo's prompt metadata as system
+  instructions. The [host reopen fix](https://github.com/getpaseo/paseo/pull/10153)
+  handles provider-reported session closure. Unexpected ACP process exit
+  reports a different event and was outside that fix.
+- As of 2026-11-21, both official npm `latest` and `next` resolve to DSH
+  0.2.2-rc.5. The CLI still requires Node >=24.9.0.
+
 ## Paseo 0.16.2 and DSH 0.2.2-rc.5 (2026-11-19)
 
 - Typecheck, lint and **251 tests** pass with SDKs **0.11.4** (pinned) and **0.16.2** (no-save). The minimum and runtime code are unchanged.
-- Official npm `latest` remains 0.2.2-rc.1 and `next` selects **0.2.2-rc.5**, matching the GitHub prerelease. The rc.5 CLI requires Node >=24.9.0. The published CLI, ACP and persistence JavaScript used by the provider matches rc.4; the release's web-search routing change does not change those interfaces.
+- The official **0.2.2-rc.5** npm package matches the GitHub prerelease. The rc.5 CLI requires Node >=24.9.0. The published CLI, ACP and persistence JavaScript used by the provider matches rc.4; the release's web-search routing change does not change those interfaces.
 - The published **beta.21** provider with SDK **0.16.2** initializes rc.5 on Node 24.18.0, discovers and configures models, lists sessions and replays batched text and Team-mode events after a fresh-process reopen. Default image capability is negotiated with the existing temporary overlay. No model calls or new desktop/mobile UI checks were performed.
 
 ## DSH 0.2.2-rc.4 (2026-11-18)

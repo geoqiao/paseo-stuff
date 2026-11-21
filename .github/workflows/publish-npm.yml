@@ -1,4 +1,4 @@
-# Publishes a plugin to npm when its GitHub release is published.
+# Publishes DeepSeek Harness to npm when its GitHub release is published.
 # Authentication uses npm trusted publishing (OIDC): no npm token or OTP.
 # npm trust needs an existing package, so the repository owner publishes a new
 # package's first version manually. The package then trusts this workflow once:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to publish, e.g. math-renderer-v0.1.0-beta.6
+        description: Release tag to publish, e.g. deepseek-harness-v0.1.0-beta.21
         required: true
 permissions:
   contents: read
@@ -30,12 +30,9 @@ jobs:
       - name: Resolve plugin
         id: plugin
         run: |
-          # Only plugins published to npm are listed here.
           case "$TAG" in
             deepseek-harness-v*) dir=deepseek-harness; version="${TAG#deepseek-harness-v}" ;;
-            math-renderer-v*) dir=math-renderer; version="${TAG#math-renderer-v}" ;;
-            readable-agent-activity-v*) dir=agent-activity; version="${TAG#readable-agent-activity-v}" ;;
-            *) echo "::notice::$TAG is not an npm-published plugin; skipping."; exit 0 ;;
+            *) echo "::notice::Skipping $TAG. This workflow publishes DeepSeek Harness."; exit 0 ;;
           esac
           echo "dir=plugins/$dir" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -75,12 +72,7 @@ jobs:
           fi
       - if: steps.check.outputs.publish
         working-directory: ${{ steps.plugin.outputs.dir }}
-        run: |
-          npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-          if [ "${{ steps.plugin.outputs.dir }}" = "plugins/math-renderer" ]; then
-            npm run prepare:markdown
-            npm run prepare:wasm
-          fi
+        run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
       - if: steps.check.outputs.publish
         working-directory: ${{ steps.plugin.outputs.dir }}
         run: npm run check

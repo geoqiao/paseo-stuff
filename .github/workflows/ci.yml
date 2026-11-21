@@ -2,13 +2,15 @@ name: Plugin checks
 on:
   push:
     branches: [main]
-    paths-ignore: &docs-only
+    paths-ignore: &non-ci-paths
       - '*.md'
       - 'docs/**'
       - '.github/ci/*.md'
       - 'plugins/*/*.md'
+      - 'plugins/agent-activity/**'
+      - 'plugins/math-renderer/**'
   pull_request:
-    paths-ignore: *docs-only
+    paths-ignore: *non-ci-paths
   workflow_dispatch:
 # Do not use github.ref for main: even cancel-in-progress: false can evict a
 # pending run in the same group. Every non-PR run gets its own group.
@@ -31,18 +33,16 @@ jobs:
           node-version: 24
       - run: node --test .github/maintenance/*.test.mjs
   check:
-    name: ${{ matrix.plugin }} / ${{ matrix.label || format('Node {0}', matrix.node) }}
+    name: deepseek-harness / ${{ matrix.label || format('Node {0}', matrix.node) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        plugin: [agent-activity, deepseek-harness, math-renderer]
         node: [22, 24]
         os: [ubuntu-latest]
         include:
-          - plugin: deepseek-harness
-            node: 24
+          - node: 24
             os: windows-latest
             label: Windows tests
             # Separate the small test-only cache from historical Windows
@@ -53,7 +53,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: plugins/${{ matrix.plugin }}
+        working-directory: plugins/deepseek-harness
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -62,10 +62,8 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: npm
-          cache-dependency-path: ${{ matrix.cache_lockfiles || format('plugins/{0}/package-lock.json', matrix.plugin) }}
+          cache-dependency-path: ${{ matrix.cache_lockfiles || 'plugins/deepseek-harness/package-lock.json' }}
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
-      - if: matrix.plugin == 'math-renderer'
-        run: npm run prepare:markdown && npm run prepare:wasm
       - if: runner.os != 'Windows'
         run: npm run check
       # Keep the full platform-specific suite, but do not serialize it behind
@@ -76,22 +74,12 @@ jobs:
     # Loads the packed npm package with only its shrinkwrapped production
     # dependencies, as an npm installation does. Development dependencies are
     # absent, so a missing file or dependency fails the plugin compilation.
-    name: ${{ matrix.plugin }} / npm package
+    name: deepseek-harness / npm package
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - plugin: agent-activity
-            id: readable-agent-activity
-          - plugin: deepseek-harness
-            id: deepseek-harness
-          - plugin: math-renderer
-            id: math-renderer
     defaults:
       run:
-        working-directory: plugins/${{ matrix.plugin }}
+        working-directory: plugins/deepseek-harness
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -101,7 +89,7 @@ jobs:
           node-version: 24
           cache: npm
           cache-dependency-path: |
-            plugins/${{ matrix.plugin }}/package-lock.json
+            plugins/deepseek-harness/package-lock.json
             .github/ci/paseo/package-lock.json
       - run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
       - name: Install Paseo CLI
@@ -121,7 +109,7 @@ jobs:
           npm ci --omit=dev --ignore-scripts --legacy-peer-deps --no-audit --no-fund
       - name: Load the package in a daemon
         env:
-          PLUGIN_ID: ${{ matrix.id }}
+          PLUGIN_ID: deepseek-harness
         run: |
           home="$RUNNER_TEMP/paseo-home"
           mkdir -p "$home"

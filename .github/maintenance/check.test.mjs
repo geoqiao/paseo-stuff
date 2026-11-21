@@ -1,6 +1,72 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { compare, followupChanges, summarizeActivity, verdictFor } from './check.mjs';
+import {
+  activeFollowupState,
+  compare,
+  followupChanges,
+  includesMaintainedPaths,
+  includesMaintainedRegistryRecord,
+  isMaintainedApproval,
+  isMaintainedIssue,
+  summarizeActivity,
+  verdictFor,
+} from './check.mjs';
+
+test('retired-only PR changes are skipped and DSH or shared changes are kept', () => {
+  const retired = ['plugins/agent-activity/README.md', 'plugins/math-renderer/index.server.ts'];
+  assert.equal(includesMaintainedPaths(retired), false);
+  assert.equal(includesMaintainedPaths([...retired, 'plugins/deepseek-harness/index.server.ts']), true);
+  assert.equal(includesMaintainedPaths([...retired, '.github/maintenance/check.mjs']), true);
+  assert.equal(includesMaintainedPaths(['README.md']), true);
+});
+
+test('registry PRs must touch the official DSH record', () => {
+  const retired = ['plugins/geoqiao/agent-activity.json', 'plugins/geoqiao/math-renderer.json'];
+  assert.equal(includesMaintainedRegistryRecord(retired), false);
+  assert.equal(includesMaintainedRegistryRecord(['plugins/someone/deepseek-harness.json']), false);
+  assert.equal(includesMaintainedRegistryRecord([...retired, 'plugins/geoqiao/deepseek-harness.json']), true);
+});
+
+test('CI approvals follow PR scope when fork run metadata omits the PR', () => {
+  const prs = [{ number: 1, headRefOid: 'retired' }, { number: 2, headRefOid: 'shared' }];
+  const maintained = new Set([2]);
+  const approval = (run) => isMaintainedApproval(run, prs, maintained);
+  assert.equal(approval({ event: 'pull_request', pull_requests: [], head_sha: 'retired' }), false);
+  assert.equal(approval({ event: 'pull_request', pull_requests: [], head_sha: 'shared' }), true);
+  assert.equal(approval({ event: 'pull_request', pull_requests: [{ number: 1 }] }), false);
+  assert.equal(approval({ event: 'workflow_dispatch', head_branch: 'deepseek-harness-v0.1.0-beta.21' }), true);
+  assert.equal(approval({ event: 'workflow_dispatch', head_branch: 'readable-agent-activity-v0.1.0-beta.14' }), false);
+});
+
+test('retired-only issues are skipped and DSH or shared reports are kept', () => {
+  assert.equal(isMaintainedIssue({ title: 'Math Renderer: formula display' }), false);
+  assert.equal(isMaintainedIssue({ title: 'Tool display', labels: [{ name: 'agent-activity' }] }), false);
+  assert.equal(isMaintainedIssue({ title: 'DeepSeek Harness session reopens' }), true);
+  assert.equal(isMaintainedIssue({ title: 'Provider not found', body: 'This is with DSH' }), true);
+  assert.equal(isMaintainedIssue({ title: 'Math Renderer and DSH use different prerequisites' }), true);
+  assert.equal(isMaintainedIssue({ title: 'Archive Math Renderer CI', labels: [{ name: 'CI' }] }), true);
+  assert.equal(isMaintainedIssue({ title: 'Release workflow check failed' }), true);
+});
+
+test('retired state and baseline items are skipped without a false closure', () => {
+  const retiredIssue = 'https://github.com/getpaseo/paseo/issues/8875';
+  const retiredPending = { id: 'upstream-transformed-work-folding', upstreamIssue: retiredIssue, status: 'waiting_upstream' };
+  const maka = { id: 'retired-cafe-delisting', pullRequest: 'https://github.com/paseo-cafe/paseo-cafe/pull/453', status: 'waiting_upstream_merge' };
+  const dshIssue = 'https://github.com/deepseek-ai/deepseek-harness/issues/12';
+  const state = { trackedUpstream: [retiredIssue, dshIssue], pending: [retiredPending, maka] };
+  assert.deepEqual(activeFollowupState(state), { tracked: [dshIssue], pending: [maka] });
+
+  const retiredRepoIssue = 'https://github.com/geoqiao/paseo-stuff/issues/4';
+  const old = [
+    { kind: 'state_pending', id: retiredPending.id },
+    { kind: 'tracked_upstream', url: retiredIssue },
+    { kind: 'registry_behind', id: 'geoqiao/math-renderer' },
+    { kind: 'open_issue', url: retiredRepoIssue },
+    { kind: 'state_pending', id: maka.id, status: maka.status },
+  ];
+  const current = [old.at(-1)];
+  assert.deepEqual(followupChanges(old, current, new Set([retiredRepoIssue])), []);
+});
 
 test('unchanged waiting work does not wake repeated maintenance', () => {
   const pending = [{ kind: 'open_pr', url: 'https://github.com/a/b/pull/1', head: 'a', fingerprint: 'same' }];
