@@ -1,7 +1,9 @@
-import { appendFile, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { appendFile, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { zstdCompressSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appendCompactionFixture, writeReplayFixture } from "../tests/replay-fixture";
@@ -15,6 +17,27 @@ afterEach(async () => { vi.restoreAllMocks(); await rm(home, { recursive: true, 
 
 const result = () => buildSessionReplay(target, { DSH_HOME: home });
 const replay = async () => (await result()).frames;
+
+const imageBytes = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 4, 5, 6]);
+const imageHash = createHash("sha256").update(imageBytes).digest("hex");
+const imageBlock = (hash = imageHash) => ({
+  type: "image",
+  attachment: { attachmentId: `sha256:${hash}`, mediaType: "image/png", width: 640, height: 480 },
+});
+
+async function writeImageAttachment(): Promise<void> {
+  const directory = join(home, "attachments", "v1", "objects", imageHash.slice(0, 2));
+  await mkdir(directory, { recursive: true });
+  await writeFile(join(directory, imageHash), imageBytes);
+}
+
+function imagePaths(updates: Record<string, any>[]): string[] {
+  return updates.flatMap((update) => {
+    if (update.sessionUpdate !== "agent_message_chunk") return [];
+    const match = /!\[Image\]\((file:\/\/\/[^)]+)\)/.exec(update.content.text);
+    return match ? [fileURLToPath(match[1])] : [];
+  });
+}
 
 // Independent published event catalog, not derived from the reader's allowlist.
 // Provenance and the upstream MIT license live beside this fixture.
@@ -359,6 +382,50 @@ describe("DSH v4 transcript replay", () => {
   it("does not use a session id as an arbitrary filesystem path", async () => {
     await writeReplayFixture(home);
     expect(await buildSessionReplay({ ...target, sessionId: "../synthetic-session" }, { DSH_HOME: home })).toEqual({ frames: [], failure: "unsupported" });
+  });
+
+  it("replays user and tool image attachments as standalone markdown images", async () => {
+    await writeImageAttachment();
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content.push(imageBlock());
+      rows[5].data.message.content.push(imageBlock());
+    });
+    const updates = (await replay()).map((frame) => (frame as any).params.update);
+    expect(updates[0]).toMatchObject({
+      sessionUpdate: "user_message_chunk",
+      content: { type: "text", text: "Read the synthetic note." },
+    });
+    const toolUpdate = updates.find((update) => update.sessionUpdate === "tool_call_update");
+    expect(toolUpdate.rawOutput.content).toEqual([
+      { type: "content", content: { type: "text", text: "Synthetic note: violet-4817." } },
+      { type: "content", content: { type: "text", text: "[image]" } },
+    ]);
+    const paths = imagePaths(updates);
+    expect(paths).toHaveLength(2);
+    for (const path of paths) expect(await readFile(path)).toEqual(imageBytes);
+  });
+
+  it("keeps an image-only user message as a markdown image", async () => {
+    await writeImageAttachment();
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content = [imageBlock()];
+    });
+    const updates = (await replay()).map((frame) => (frame as any).params.update);
+    expect(updates.some((update) => update.sessionUpdate === "user_message_chunk")).toBe(false);
+    expect(imagePaths(updates)).toHaveLength(1);
+  });
+
+  it("falls back to a text placeholder when the image bytes were pruned", async () => {
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content.push(imageBlock("f".repeat(64)));
+    });
+    const outcome = await result();
+    expect(outcome.failure).toBeUndefined();
+    const updates = outcome.frames.map((frame) => (frame as any).params.update);
+    expect(updates).toContainEqual(expect.objectContaining({
+      sessionUpdate: "user_message_chunk",
+      content: { type: "text", text: "[image attachment: image/png, 640×480]" },
+    }));
   });
 
   it("resolves DSH_HOME exactly like the usage source", () => {

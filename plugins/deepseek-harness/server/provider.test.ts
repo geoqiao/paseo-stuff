@@ -213,7 +213,7 @@ describe.sequential("DeepSeek Harness provider", () => {
               rows.push({ type: "plugin:synthetic/metadata", seq: rows.length - 1, time: 0, data: null, ignorable: true });
             }
             if (mode === "empty") rows.splice(1);
-            if (mode === "unsupported") rows[6].data.message.content = [{ type: "image", data: "private-image-api_key=secret", mimeType: "image/png" }];
+            if (mode === "unsupported") rows[6].data.message.content = [{ type: "future-block", text: "private-block-api_key=secret" }];
           });
           if (mode === "corrupt") await writeFile(path, "private transcript /private/path api_key=secret");
           if (mode === "oversized") {
