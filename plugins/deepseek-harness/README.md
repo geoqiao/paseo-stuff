@@ -174,16 +174,20 @@ skipped only when DSH explicitly marks them `ignorable: true` and they carry no
 surface operation or source-event references; their payload may be any JSON value.
 Unknown required events still reject the replay. Replacements
 must match the immediately preceding compaction marker; endpoints follow current
-context positions and may have decreasing log sequence numbers. Image blocks are
-replayed as standalone markdown previews: DSH stores their bytes under a bare
-content hash, so the reader exposes a cached hard link (or a staged copy) with the
-matching image extension in the OS temporary directory, which Paseo loads through
-its file API. If the attachment bytes are gone, a short text placeholder keeps the
-rest of the transcript. Missing,
+context positions and may have decreasing log sequence numbers. After validating
+the transcript, replay uses the time left to verify PNG, JPEG, GIF and WebP
+attachments against their content hashes and produce standalone Markdown
+previews through Paseo's file API. Copies with the matching extension are stored
+in the daemon user's private `~/.paseo-dsh-image-cache`. The cache admits up to
+8 MiB per image and keeps up to 64 MiB and 128 files. It removes entries unused for
+seven days when making room for new previews and evicts least recently used entries
+when it reaches capacity. Replay rechecks the source even on a cache hit. A deleted
+or unreadable attachment, unsupported format, cache error or exhausted preview
+budget leaves a text placeholder and preserves the transcript. Missing,
 corrupt or changed files, newer generations, unknown required events, unknown
 content blocks or unrecognised surface replacements leave the timeline empty while
 DSH still restores context. Reads are capped at 16 MiB compressed, 64 MiB decoded,
-50,000 records/updates and one second; exceeding a cap discards the entire replay.
+50,000 records/updates and one second. A log that exceeds a limit leaves the timeline empty.
 After a successful context resume with history recovery requested, a brief
 nonfatal warning explains if the log is missing, damaged/incomplete, unsupported,
 over the recovery limit or unreadable. It uses the public provider notice channel,
@@ -228,9 +232,8 @@ The plugin still uses DSH's real image capability and per-prompt model validatio
 it does not make text-only models accept images. Custom ACP profiles remain
 responsible for advertising the capabilities of their routes.
 
-Image history is replayed too. Image blocks are restored as standalone markdown
-previews from their DSH attachments; a pruned attachment leaves a short text
-placeholder instead of discarding the transcript. Paseo renders user-message
+Supported images are restored as standalone previews. Missing or unsupported
+attachments appear as short text placeholders. Paseo renders user-message
 text without markdown, so an image the user pasted is shown immediately after
 that message rather than inside its bubble.
 

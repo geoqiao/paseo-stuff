@@ -4,7 +4,7 @@ import { setImmediate as yieldLoop } from "node:timers/promises";
 import { zstdDecompress } from "node:zlib";
 import type { AcpStreamMessage } from "@getpaseo/plugin/server/acp";
 import { resolveDshHome } from "./dsh-home";
-import { dshImageMarkdown, materializeDshImage, readDshImageAttachment } from "./image-attachments";
+import { dshImageMarkdown, materializeDshImage, readDshImageAttachment, type DshImageAttachment } from "./image-attachments";
 
 const SESSION_FILE = "session.v4.jsonl.zstd";
 const MAX_FILE_BYTES = 16 * 1024 * 1024;
@@ -61,20 +61,25 @@ class ReplayError extends Error {
 }
 
 type RecordValue = Record<string, unknown>;
+type ReplayImage = { attachment: DshImageAttachment; update: RecordValue };
 
-/** Best-effort v4 text history only; no writes, new sessions, or model calls. */
+/** Validate and restore v4 text history before spending the remaining budget on previews. */
 export async function buildSessionReplay(
   target: ReplayTarget,
   env: Readonly<Record<string, string | undefined>>,
 ): Promise<SessionReplay> {
   const signal = AbortSignal.timeout(MAX_REPLAY_MS);
+  const aborted = new Promise<void>((resolve) => {
+    if (signal.aborted) resolve();
+    else signal.addEventListener("abort", () => resolve(), { once: true });
+  });
   try {
-    return { frames: await Promise.race([
-      readReplay(target, resolveDshHome(env.DSH_HOME), signal),
-      new Promise<never>((_, reject) => {
-        signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-      }),
-    ]) };
+    const home = resolveDshHome(env.DSH_HOME);
+    const images: ReplayImage[] = [];
+    const frames = await Promise.race([readReplay(target, home, signal, images), aborted]);
+    if (!frames || signal.aborted) return { frames: [], failure: "limit" };
+    if (images.length > 0) await Promise.race([restoreImages(images, home, signal), aborted]);
+    return { frames };
   } catch (error) {
     // Only classified reasons cross the bridge. Never expose paths, transcript
     // contents or raw errors, and never turn a successful resume into a failure.
@@ -92,10 +97,12 @@ async function readReplay(
   target: ReplayTarget,
   home: string,
   signal: AbortSignal,
+  images: ReplayImage[],
 ): Promise<AcpStreamMessage[]> {
   // DSH currently issues UUIDs. Refuse other path syntax rather than allowing
   // a session/load parameter to escape the sessions directory.
   if (!/^[A-Za-z0-9_-]+$/.test(target.sessionId)) throw new ReplayError("unsupported");
+  signal.throwIfAborted();
   const root = join(home, "sessions");
   const projects = await opendir(root);
   let count = 0;
@@ -142,7 +149,7 @@ async function readReplay(
       if (event.seq !== index - 1 || typeof event.time !== "number") {
         throw new ReplayError("corrupt");
       }
-      for (const update of await replayEvent(event, previous, home)) {
+      for (const update of replayEvent(event, previous, images)) {
         frames.push({
           jsonrpc: "2.0",
           method: "session/update",
@@ -236,11 +243,11 @@ function frameLength(input: Buffer): number {
   return end;
 }
 
-async function replayEvent(
+function replayEvent(
   event: RecordValue,
   previous: RecordValue | undefined,
-  home: string,
-): Promise<RecordValue[]> {
+  previews: ReplayImage[],
+): RecordValue[] {
   if (typeof event.type !== "string") throw new ReplayError("corrupt");
   if (!("data" in event)) throw new ReplayError("corrupt");
   if (BOOKKEEPING.has(event.type)) {
@@ -269,15 +276,15 @@ async function replayEvent(
       if (typeof source.kind !== "string") throw new ReplayError("corrupt");
       if (source.kind !== "user") return [];
       return [
-        ...(await textUpdates(data, "user_message_chunk")),
-        ...(await imageUpdates(data.content, home, "user_message_chunk", string(data.id), "image attachment")),
+        ...textUpdates(data, "user_message_chunk"),
+        ...imageUpdates(data.content, "user_message_chunk", string(data.id), "image attachment", previews),
       ];
     }
     case "assistant/message": {
       const message = record(data.message);
       return [
-        ...(await textUpdates(message, "agent_message_chunk")),
-        ...(await imageUpdates(message.content, home, "agent_message_chunk", string(message.id), "image")),
+        ...textUpdates(message, "agent_message_chunk"),
+        ...imageUpdates(message.content, "agent_message_chunk", string(message.id), "image", previews),
       ];
     }
     case "tool/call": {
@@ -300,15 +307,10 @@ async function replayEvent(
         }
         if (block.type !== "image") throw new ReplayError("unsupported");
         content.push({ type: "content", content: { type: "text", text: "[image]" } });
-        const path = await replayImagePath(block, home);
-        images.push({
-          sessionUpdate: "agent_message_chunk",
-          messageId: `replay:tool-image:${string(message.toolCallId)}:${images.length}`,
-          content: {
-            type: "text",
-            text: path ? dshImageMarkdown(path) : imagePlaceholder(block, "image output"),
-          },
-        });
+        images.push(imageUpdate(
+          block, "agent_message_chunk", `replay:tool-image:${string(message.toolCallId)}:${images.length}`,
+          "image output", previews,
+        ));
       }
       if (message.isError !== undefined && typeof message.isError !== "boolean") {
         throw new ReplayError("corrupt");
@@ -366,24 +368,23 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
   });
 }
 
-async function replayImagePath(block: RecordValue, home: string): Promise<string | null> {
+function imageUpdate(
+  block: RecordValue, kind: string, messageId: string, label: string, previews: ReplayImage[],
+): RecordValue {
   const attachment = readDshImageAttachment(block.attachment);
-  return attachment ? materializeDshImage(attachment, home) : null;
-}
-
-/** Shown only when the attachment bytes are no longer available. */
-function imagePlaceholder(block: RecordValue, label: string): string {
-  const attachment = block.attachment;
-  if (typeof attachment !== "object" || attachment === null || Array.isArray(attachment)) {
-    return `[${label}]`;
-  }
-  const meta = attachment as RecordValue;
-  const details: string[] = [];
-  if (typeof meta.mediaType === "string") details.push(meta.mediaType);
-  if (typeof meta.width === "number" && typeof meta.height === "number") {
-    details.push(`${meta.width}×${meta.height}`);
-  }
-  return details.length > 0 ? `[${label}: ${details.join(", ")}]` : `[${label}]`;
+  const meta = attachment ? block.attachment as RecordValue : {};
+  const dimensions = typeof meta.width === "number" && typeof meta.height === "number"
+    ? `, ${meta.width}×${meta.height}` : "";
+  const update = {
+    sessionUpdate: kind,
+    messageId,
+    content: {
+      type: "text",
+      text: attachment ? `[${label}: ${attachment.mediaType}${dimensions}]` : `[${label} unavailable]`,
+    },
+  };
+  if (attachment) previews.push({ attachment, update });
+  return update;
 }
 
 /**
@@ -391,27 +392,37 @@ function imagePlaceholder(block: RecordValue, label: string): string {
  * Codex providers use for provider image output. They are emitted after the text
  * chunks so a user turn keeps its bubble before the preview.
  */
-async function imageUpdates(
+function imageUpdates(
   content: unknown,
-  home: string,
   kind: string,
   messageId: string,
   label: string,
-): Promise<RecordValue[]> {
+  previews: ReplayImage[],
+): RecordValue[] {
   const updates: RecordValue[] = [];
   for (const [index, block] of blocks(content).entries()) {
     if (block.type !== "image") continue;
-    const path = await replayImagePath(block, home);
-    updates.push({
-      sessionUpdate: path ? "agent_message_chunk" : kind,
-      messageId: `replay:${messageId}:${index}`,
-      content: {
-        type: "text",
-        text: path ? dshImageMarkdown(path) : imagePlaceholder(block, label),
-      },
-    });
+    updates.push(imageUpdate(block, kind, `replay:${messageId}:${index}`, label, previews));
   }
   return updates;
+}
+
+async function restoreImages(images: ReplayImage[], home: string, signal: AbortSignal): Promise<void> {
+  const pinned = new Set<string>();
+  for (const { attachment, update } of images) {
+    if (signal.aborted) return;
+    const path = await materializeDshImage(attachment, home, signal, pinned);
+    if (signal.aborted) return;
+    if (!path) continue;
+    try {
+      const text = dshImageMarkdown(path);
+      pinned.add(path);
+      update.sessionUpdate = "agent_message_chunk";
+      update.content = { type: "text", text };
+    } catch {
+      // A path the host cannot represent keeps its text placeholder.
+    }
+  }
 }
 
 function record(value: unknown): RecordValue {
