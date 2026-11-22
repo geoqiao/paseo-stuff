@@ -103,6 +103,12 @@ or wrap the entire reply in a code fence.
 
 ## Limitations
 
+- Completed replies with a fence recognized by GenUI 0.3.3, such as `ui`, `app`,
+  `ui.json` or `app.html`, are left for the live-UI plugin. When only Math Renderer
+  is installed, replies that mix formulas with those fences use native Markdown.
+  This workaround accommodates live-UI installation IDs that sort after Math
+  Renderer in Paseo's first-wins transformer order. Priority and block-level
+  composition are tracked in [Paseo #10486](https://github.com/getpaseo/paseo/issues/10486).
 - Inline formulas are images, so a long formula does not wrap across lines.
   Punctuation after a formula is joined to it with an invisible U+2060 word joiner,
   which appears in copied text.
