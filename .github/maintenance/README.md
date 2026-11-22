@@ -2,8 +2,9 @@
 
 The Orca automation **Paseo Stuff 每日维护** runs at **08:00 Asia/Shanghai**.
 It reads [prompt.md](prompt.md) from the canonical checkout and follows DeepSeek
-Harness (DSH) and shared repository maintenance. DSH's minimum SDK pin stays in
-its package. CI tool locks use verified Paseo and official DSH versions.
+Harness (DSH), Math Renderer and shared repository maintenance. Each plugin's
+minimum SDK pin stays in its package. CI tool locks use verified Paseo and
+official DSH versions.
 
 ## Entry points
 
@@ -18,11 +19,11 @@ directory for an isolated detector check. Preserve the production baseline when
 testing.
 
 The detector compares official Paseo and DSH releases, npm channels and
-integrity, DSH registry activity, and URLs tracked in `state.json`. Repository
-PRs that touch DSH or shared paths, their CI approvals, and DSH or shared issue
-activity remain in scope. Issues without a plugin identifier can be triaged as
-shared reports. Activity confined to retired plugin paths or identified as a
-retired-only issue is skipped. Unchanged waiting items do not trigger more work.
+integrity, both maintained plugins' registry activity and URLs tracked in
+`state.json`. Repository PRs that touch maintained plugin or shared paths, their
+CI approvals and related issue activity are in scope. Issues without a plugin
+identifier can be triaged as shared reports. Activity specific to Readable Agent
+Activity is skipped. Unchanged waiting items do not trigger more work.
 A source error returns `ERROR`, never `NO_CHANGE`. After reviewing every detected
 change and recording verification or a concrete pending item, run
 `node .github/maintenance/check.mjs accept`. Never accept an error snapshot.
@@ -44,6 +45,8 @@ Verify the published package, version, dist-tag and workflow before recording a
 release as complete. Documentation-only changes do not require a plugin release.
 Record public text and resulting URLs; never duplicate a PR or overwrite a
 published version. Follow the detailed gates in [prompt.md](prompt.md).
+For Math Renderer, the automation prepares local evidence and drafts. Each push,
+PR, comment, review, merge or release requires separate authorization.
 External-repository writes, issue closure, destructive changes, paid services and
 main-daemon/plugin installation changes still require separate authorization;
 first npm publication and interactive authentication remain owner actions.
@@ -57,7 +60,7 @@ lock before ending. Persist external blockers in the state directory.
 
 A merged upstream fix stays pending until a released tag contains it and the
 affected plugin behavior has been verified. A green unit suite is not a native
-device check. Preserve DSH's recorded verification limits.
+device check. Preserve each maintained plugin's recorded verification limits.
 
 This is a local Orca automation. After downtime, compare against the last
 successful baseline to catch intervening changes. Use Orca's task and run

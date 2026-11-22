@@ -1,9 +1,9 @@
 # Plugin source migration
 
-DeepSeek Harness development and new releases live in `geoqiao/paseo-stuff`.
-Use the [DSH installation guide](plugins/deepseek-harness/README.md) for new
-installations. Math Renderer and Readable Agent Activity have stopped receiving
-updates. Their source, historical npm versions and Git tags remain available.
+DeepSeek Harness and Math Renderer development and releases live in
+`geoqiao/paseo-stuff`. See the [installation guides](README.md) for new
+installations. Readable Agent Activity has stopped receiving updates. Its source,
+historical npm versions and Git tags remain available.
 
 ## Historical moves
 

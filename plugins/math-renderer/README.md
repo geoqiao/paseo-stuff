@@ -1,8 +1,5 @@
 # Math Renderer for Paseo
 
-> **Maintenance ended.** Historical versions and source remain available. The
-> compatibility notes below describe the last release, 0.1.0-beta.8.
-
 Render **block and inline LaTeX inside assistant reply bodies**. Block formulas get one
 muted English action row: **Show LaTeX** and **Copy LaTeX**. Inline formulas sit in the
 text; tap one to see its source. No extra panel or duplicate message toolbar.
@@ -51,7 +48,7 @@ paseo plugin add git:geoqiao/paseo-stuff:plugins/math-renderer --ref math-render
 Paseo reads a bare `owner/name` source as a registry ID, so the `git:` prefix is
 required. If the registry install fails with "npm artifact changed since review", the daemon's
 npm uses a registry mirror; see
-[the fix](https://github.com/geoqiao/paseo-stuff#if-a-registry-install-fails-with-npm-artifact-changed-since-review).
+[the fix](../../README.md#registry-mirrors-and-artifact-verification).
 
 The manifest ID is `math-renderer`. This directory is independently installable;
 it does not import any sibling plugin or depend on root-installed packages.
