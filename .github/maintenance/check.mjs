@@ -24,12 +24,13 @@ const NPM_PACKAGES = [
 ];
 const REGISTRY_PLUGINS = {
   'geoqiao/deepseek-harness': { dir: 'plugins/deepseek-harness', tag: 'deepseek-harness-v' },
+  'geoqiao/math-renderer': { dir: 'plugins/math-renderer', tag: 'math-renderer-v' },
 };
 const REPO = 'geoqiao/paseo-stuff';
 const CLOSED_PENDING = /^(resolved|dropped|done|closed)/;
-const RETIRED_PATH = /^plugins\/(?:agent-activity|math-renderer)\//;
-const RETIRED_PLUGIN = /\b(?:readable[ -])?agent[ -]activity\b|\bmath[ -]renderer\b/i;
-const DSH_PLUGIN = /\b(?:deepseek[ -]harness|dsh)\b/i;
+const RETIRED_PATH = /^plugins\/agent-activity\//;
+const RETIRED_PLUGIN = /\b(?:readable[ -])?agent[ -]activity\b/i;
+const MAINTAINED_PLUGIN = /\b(?:deepseek[ -]harness|dsh|math[ -]renderer)\b/i;
 const RETIRED_UPSTREAM = 'https://github.com/getpaseo/paseo/issues/8875';
 const RETIRED_PENDING_ID = 'upstream-transformed-work-folding';
 
@@ -176,7 +177,7 @@ export function isMaintainedIssue({ title, body, labels = [] }) {
   const text = [title, body, ...labels.map((label) => label.name)].join('\n');
   const shared = labels.some((label) => /^(maintenance|ci)$/i.test(label.name));
   // General repository reports still need triage, even without a plugin label.
-  return shared || DSH_PLUGIN.test(text) || !RETIRED_PLUGIN.test(text);
+  return shared || MAINTAINED_PLUGIN.test(text) || !RETIRED_PLUGIN.test(text);
 }
 
 function isRetiredFollowup(item) {

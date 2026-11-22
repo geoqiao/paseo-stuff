@@ -1,4 +1,4 @@
-# Publishes DeepSeek Harness to npm when its GitHub release is published.
+# Publishes maintained plugins to npm when their GitHub releases are published.
 # Authentication uses npm trusted publishing (OIDC): no npm token or OTP.
 # npm trust needs an existing package, so the repository owner publishes a new
 # package's first version manually. The package then trusts this workflow once:
@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Release tag to publish, e.g. deepseek-harness-v0.1.0-beta.21
+        description: Release tag to publish, e.g. math-renderer-v0.1.0-beta.8
         required: true
 permissions:
   contents: read
@@ -32,7 +32,8 @@ jobs:
         run: |
           case "$TAG" in
             deepseek-harness-v*) dir=deepseek-harness; version="${TAG#deepseek-harness-v}" ;;
-            *) echo "::notice::Skipping $TAG. This workflow publishes DeepSeek Harness."; exit 0 ;;
+            math-renderer-v*) dir=math-renderer; version="${TAG#math-renderer-v}" ;;
+            *) echo "::notice::Skipping $TAG. This workflow publishes DeepSeek Harness and Math Renderer."; exit 0 ;;
           esac
           echo "dir=plugins/$dir" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -73,6 +74,9 @@ jobs:
       - if: steps.check.outputs.publish
         working-directory: ${{ steps.plugin.outputs.dir }}
         run: npm ci --ignore-scripts --legacy-peer-deps --no-audit --no-fund
+      - if: steps.check.outputs.publish && steps.plugin.outputs.dir == 'plugins/math-renderer'
+        working-directory: ${{ steps.plugin.outputs.dir }}
+        run: npm run prepare:markdown && npm run prepare:wasm
       - if: steps.check.outputs.publish
         working-directory: ${{ steps.plugin.outputs.dir }}
         run: npm run check
