@@ -2,9 +2,10 @@ import type { PluginTimelineTransformerContribution } from "@getpaseo/plugin/cli
 import { MATH_KIND } from "../shared/contracts";
 import { parseDocument } from "../shared/markdown";
 
-// The language is the whole first word of the info string, so ```ui.json and
-// ```ui+json stay ordinary code blocks rather than handing the reply over.
-const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})\s*(\S*)/;
+// Match findFences in paseo-plugin-genui@0.3.3 (shared/fallback.ts). The
+// language token ends at punctuation other than hyphens and underscores,
+// so ui.json and app.html are read as ui and app respectively.
+const FENCE_OPEN = /^ {0,3}(`{3,}|~{3,})\s*([A-Za-z0-9_-]*)/;
 
 /** True when the reply opens a ```ui or ```app fence another plugin renders live. */
 function hasUiFence(text: string): boolean {
@@ -30,9 +31,10 @@ export const transformMessage: PluginTimelineTransformerContribution<"assistant_
   // file link or size limit must not tear down an already interactive math card.
   // This also avoids parsing the whole document on every token update.
   if (phase === "streaming") return undefined;
-  // A ```ui/```app fence belongs to a live-UI renderer (genui). Paseo offers the
-  // message to transformers first-wins in plugin-name order and math-renderer
-  // sorts before genui, so claiming it here would show the widgets as code.
+  // Paseo sorts plugins by `${serverId}/${id}` and uses the first transform that
+  // claims the reply. Yield when a live-UI fence is present so a later-sorting
+  // UI installation gets a turn. With math-renderer alone, the reply stays native.
+  // Temporary until Paseo supports priority or block composition (getpaseo/paseo#10486).
   if (hasUiFence(item.text)) return undefined;
   if (!/(?:\$|\\[[(]|(?:`{3,}|~{3,})[ \t]*math\b)/.test(item.text)) return undefined;
   const parsed = parseDocument(item.text);
