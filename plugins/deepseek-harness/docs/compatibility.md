@@ -59,8 +59,14 @@ The beta.21 reader recognises all 63 event types from the published DSH
 auxiliary metadata, matching the ACP presentation scope. Unknown events may be
 omitted only with DSH's explicit `ignorable: true` envelope and no surface
 operation or source references; their payload can be any JSON value. Unknown
-required events and unsupported image content still prevent replay. Synthetic
-catalog coverage and a macOS 0.15.3 desktop reload are recorded in verification.
+required events and unknown content blocks still prevent replay. Image replay uses
+Paseo 0.16.2's cross-platform PNG, JPEG, GIF and WebP preview formats. Missing
+source files, unsupported formats and preview failures leave text placeholders
+while preserving the transcript. The daemon user's private cache holds up to
+8 MiB per image, 64 MiB and 128 files. New cache entries trigger expiry after seven
+days of inactivity and evict the least recently used previews when space is
+needed. Synthetic catalog coverage and a macOS 0.15.3 desktop reload are recorded
+in verification.
 
 ## DSH 0.2.2-rc.5
 

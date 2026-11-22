@@ -4,6 +4,7 @@ import { setImmediate as yieldLoop } from "node:timers/promises";
 import { zstdDecompress } from "node:zlib";
 import type { AcpStreamMessage } from "@getpaseo/plugin/server/acp";
 import { resolveDshHome } from "./dsh-home";
+import { dshImageMarkdown, materializeDshImage, readDshImageAttachment, type DshImageAttachment } from "./image-attachments";
 
 const SESSION_FILE = "session.v4.jsonl.zstd";
 const MAX_FILE_BYTES = 16 * 1024 * 1024;
@@ -60,20 +61,25 @@ class ReplayError extends Error {
 }
 
 type RecordValue = Record<string, unknown>;
+type ReplayImage = { attachment: DshImageAttachment; update: RecordValue };
 
-/** Best-effort v4 text history only; no writes, new sessions, or model calls. */
+/** Validate and restore v4 text history before spending the remaining budget on previews. */
 export async function buildSessionReplay(
   target: ReplayTarget,
   env: Readonly<Record<string, string | undefined>>,
 ): Promise<SessionReplay> {
   const signal = AbortSignal.timeout(MAX_REPLAY_MS);
+  const aborted = new Promise<void>((resolve) => {
+    if (signal.aborted) resolve();
+    else signal.addEventListener("abort", () => resolve(), { once: true });
+  });
   try {
-    return { frames: await Promise.race([
-      readReplay(target, resolveDshHome(env.DSH_HOME), signal),
-      new Promise<never>((_, reject) => {
-        signal.addEventListener("abort", () => reject(signal.reason), { once: true });
-      }),
-    ]) };
+    const home = resolveDshHome(env.DSH_HOME);
+    const images: ReplayImage[] = [];
+    const frames = await Promise.race([readReplay(target, home, signal, images), aborted]);
+    if (!frames || signal.aborted) return { frames: [], failure: "limit" };
+    if (images.length > 0) await Promise.race([restoreImages(images, home, signal), aborted]);
+    return { frames };
   } catch (error) {
     // Only classified reasons cross the bridge. Never expose paths, transcript
     // contents or raw errors, and never turn a successful resume into a failure.
@@ -91,10 +97,12 @@ async function readReplay(
   target: ReplayTarget,
   home: string,
   signal: AbortSignal,
+  images: ReplayImage[],
 ): Promise<AcpStreamMessage[]> {
   // DSH currently issues UUIDs. Refuse other path syntax rather than allowing
   // a session/load parameter to escape the sessions directory.
   if (!/^[A-Za-z0-9_-]+$/.test(target.sessionId)) throw new ReplayError("unsupported");
+  signal.throwIfAborted();
   const root = join(home, "sessions");
   const projects = await opendir(root);
   let count = 0;
@@ -141,7 +149,7 @@ async function readReplay(
       if (event.seq !== index - 1 || typeof event.time !== "number") {
         throw new ReplayError("corrupt");
       }
-      for (const update of replayEvent(event, previous)) {
+      for (const update of replayEvent(event, previous, images)) {
         frames.push({
           jsonrpc: "2.0",
           method: "session/update",
@@ -235,7 +243,11 @@ function frameLength(input: Buffer): number {
   return end;
 }
 
-function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] {
+function replayEvent(
+  event: RecordValue,
+  previous: RecordValue | undefined,
+  previews: ReplayImage[],
+): RecordValue[] {
   if (typeof event.type !== "string") throw new ReplayError("corrupt");
   if (!("data" in event)) throw new ReplayError("corrupt");
   if (BOOKKEEPING.has(event.type)) {
@@ -263,10 +275,18 @@ function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] 
       const source = record(data.source);
       if (typeof source.kind !== "string") throw new ReplayError("corrupt");
       if (source.kind !== "user") return [];
-      return textUpdates(data, "user_message_chunk");
+      return [
+        ...textUpdates(data, "user_message_chunk"),
+        ...imageUpdates(data.content, "user_message_chunk", string(data.id), "image attachment", previews),
+      ];
     }
-    case "assistant/message":
-      return textUpdates(record(data.message), "agent_message_chunk");
+    case "assistant/message": {
+      const message = record(data.message);
+      return [
+        ...textUpdates(message, "agent_message_chunk"),
+        ...imageUpdates(message.content, "agent_message_chunk", string(message.id), "image", previews),
+      ];
+    }
     case "tool/call": {
       const args = string(data.arguments);
       let rawInput: unknown = args;
@@ -278,17 +298,27 @@ function replayEvent(event: RecordValue, previous?: RecordValue): RecordValue[] 
     }
     case "tool/result": {
       const message = record(data.message);
-      const content = blocks(message.content).map((block) => {
-        if (block.type !== "text") throw new ReplayError("unsupported");
-        return { type: "content", content: { type: "text", text: string(block.text) } };
-      });
+      const content: RecordValue[] = [];
+      const images: RecordValue[] = [];
+      for (const block of blocks(message.content)) {
+        if (block.type === "text") {
+          content.push({ type: "content", content: { type: "text", text: string(block.text) } });
+          continue;
+        }
+        if (block.type !== "image") throw new ReplayError("unsupported");
+        content.push({ type: "content", content: { type: "text", text: "[image]" } });
+        images.push(imageUpdate(
+          block, "agent_message_chunk", `replay:tool-image:${string(message.toolCallId)}:${images.length}`,
+          "image output", previews,
+        ));
+      }
       if (message.isError !== undefined && typeof message.isError !== "boolean") {
         throw new ReplayError("corrupt");
       }
       return [{
         sessionUpdate: "tool_call_update", toolCallId: string(message.toolCallId),
         status: message.isError ? "failed" : "completed", content, rawOutput: { content },
-      }];
+      }, ...images];
     }
     default:
       throw new ReplayError("unsupported");
@@ -327,6 +357,8 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
     // The separate tool/call record owns this card.
     if (block.type === "tool-call" && kind === "agent_message_chunk") return [];
     const thought = block.type === "reasoning" && kind === "agent_message_chunk";
+    // Image blocks are replayed separately as standalone markdown images.
+    if (block.type === "image") return [];
     if (block.type !== "text" && !thought) throw new ReplayError("unsupported");
     return [{
       sessionUpdate: thought ? "agent_thought_chunk" : kind,
@@ -334,6 +366,63 @@ function textUpdates(message: RecordValue, kind: string): RecordValue[] {
       content: { type: "text", text: string(block.text) },
     }];
   });
+}
+
+function imageUpdate(
+  block: RecordValue, kind: string, messageId: string, label: string, previews: ReplayImage[],
+): RecordValue {
+  const attachment = readDshImageAttachment(block.attachment);
+  const meta = attachment ? block.attachment as RecordValue : {};
+  const dimensions = typeof meta.width === "number" && typeof meta.height === "number"
+    ? `, ${meta.width}×${meta.height}` : "";
+  const update = {
+    sessionUpdate: kind,
+    messageId,
+    content: {
+      type: "text",
+      text: attachment ? `[${label}: ${attachment.mediaType}${dimensions}]` : `[${label} unavailable]`,
+    },
+  };
+  if (attachment) previews.push({ attachment, update });
+  return update;
+}
+
+/**
+ * Image blocks become standalone markdown images, the surface Paseo's Claude and
+ * Codex providers use for provider image output. They are emitted after the text
+ * chunks so a user turn keeps its bubble before the preview.
+ */
+function imageUpdates(
+  content: unknown,
+  kind: string,
+  messageId: string,
+  label: string,
+  previews: ReplayImage[],
+): RecordValue[] {
+  const updates: RecordValue[] = [];
+  for (const [index, block] of blocks(content).entries()) {
+    if (block.type !== "image") continue;
+    updates.push(imageUpdate(block, kind, `replay:${messageId}:${index}`, label, previews));
+  }
+  return updates;
+}
+
+async function restoreImages(images: ReplayImage[], home: string, signal: AbortSignal): Promise<void> {
+  const pinned = new Set<string>();
+  for (const { attachment, update } of images) {
+    if (signal.aborted) return;
+    const path = await materializeDshImage(attachment, home, signal, pinned);
+    if (signal.aborted) return;
+    if (!path) continue;
+    try {
+      const text = dshImageMarkdown(path);
+      pinned.add(path);
+      update.sessionUpdate = "agent_message_chunk";
+      update.content = { type: "text", text };
+    } catch {
+      // A path the host cannot represent keeps its text placeholder.
+    }
+  }
 }
 
 function record(value: unknown): RecordValue {

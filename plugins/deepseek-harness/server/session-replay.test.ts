@@ -1,20 +1,64 @@
-import { appendFile, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { appendFile, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { homedir, tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { zstdCompressSync } from "node:zlib";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { appendCompactionFixture, writeReplayFixture } from "../tests/replay-fixture";
 import { resolveDshHome } from "./dsh-home";
+import { materializeDshImage } from "./image-attachments";
 import { buildSessionReplay } from "./session-replay";
+
+vi.mock("./image-attachments", { spy: true });
 
 let home: string;
 const target = { sessionId: "synthetic-session", cwd: "/synthetic/workspace" };
-beforeEach(async () => { home = await mkdtemp(join(tmpdir(), "dsh-replay-")); });
-afterEach(async () => { vi.restoreAllMocks(); await rm(home, { recursive: true, force: true }); });
+beforeEach(async () => {
+  home = await mkdtemp(join(tmpdir(), "dsh-replay-"));
+  vi.stubEnv(process.platform === "win32" ? "USERPROFILE" : "HOME", home);
+});
+afterEach(async () => {
+  vi.restoreAllMocks();
+  vi.mocked(materializeDshImage).mockRestore();
+  vi.unstubAllEnvs();
+  await rm(home, { recursive: true, force: true });
+});
 
 const result = () => buildSessionReplay(target, { DSH_HOME: home });
 const replay = async () => (await result()).frames;
+
+const imageBytes = Buffer.from(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jX1cAAAAASUVORK5CYII=", "base64",
+);
+const imageHash = createHash("sha256").update(imageBytes).digest("hex");
+const imageBlock = (hash = imageHash) => ({
+  type: "image",
+  attachment: { attachmentId: `sha256:${hash}`, mediaType: "image/png", width: 640, height: 480 },
+});
+
+async function writeImageAttachment(): Promise<string> {
+  const directory = join(home, "attachments", "v1", "objects", imageHash.slice(0, 2));
+  await mkdir(directory, { recursive: true });
+  const path = join(directory, imageHash);
+  await writeFile(path, imageBytes);
+  return path;
+}
+
+async function addUserImages(...images: ReturnType<typeof imageBlock>[]): Promise<void> {
+  await writeReplayFixture(home, undefined, undefined, (rows) => {
+    rows[2].data.content.push(...images);
+  });
+}
+
+function imagePaths(updates: Record<string, any>[]): string[] {
+  return updates.flatMap((update) => {
+    if (update.sessionUpdate !== "agent_message_chunk") return [];
+    const match = /!\[Image\]\((file:\/\/\/[^)]+)\)/.exec(update.content.text);
+    return match ? [fileURLToPath(match[1])] : [];
+  });
+}
 
 // Independent published event catalog, not derived from the reader's allowlist.
 // Provenance and the upstream MIT license live beside this fixture.
@@ -359,6 +403,119 @@ describe("DSH v4 transcript replay", () => {
   it("does not use a session id as an arbitrary filesystem path", async () => {
     await writeReplayFixture(home);
     expect(await buildSessionReplay({ ...target, sessionId: "../synthetic-session" }, { DSH_HOME: home })).toEqual({ frames: [], failure: "unsupported" });
+  });
+
+  it("replays user and tool image attachments as standalone markdown images", async () => {
+    await writeImageAttachment();
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content.push(imageBlock());
+      rows[5].data.message.content.push(imageBlock());
+    });
+    const updates = (await replay()).map((frame) => (frame as any).params.update);
+    expect(updates[0]).toMatchObject({
+      sessionUpdate: "user_message_chunk",
+      content: { type: "text", text: "Read the synthetic note." },
+    });
+    const toolUpdate = updates.find((update) => update.sessionUpdate === "tool_call_update");
+    expect(toolUpdate.rawOutput.content).toEqual([
+      { type: "content", content: { type: "text", text: "Synthetic note: violet-4817." } },
+      { type: "content", content: { type: "text", text: "[image]" } },
+    ]);
+    const paths = imagePaths(updates);
+    expect(paths).toHaveLength(2);
+    for (const path of paths) expect(await readFile(path)).toEqual(imageBytes);
+  });
+
+  it("keeps an image-only user message as a markdown image", async () => {
+    await writeImageAttachment();
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content = [imageBlock()];
+    });
+    const updates = (await replay()).map((frame) => (frame as any).params.update);
+    expect(updates.some((update) => update.sessionUpdate === "user_message_chunk")).toBe(false);
+    expect(imagePaths(updates)).toHaveLength(1);
+  });
+
+  it("falls back to a text placeholder when the image bytes were pruned", async () => {
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      rows[2].data.content.push(imageBlock("f".repeat(64)));
+    });
+    const outcome = await result();
+    expect(outcome.failure).toBeUndefined();
+    const updates = outcome.frames.map((frame) => (frame as any).params.update);
+    expect(updates).toContainEqual(expect.objectContaining({
+      sessionUpdate: "user_message_chunk",
+      content: { type: "text", text: "[image attachment: image/png, 640×480]" },
+    }));
+  });
+
+  it("keeps the text history when a previously previewed source is removed", async () => {
+    const source = await writeImageAttachment();
+    await writeReplayFixture(home);
+    const textFrames = await replay();
+    await addUserImages(imageBlock());
+    const before = (await replay()).map((frame) => (frame as any).params.update);
+    expect(imagePaths(before)).toHaveLength(1);
+    await rm(source);
+    const after = await result();
+    expect(after.failure).toBeUndefined();
+    const updates = after.frames.map((frame) => (frame as any).params.update);
+    expect(imagePaths(updates)).toHaveLength(0);
+    expect(updates[1].content.text).toBe("[image attachment: image/png, 640×480]");
+    expect(after.frames.filter((_frame, index) => index !== 1)).toEqual(textFrames);
+  });
+
+  it("preserves all text and tool frames when the cache directory cannot be created", async () => {
+    await writeImageAttachment();
+    await writeReplayFixture(home);
+    const textFrames = await replay();
+    await writeFile(join(home, ".paseo-dsh-image-cache"), "Synthetic unavailable cache");
+    await addUserImages(imageBlock());
+    const outcome = await result();
+    expect(outcome.failure).toBeUndefined();
+    expect((outcome.frames[1] as any).params.update.content.text).toBe("[image attachment: image/png, 640×480]");
+    expect(outcome.frames.filter((_frame, index) => index !== 1)).toEqual(textFrames);
+  });
+
+  it("stops starting image I/O at the replay deadline and retains the completed transcript", async () => {
+    await writeReplayFixture(home);
+    const textFrames = await replay();
+    await addUserImages(imageBlock(), imageBlock());
+    const deadline = new AbortController();
+    vi.spyOn(AbortSignal, "timeout").mockReturnValue(deadline.signal);
+    const materialize = vi.mocked(materializeDshImage);
+    materialize.mockImplementationOnce(async (_attachment, _home, signal) => {
+      expect(signal).toBe(deadline.signal);
+      deadline.abort();
+      return null;
+    });
+    const outcome = await result();
+    expect(materialize).toHaveBeenCalledTimes(1);
+    expect(outcome.failure).toBeUndefined();
+    expect(outcome.frames.slice(1, 3).map((frame) => (frame as any).params.update.content.text)).toEqual([
+      "[image attachment: image/png, 640×480]", "[image attachment: image/png, 640×480]",
+    ]);
+    expect(outcome.frames.filter((_frame, index) => index !== 1 && index !== 2)).toEqual(textFrames);
+  });
+
+  it("uses fixed placeholders for unsupported or invalid metadata in assistant and tool output", async () => {
+    await writeReplayFixture(home, undefined, undefined, (rows) => {
+      for (const mediaType of ["image/bmp", "image/tiff", "image/avif", "constructor", "invalid [mime]"]) {
+        const image = imageBlock();
+        image.attachment.mediaType = mediaType;
+        rows[6].data.message.content.push(image);
+        rows[5].data.message.content.push(image);
+      }
+    });
+    const outcome = await result();
+    expect(outcome.failure).toBeUndefined();
+    const updates = outcome.frames.map((frame) => (frame as any).params.update);
+    expect(imagePaths(updates)).toHaveLength(0);
+    const text = updates.filter((update) => update.sessionUpdate === "agent_message_chunk")
+      .map((update) => update.content.text);
+    expect(text.filter((value) => value === "[image output unavailable]")).toHaveLength(5);
+    expect(text.filter((value) => value === "[image unavailable]")).toHaveLength(5);
+    expect(text.join(" ")).not.toContain("invalid [mime]");
   });
 
   it("resolves DSH_HOME exactly like the usage source", () => {
