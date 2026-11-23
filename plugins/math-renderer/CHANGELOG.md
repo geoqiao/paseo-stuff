@@ -1,11 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-beta.9 — 2026-11-23
 
 - Yield completed replies containing a live-UI fence recognized by GenUI 0.3.3, including `ui`, `app`, `ui.json` and `app.html`. Paseo sorts plugins by `${serverId}/${id}` and uses the first transformer that claims the reply. Yielding lets a UI plugin whose installation ID sorts after `math-renderer` render the reply. With Math Renderer alone, replies mixing formulas and live-UI fences fall back to native Markdown. Plain formula replies and streaming are unchanged. This is a temporary workaround pending transformer priority or block-level composition in [Paseo #10486](https://github.com/getpaseo/paseo/issues/10486).
-- Replace the pinned 0.13.2 host fixtures with unmodified 0.14.0 sources and run the host tests in Full, Collapse tool calls and Collapse turns. Rendering is unchanged from beta.8.
-- Document a Paseo 0.14 limitation: Collapse turns folds a turn only around a native reply, and a transformer can return only plugin rows, so a turn whose reply contains a formula stays unfolded. Native-reply mode folds it. Tests pin this behavior.
-- Typecheck, lint and 97 tests pass with SDK 0.13.2 and with SDK 0.14.0.
+- Refresh the pinned host fixtures to Paseo 0.16.2. The host tests cover Full, Collapse tool calls, Collapse turns and chat Find. On 0.16.2, completed formula replies fold in Collapse turns. Use native-reply mode for folding formula replies on Paseo 0.14 through 0.15.4 or for finding formula source.
+- Typecheck, lint and 119 tests pass with the pinned Paseo 0.13.2 SDKs and the no-save Paseo 0.16.2 SDKs, including Hermes and offline host tests for the GenUI handoff.
 
 ## 0.1.0-beta.8 — 2026-10-28
 

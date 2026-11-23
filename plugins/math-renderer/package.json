@@ -1,6 +1,6 @@
 {
   "name": "paseo-math-renderer",
-  "version": "0.1.0-beta.8",
+  "version": "0.1.0-beta.9",
   "type": "module",
   "description": "Render block and inline LaTeX in completed Paseo replies while other Markdown stays native, with source viewing, copying and native-reply mode. Experimental beta for Paseo 0.13 or newer.",
   "license": "MIT",
