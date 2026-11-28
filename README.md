@@ -21,8 +21,8 @@ paseo plugin add geoqiao/deepseek-harness --host <host:port>
 For an exact version, install from npm or from its immutable Git tag:
 
 ~~~sh
-paseo plugin add npm:paseo-deepseek-harness@0.1.0-beta.21 --host <host:port>
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.21 --host <host:port>
+paseo plugin add npm:paseo-deepseek-harness@0.1.0-beta.22 --host <host:port>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.22 --host <host:port>
 ~~~
 
 The Git subdirectory selects the plugin. Paseo 0.11 and later interpret a bare

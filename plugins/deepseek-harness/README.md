@@ -26,10 +26,9 @@ patched Paseo app is required.
 > On Paseo 0.8 to 0.10, install beta.12 instead:
 > `paseo plugin add geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.12`.
 
-**Beta.21** preserves text/tool history when DSH 0.2.2-rc.2 records Team-mode
-changes. Its replay catalog covers all 63 published v4 event types. Original
-messages and full tool results remain available after context compaction,
-pruning and model/reasoning configuration changes.
+**Beta.22** lets you create agents with a custom DSH model at its provider
+default reasoning effort or a supported explicit effort. It also restores
+supported image attachments as standalone previews when reopening history.
 
 ## What it does
 
@@ -41,8 +40,9 @@ pruning and model/reasoning configuration changes.
 - Reports the DeepSeek API balance in Paseo's **Usage** panel.
 - Uses Paseo's public runAcpProvider shim for ACP lifecycle, permissions,
   prompts, timeline mapping, usage and configuration.
-- Presents DSH's live model and reasoning-effort options without rewriting
-  their wire IDs. DSH model IDs are opaque JSON strings.
+- Presents DSH's live model and reasoning-effort options. The plugin maps
+  DSH's empty provider-default effort to a selectable option in Paseo and
+  sends DSH its original value. DSH model IDs are opaque JSON strings.
 - Passes configured MCP servers, images, environment variables and working
   directories to DSH session runtimes.
 - Keeps complete raw tool output. The adapter maps an ACP tool update whose
@@ -263,7 +263,7 @@ npm package. The `paseo-plugin.json` in the Git source retains those build steps
 To install the pinned Git prerelease instead, run:
 
 ~~~sh
-paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.21 --host <your-host>
+paseo plugin add git:geoqiao/paseo-stuff:plugins/deepseek-harness --ref deepseek-harness-v0.1.0-beta.22 --host <your-host>
 paseo plugin ls --host <your-host>
 ~~~
 

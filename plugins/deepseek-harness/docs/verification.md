@@ -1,5 +1,17 @@
 # Verification and limits
 
+## Beta.22 custom model reasoning (2026-11-28)
+
+- Typecheck, lint and 283 tests pass with SDK 0.11.4 and the no-save 0.16.2
+  target. The fix PR also passed with SDK 0.17.5.
+- On macOS, the official DSH 0.2.2-rc.5 CLI and an isolated Paseo 0.17.5 daemon
+  ran synthetic loopback turns with a custom model at provider default and high
+  and with the built-in DeepSeek Flash model. The probe checked WebSocket draft
+  controls, MCP provider inspection and agent creation, and persistence of the
+  default after changing from high and reopening the session.
+- The probe used local mock responses. The Windows Desktop picker and native
+  mobile UI are outside this verification.
+
 ## Paseo 0.17.0-beta.1 preview (2026-11-20 to 2026-11-21)
 
 - `npm run check` passes with the published 0.17.0-beta.1 SDK (251 tests). The

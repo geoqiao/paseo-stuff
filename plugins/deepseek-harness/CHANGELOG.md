@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-beta.22 — 2026-11-28
+
+- Fix agent creation with custom DSH models that expose an empty provider-default
+  reasoning effort. Paseo can select the default or a supported explicit effort.
+  The provider-default selection also survives a session reload. [#70](https://github.com/geoqiao/paseo-stuff/issues/70)
+- Restore supported image attachments as standalone previews in replayed DSH v4
+  history. Missing images and preview failures leave a text placeholder so the
+  surrounding conversation remains visible. [#65](https://github.com/geoqiao/paseo-stuff/pull/65)
+- Typecheck, lint and 283 tests pass with Paseo SDKs 0.11.4 and 0.16.2.
+  Official DSH 0.2.2-rc.5 on macOS passed isolated loopback checks for a custom
+  model at provider default and high, and for the built-in DeepSeek Flash model.
+
 ## 0.1.0-beta.21 — 2026-11-13
 
 - Preserve text/tool history when DSH 0.2.2-rc.2 records `team/mode` changes.
