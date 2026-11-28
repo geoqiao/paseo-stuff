@@ -4,6 +4,8 @@ DeepSeek Harness must already be installed, logged in and configured on the daem
 
 If you are upgrading from 0.1.0-beta.12 or earlier, note that the plugin no longer reads the `DSH_PASEO_COMMAND` and `DSH_PASEO_PROFILE` environment variables. Move those values into Paseo's provider command override, `agents.providers.deepseek-harness.command` in the daemon's `config.json`, as one array such as `["/opt/dsh/bin/dsh", "--profile", "acp"]`. The array replaces the whole default command, so keep a `--profile` that speaks ACP.
 
+Starting with beta.22, you can create an agent with a custom model at its provider default reasoning effort or a supported explicit effort. Paseo shows the default as a selectable option even when DSH represents it with an empty string.
+
 The Usage panel shows your DeepSeek API balance. To get it, the plugin reads the API key the same way `dsh` does, from the environment, `~/.dsh/.credentials.yaml` or `~/.dsh/.env`, and sends it only to DeepSeek's balance endpoint.
 
 Each agent session runs `dsh --profile acp` as a child process under your operating system user, with the daemon's environment plus the session's environment variables. Any credentials in that environment reach `dsh`, and the plugin adds no sandbox or permission policy of its own. `dsh` itself makes the calls to DeepSeek's service.

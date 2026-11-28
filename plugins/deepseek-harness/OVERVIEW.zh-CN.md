@@ -4,6 +4,8 @@ daemon 所在的机器上必须已经安装、登录并配置好 DeepSeek Harnes
 
 如果你从 0.1.0-beta.12 或更早的版本升级，请注意插件不再读取 `DSH_PASEO_COMMAND` 和 `DSH_PASEO_PROFILE` 环境变量。请把这些值移到 Paseo 的 provider 命令覆盖设置，也就是 daemon `config.json` 里的 `agents.providers.deepseek-harness.command`，写成一个数组，例如 `["/opt/dsh/bin/dsh", "--profile", "acp"]`。这个数组会替换整条默认命令，所以要保留一个使用 ACP 的 `--profile`。
 
+从 beta.22 开始，用自定义模型创建 agent 时，可以选择供应商默认的推理强度，也可以选择模型支持的具体档位。即使 DSH 用空字符串表示默认档位，Paseo 也会把它显示为可选项。
+
 Usage 面板显示你的 DeepSeek API 余额。为了查询余额，插件按 `dsh` 相同的方式读取 API key：先读环境变量，再读 `~/.dsh/.credentials.yaml` 或 `~/.dsh/.env`，并且只把 key 发送到 DeepSeek 的余额接口。
 
 每个 agent 会话都以你的操作系统用户身份，作为子进程运行 `dsh --profile acp`，使用 daemon 的环境变量加上该会话的环境变量。这些环境变量里的凭据都会传给 `dsh`。插件本身不添加沙箱或权限策略。对 DeepSeek 服务的调用由 `dsh` 自己发出。
