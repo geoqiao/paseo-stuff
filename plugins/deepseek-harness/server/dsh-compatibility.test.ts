@@ -111,6 +111,98 @@ async function handshake(
 }
 
 describe("DeepSeek ACP compatibility stream", () => {
+  it.each(["session/new", "session/load", "session/resume", "native load"])(
+    "round-trips provider default and refreshes session controls after %s",
+    async (openMethod) => {
+      const transport = memoryTransport();
+      const { managed, writer, reader } = await handshake(transport,
+        openMethod === "native load" ? { loadSession: true } : { sessionCapabilities: { resume: {} } });
+      const providerDefault = { value: "", name: "Provider default", description: "Use model defaults" };
+      const high = { value: "high", name: "High" };
+      const other = { id: "other", type: "select", currentValue: "", options: [providerDefault] };
+      const reasoning = (currentValue: string, options: unknown[]) =>
+        ({ id: "reasoning_effort", category: "thought_level", type: "select", currentValue, options });
+      const sessionId = "dsh-session";
+      const session = { sessionId };
+      let id = 1;
+      async function send(method: string, params: object) {
+        await writer.write(frame({ jsonrpc: "2.0", id: ++id, method, params }));
+        return transport.writes.at(-1);
+      }
+      async function receive(payload: object) {
+        transport.input.enqueue(frame({ jsonrpc: "2.0", ...payload }));
+        return readMessage(reader);
+      }
+      async function respond(configOptions: unknown[]) {
+        return receive({
+          id, result: { ...(openMethod === "session/new" && id === 2 ? session : {}), configOptions },
+        });
+      }
+      const setEffort = (value: string, target = sessionId, configId = "reasoning_effort") =>
+        send("session/set_config_option", { sessionId: target, configId, value, _meta: { preserve: true } });
+      try {
+        await send(openMethod === "native load" ? "session/load" : openMethod,
+          { ...session, cwd: "/workspace", mcpServers: [] });
+        const original = reasoning("", [providerDefault, high]);
+        const opened = await respond([original, other]);
+        const alias = (opened as { result: { configOptions: { currentValue: string }[] } })
+          .result.configOptions[0].currentValue;
+        expect(alias).toBeTruthy();
+        const projectedDefault = { ...providerDefault, value: alias };
+        expect(opened).toMatchObject({ result: { configOptions: [
+          reasoning(alias, [projectedDefault, high]), other,
+        ] } });
+        expect(original.currentValue).toBe("");
+        expect(providerDefault.value).toBe("");
+
+        expect(await setEffort("high")).toMatchObject({ params: { value: "high" } });
+        expect(await respond([reasoning("high", [providerDefault, high])])).toMatchObject({
+          result: { configOptions: [reasoning("high", [projectedDefault, high])] },
+        });
+        expect(await setEffort(alias)).toMatchObject({ params: { value: "", _meta: { preserve: true } } });
+        expect(await respond([original])).toMatchObject({
+          result: { configOptions: [reasoning(alias, [projectedDefault, high])] },
+        });
+        expect(await setEffort(alias, "other-session")).toMatchObject({ params: { value: alias } });
+        expect(await setEffort(alias, sessionId, "other")).toMatchObject({ params: { value: alias } });
+        await receive({ id, error: { code: -32602, message: "unsupported option" } });
+
+        const group = { group: "levels", name: "Levels", options: [providerDefault, high] };
+        const real = { value: alias, name: "Real effort" };
+        const secondGroup = { group: "more", name: "More", options: [real] };
+        const notification = await receive({ method: "session/update", params: {
+          ...session, update: { sessionUpdate: "config_option_update", configOptions: [
+            reasoning("", [group, secondGroup]),
+          ] },
+        } });
+        const groupedAlias = (notification as {
+          params: { update: { configOptions: { currentValue: string }[] } };
+        }).params.update.configOptions[0].currentValue;
+        expect(groupedAlias).toBeTruthy();
+        expect(groupedAlias).not.toBe(alias);
+        expect(notification).toMatchObject({ params: { update: { configOptions: [
+          reasoning(groupedAlias, [
+            { ...group, options: [{ ...providerDefault, value: groupedAlias }, high] }, secondGroup,
+          ]),
+        ] } } });
+        expect(await setEffort(groupedAlias)).toMatchObject({ params: { value: "" } });
+        expect(await setEffort(alias)).toMatchObject({ params: { value: alias } });
+
+        await send("session/set_config_option", { ...session, configId: "model", value: "built-in" });
+        const builtIn = reasoning("high", [high, { value: groupedAlias, name: "Real built-in effort" }]);
+        expect(await respond([builtIn])).toMatchObject({ result: { configOptions: [builtIn] } });
+        expect(await setEffort(groupedAlias)).toMatchObject({ params: { value: groupedAlias } });
+        expect(await setEffort("")).toMatchObject({ params: { value: "" } });
+        await respond([original]);
+        await send("session/close", session);
+        await receive({ id, result: {} });
+        expect(await setEffort(alias)).toMatchObject({ params: { value: alias } });
+      } finally {
+        await managed.close();
+      }
+    },
+  );
+
   it.each(["resume", "native", "error", "missing", "direct-resume"])("keeps load/replay response ordering for %s", async (mode) => {
     const home = await mkdtemp(join(tmpdir(), "dsh-bridge-replay-"));
     const transport = memoryTransport();

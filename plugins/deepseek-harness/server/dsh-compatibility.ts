@@ -23,6 +23,8 @@ const STARTUP_TIMEOUT_MS = 5_000;
 const SHUTDOWN_SIGNAL_TIMEOUT_MS = 1_000;
 const DIAGNOSTIC_LIMIT = 1_600;
 const STDERR_CAPTURE_LIMIT = 8_192;
+const REASONING_EFFORT_ID = "reasoning_effort";
+const PROVIDER_DEFAULT_ID = "__dsh_provider_default__";
 const ANSI_ESCAPE_RE = new RegExp(
   String.fromCharCode(27) + "\\[[0-?]*[ -/]*[@-~]",
   "g",
@@ -268,6 +270,11 @@ export function createAcpCompatibilityStream(
   let failed = false;
   let closePromise: Promise<void> | undefined;
   const pendingLoads = new Map<string | number | null, ReplayTarget>();
+  const pendingConfigRequests = new Map<string | number | null, {
+    method: string;
+    sessionId?: string;
+  }>();
+  const providerDefaultIds = new Map<string, string>();
 
   const unsubscribeFailure = owner.onFailure((error) => {
     fail(error);
@@ -279,6 +286,8 @@ export function createAcpCompatibilityStream(
     }
     state = "closed";
     pendingLoads.clear();
+    pendingConfigRequests.clear();
+    providerDefaultIds.clear();
     closePromise = (async () => {
       const results = await Promise.allSettled([
         reader.cancel(reason),
@@ -403,11 +412,11 @@ export function createAcpCompatibilityStream(
     }
 
     if (messageRecord.method !== "session/load") {
-      return message;
+      return trackConfigRequest(message);
     }
 
     if (persistenceMode === "native-load") {
-      return message;
+      return trackConfigRequest(message);
     }
     if (persistenceMode !== "resume") {
       throw new Error(
@@ -427,10 +436,10 @@ export function createAcpCompatibilityStream(
       sessionId: messageRecord.params.sessionId,
       cwd: messageRecord.params.cwd,
     });
-    return {
+    return trackConfigRequest({
       ...message,
       method: "session/resume",
-    } as AcpStreamMessage;
+    } as AcpStreamMessage);
   }
 
   function transformInbound(message: AcpStreamMessage): AcpStreamMessage {
@@ -457,7 +466,96 @@ export function createAcpCompatibilityStream(
       throw new Error("DeepSeek Harness ACP stream is closed");
     }
 
-    return projectToolOutput(projectThoughtMessageId(message));
+    return projectToolOutput(projectThoughtMessageId(projectSessionConfig(message)));
+  }
+
+  function trackConfigRequest(message: AcpStreamMessage): AcpStreamMessage {
+    if (!isRequestFrame(message)) return message;
+    const { method } = message;
+    const params = (message as RecordValue).params;
+    if (method === "session/new") {
+      pendingConfigRequests.set(message.id, { method });
+      return message;
+    }
+    if (method !== "session/load" && method !== "session/resume" &&
+        method !== "session/set_config_option" && method !== "session/close") {
+      return message;
+    }
+    if (!isRecord(params) || typeof params.sessionId !== "string") return message;
+
+    pendingConfigRequests.set(message.id, { method, sessionId: params.sessionId });
+    const alias = providerDefaultIds.get(params.sessionId);
+    if (method === "session/set_config_option" && params.configId === REASONING_EFFORT_ID &&
+        alias !== undefined && params.value === alias) {
+      return { ...message, params: { ...params, value: "" } } as AcpStreamMessage;
+    }
+    return message;
+  }
+
+  function projectSessionConfig(message: AcpStreamMessage): AcpStreamMessage {
+    if (isResponseFrame(message)) {
+      const request = pendingConfigRequests.get(message.id);
+      pendingConfigRequests.delete(message.id);
+      if (!request || !isRecord(message.result)) return message;
+      const { result } = message;
+      const sessionId = request.method === "session/new" ? result.sessionId : request.sessionId;
+      if (typeof sessionId !== "string") return message;
+
+      if (request.method === "session/close" || !Array.isArray(result.configOptions)) {
+        providerDefaultIds.delete(sessionId);
+        return message;
+      }
+      const configOptions = projectReasoningOptions(sessionId, result.configOptions);
+      return configOptions === result.configOptions ? message :
+        { ...message, result: { ...result, configOptions } } as AcpStreamMessage;
+    }
+
+    if (!isNotificationFrame(message) || message.method !== "session/update" ||
+        !isRecord(message.params)) return message;
+    const { sessionId, update } = message.params;
+    if (typeof sessionId !== "string" || !isRecord(update) ||
+        update.sessionUpdate !== "config_option_update" ||
+        !Array.isArray(update.configOptions)) return message;
+
+    const configOptions = projectReasoningOptions(sessionId, update.configOptions);
+    return configOptions === update.configOptions ? message :
+      { ...message, params: { ...message.params, update: { ...update, configOptions } } } as AcpStreamMessage;
+  }
+
+  function projectReasoningOptions(sessionId: string, configOptions: unknown[]): unknown[] {
+    // Each configuration frame is a complete snapshot. A model switch can
+    // remove the default or introduce a real value that matches its old ID.
+    providerDefaultIds.delete(sessionId);
+    const index = configOptions.findIndex((option) =>
+      isRecord(option) && option.id === REASONING_EFFORT_ID && option.type === "select",
+    );
+    const control = configOptions[index];
+    if (!isRecord(control) || !Array.isArray(control.options)) return configOptions;
+
+    const values = new Set<string>();
+    for (const option of control.options) {
+      for (const entry of isOptionGroup(option) ? option.options : [option]) {
+        if (isRecord(entry) && typeof entry.value === "string") values.add(entry.value);
+      }
+    }
+    if (!values.has("")) return configOptions;
+    // Treat an unlisted current value as occupied as well.
+    if (typeof control.currentValue === "string") values.add(control.currentValue);
+    let alias = PROVIDER_DEFAULT_ID;
+    for (let suffix = 1; values.has(alias); suffix++) {
+      alias = PROVIDER_DEFAULT_ID + "_" + suffix;
+    }
+    providerDefaultIds.set(sessionId, alias);
+
+    const project = (entry: unknown) =>
+      isRecord(entry) && entry.value === "" ? { ...entry, value: alias } : entry;
+    return configOptions.with(index, {
+      ...control,
+      currentValue: control.currentValue === "" ? alias : control.currentValue,
+      options: control.options.map((option) =>
+        isOptionGroup(option) ? { ...option, options: option.options.map(project) } : project(option),
+      ),
+    });
   }
 
   function projectInitializeCapabilities(
@@ -734,6 +832,10 @@ function isRpcError(value: unknown): value is RecordValue {
 
 function isRecord(value: unknown): value is RecordValue {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isOptionGroup(value: unknown): value is RecordValue & { options: unknown[] } {
+  return isRecord(value) && typeof value.group === "string" && Array.isArray(value.options);
 }
 
 function hasOwn(value: RecordValue, key: string): boolean {
