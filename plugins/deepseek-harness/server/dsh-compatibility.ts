@@ -551,7 +551,7 @@ export function createAcpCompatibilityStream(
       isRecord(entry) && entry.value === "" ? { ...entry, value: alias } : entry;
     return configOptions.with(index, {
       ...control,
-      currentValue: control.currentValue === "" ? alias : control.currentValue,
+      ...(control.currentValue === "" ? { currentValue: alias } : {}),
       options: control.options.map((option) =>
         isOptionGroup(option) ? { ...option, options: option.options.map(project) } : project(option),
       ),
