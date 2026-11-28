@@ -1,5 +1,8 @@
 # Paseo Stuff
 
+> **Guides & Project Page:** [Paseo Complete Setup & Usage Guide (中文)](https://geoqiao.me/blog/paseo-guide/) · [paseo-stuff Project Page](https://geoqiao.me/projects/paseo-stuff/)
+> **Workflow & Comparisons:** [Paseo Multi-Agent Profile Workflow](https://geoqiao.me/blog/how-i-use-paseo/) · [Orca vs Paseo](https://geoqiao.me/blog/how-i-use-orca/)
+
 This repository maintains [DeepSeek Harness](plugins/deepseek-harness), which
 connects Paseo to the official DSH executable through its ACP profile, and
 [Math Renderer](plugins/math-renderer), which renders inline and block LaTeX in
